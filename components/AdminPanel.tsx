@@ -34,7 +34,10 @@ import {
   Grid3x3,
   MousePointer2,
   Sun,
-  Move
+  Move,
+  Shield,
+  RefreshCw,
+  CreditCard
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig } from '../types';
@@ -47,7 +50,7 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
-type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero';
+type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
@@ -113,10 +116,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
             onClick={() => setActiveTab('payments')}
           />
           <SidebarItem
-            icon={<Settings size={20} />}
-            label="Settings"
+            icon={<Tag size={20} />}
+            label="Categories"
             active={activeTab === 'settings'}
             onClick={() => setActiveTab('settings')}
+          />
+          <SidebarItem
+            icon={<CreditCard size={20} />}
+            label="Payment Settings"
+            active={activeTab === 'payment_settings'}
+            onClick={() => setActiveTab('payment_settings')}
           />
 
           <SidebarItem
@@ -138,6 +147,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
             className="flex items-center gap-2 text-gray-500 dark:text-dark-text-secondary hover:text-gray-900 dark:hover:text-white transition-colors w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-lg"
           >
             <X size={18} /> Exit Admin
+          </button>
+          <button
+            onClick={() => firebaseService.makeMeAdmin()}
+            className="mt-2 flex items-center gap-2 text-xs text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors w-full px-4 py-2"
+            title="Click if you see permission errors"
+          >
+            <Shield size={14} /> Fix Permissions (Dev)
+          </button>
+          <button
+            onClick={() => firebaseService.clearPersistence()}
+            className="mt-1 flex items-center gap-2 text-xs text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors w-full px-4 py-2"
+            title="Click if you see 'Unexpected state' or crashes"
+          >
+            <RefreshCw size={14} /> Reset Cache (Fix Crash)
           </button>
         </div>
       </aside>
@@ -167,7 +190,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
           <Sparkles size={24} />
         </button>
         <button onClick={() => setActiveTab('settings')} className={`p-2 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <Settings size={24} />
+          <Tag size={24} />
+        </button>
+        <button onClick={() => setActiveTab('payment_settings')} className={`p-2 rounded-xl transition-all ${activeTab === 'payment_settings' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
+          <CreditCard size={24} />
         </button>
       </div>
 
@@ -190,6 +216,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
           {activeTab === 'users' && <UsersManager orders={orders} />}
           {activeTab === 'payments' && <PaymentsManager />}
           {activeTab === 'settings' && <CategoriesManager />}
+          {activeTab === 'payment_settings' && <PaymentSetting />}
 
           {activeTab === 'blog' && <BlogManager />}
           {activeTab === 'hero' && <HeroManager products={localProducts} />}
@@ -484,6 +511,17 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
     e.preventDefault();
     if (!currentProduct.name || !currentProduct.price) return;
 
+    // 1. Auth Check
+    const user = firebaseService.auth?.currentUser;
+    if (!user) {
+      alert("You must be logged in to upload products.");
+      return;
+    }
+
+    // Optional: Check for admin role if possible (client-side check is weak but helpful UX)
+    // We can't easily check custom claims synchronously here without an ID token result, 
+    // but we can trust the backend rules to fail if not admin.
+
     setIsUploading(true);
 
     try {
@@ -524,11 +562,12 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
         imageUrl = uploadedImageUrls[coverIndex];
       }
 
-      // Upload Preview (GLB) -> Public
+      // Upload Preview (GLB) -> Public (now in products folder)
       if (previewFile) {
         const ext = previewFile.name.split('.').pop() || 'glb';
-        const path = `public/models/${productSlug}_${Date.now()}.${ext}`;
-        // uploadFile returns URL for public paths
+        // Use productFolder instead of public/models to match storage rules
+        const path = `${productFolder}/model_${Date.now()}.${ext}`;
+        // uploadFile returns URL for public paths (and products/ is public read)
         const url = await firebaseService.uploadFile(previewFile, path);
         modelUrl = url; // Keep modelUrl for backward compatibility or easy access
         previewStoragePath = path;
@@ -542,10 +581,11 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
         sourceStoragePath = await firebaseService.uploadFile(sourceFile, path);
       }
 
-      // Upload Video -> Public
+      // Upload Video -> Public (now in products folder)
       if (videoFile) {
         const ext = videoFile.name.split('.').pop() || 'mp4';
-        const path = `public/videos/${productSlug}_${Date.now()}.${ext}`;
+        // Use productFolder instead of public/videos to match storage rules
+        const path = `${productFolder}/video_${Date.now()}.${ext}`;
         const url = await firebaseService.uploadFile(videoFile, path);
         videoUrl = url;
       }
@@ -590,9 +630,19 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
       setVideoFile(null);
       setTagInput('');
       setSelectedCoverIndex(0);
+      alert("Product saved successfully!");
     } catch (error: any) {
       console.error("Failed to save product", error);
-      alert(`Failed to save product: ${error.message || error}`);
+
+      // Enhanced Error Handling
+      let errorMessage = error.message || "Unknown error";
+      if (error.code === 'permission-denied' || error.message.includes('permission')) {
+        errorMessage = "Permission Denied. You do not have admin rights to perform this action. Please click 'Fix Permissions (Dev)' in the sidebar.";
+      } else if (error.code === 'storage/unauthorized') {
+        errorMessage = "Storage Unauthorized. You cannot upload files. Ensure you are logged in as an admin.";
+      }
+
+      alert(`Failed to save product: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
@@ -2330,13 +2380,20 @@ const ClearDatabaseButton = () => {
   );
 };
 
-const SettingsManager = () => {
+const PaymentSetting = () => {
   const [config, setConfig] = useState(paymentService.getStripeConfig());
   const [saved, setSaved] = useState(false);
   const status = firebaseService.getSystemStatus();
 
-  const handleSave = () => {
-    paymentService.setStripeConfig(config);
+  useEffect(() => {
+    const unsubscribe = firebaseService.subscribeToStripeConfig((newConfig) => {
+      if (newConfig) setConfig(prev => ({ ...prev, ...newConfig }));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSave = async () => {
+    await firebaseService.updateStripeConfig(config);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -2348,7 +2405,18 @@ const SettingsManager = () => {
 
   return (
     <div className="max-w-3xl animate-in fade-in duration-500">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary mb-6">Store Settings</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary mb-6">Payment Settings</h1>
+
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex gap-3 items-start">
+        <Shield className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" size={20} />
+        <div>
+          <h3 className="font-bold text-blue-800 dark:text-blue-300">Access Restricted</h3>
+          <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+            Test Mode is currently restricted to <strong>yassinebouomrine@gmail.com</strong>.
+            All other users will process payments in Live Mode regardless of the setting below.
+          </p>
+        </div>
+      </div>
 
       {/* Database Connection Status */}
       <div className={`bg-white dark:bg-dark-surface rounded-2xl p-8 border border-gray-200 dark:border-dark-border mb-8 relative overflow-hidden shadow-sm transition-colors`}>

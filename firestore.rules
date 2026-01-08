@@ -59,6 +59,52 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Payments: Admins can read/write all
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin(); // Usually created via backend or admin
+    }
+
+    // Coupons: Public read (to validate), Admin write
+    match /coupons/{couponCode} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Reviews: Public read, Authenticated create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Mail: Admin write (or system)
+    match /mail/{mailId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin(); // Or specific trigger rules
+    }
+
+    // Settings: Public read, Admin write
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Stripe Extension: Customers
+    match /customers/{uid} {
+      allow read, write: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

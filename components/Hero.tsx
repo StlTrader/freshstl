@@ -244,25 +244,25 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-32 md:pb-32">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     <Content />
-                    <div className="relative hidden lg:block animate-fade-in-up animation-delay-200">
-                        <div className="relative w-full aspect-square max-w-lg mx-auto">
+                    <div className="relative block mt-12 lg:mt-0 animate-fade-in-up animation-delay-200">
+                        <div className="relative w-full aspect-square max-w-[320px] sm:max-w-lg mx-auto">
                             <div className={`absolute inset-0 bg-gradient-to-tr from-brand-500/10 to-blue-500/10 rounded-full blur-3xl ${effect === 'glow' ? 'animate-pulse' : ''}`} />
 
                             {products.length > 0 ? (
                                 <div className="relative w-full h-full">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-96 z-20 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-20 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500">
                                         <ProductCard product={products[0]} index={0} />
                                     </div>
                                     {products.length > 1 && (
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-96 z-10 transform rotate-[6deg] translate-x-12 translate-y-4 opacity-80">
-                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-surface">
+                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-10 transform rotate-[6deg] translate-x-8 translate-y-4 sm:translate-x-12 opacity-80">
+                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-surface shadow-xl">
                                                 <img src={products[1].imageUrl} alt={products[1].name} className="w-full h-full object-cover grayscale" />
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-96 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border p-4 flex items-center justify-center">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border p-4 flex items-center justify-center">
                                     <div className="text-center">
                                         <Box className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                         <p className="text-gray-500 font-medium">Coming Soon</p>

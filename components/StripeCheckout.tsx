@@ -2,10 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import * as paymentService from '../services/paymentService';
-import { Loader2, AlertCircle, Lock, TestTube2, Zap, CreditCard } from 'lucide-react';
+import { Loader2, AlertCircle, Lock, TestTube2, Zap, CreditCard, ShieldCheck } from 'lucide-react';
 import { auth } from '../services/firebaseService';
 import { PaymentMethod } from '../types';
 import { useStore } from '../contexts/StoreContext';
+
+const CardIcon = ({ brand }: { brand: string }) => {
+    const b = brand.toLowerCase();
+    if (b === 'visa') return (
+        <div className="w-10 h-7 bg-[#1A1F71] rounded flex items-center justify-center text-white font-bold italic text-[10px] tracking-wider shadow-sm">
+            VISA
+        </div>
+    );
+    if (b === 'mastercard') return (
+        <div className="w-10 h-7 bg-[#252525] rounded flex items-center justify-center relative overflow-hidden shadow-sm">
+            <div className="w-4 h-4 rounded-full bg-[#EB001B] opacity-90 -mr-1"></div>
+            <div className="w-4 h-4 rounded-full bg-[#F79E1B] opacity-90 -ml-1"></div>
+        </div>
+    );
+    if (b === 'amex') return (
+        <div className="w-10 h-7 bg-[#2E77BB] rounded flex items-center justify-center text-white font-bold text-[8px] tracking-tighter shadow-sm">
+            AMEX
+        </div>
+    );
+    return (
+        <div className="w-10 h-7 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center text-gray-500 dark:text-gray-400 shadow-sm">
+            <CreditCard size={16} />
+        </div>
+    );
+};
 
 interface StripeCheckoutProps {
     amount: number; // in cents
@@ -57,6 +82,10 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
             setError(error.message || "Payment failed");
             setIsProcessing(false);
         } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+            // Note: We cannot easily retrieve card details on the client to save them to Firestore
+            // without a backend endpoint. The 'Save Card' checkbox currently relies on
+            // setup_future_usage which attaches it to the customer in Stripe, 
+            // but it won't appear in our Firestore list automatically.
             onSuccess(paymentIntent.id);
         } else {
             setError("Payment status unknown.");
@@ -106,9 +135,10 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
                 )}
             </button>
 
-            <div className="flex justify-center gap-4 text-gray-400 dark:text-gray-500">
-                <div className="flex items-center gap-1 text-xs">
-                    <Lock size={10} /> 256-bit SSL Secure
+            <div className="flex justify-center gap-4 text-gray-400 dark:text-gray-500 mt-6">
+                <div className="flex items-center gap-1.5 text-xs font-medium bg-gray-50 dark:bg-dark-bg px-3 py-1.5 rounded-full border border-gray-100 dark:border-dark-border">
+                    <ShieldCheck size={12} className="text-emerald-500" />
+                    <span>256-bit SSL Secure Encrypted Payment</span>
                 </div>
             </div>
         </form>
@@ -343,19 +373,19 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-6 bg-gray-200 dark:bg-dark-surface rounded flex items-center justify-center text-[10px] font-bold uppercase text-gray-600 dark:text-dark-text-secondary">
-                                        {method.brand}
+                                    <div className="flex items-center gap-4">
+                                        <CardIcon brand={method.brand} />
+                                        <div className="text-sm">
+                                            <span className="font-medium text-gray-900 dark:text-dark-text-primary">•••• {method.last4}</span>
+                                            <span className="text-gray-500 dark:text-dark-text-secondary ml-2 text-xs">Exp {method.expiryMonth}/{method.expiryYear}</span>
+                                        </div>
                                     </div>
-                                    <div className="text-sm">
-                                        <span className="font-medium text-gray-900 dark:text-dark-text-primary">•••• {method.last4}</span>
-                                        <span className="text-gray-500 dark:text-dark-text-secondary ml-2 text-xs">Exp {method.expiryMonth}/{method.expiryYear}</span>
-                                    </div>
+                                    {(!useNewCard && selectedMethodId === method.id) && (
+                                        <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center">
+                                            <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                                        </div>
+                                    )}
                                 </div>
-                                {(!useNewCard && selectedMethodId === method.id) && (
-                                    <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center">
-                                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                                    </div>
-                                )}
                             </div>
                         ))}
 
@@ -388,7 +418,32 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                     <p className="text-gray-500">Preparing secure checkout...</p>
                 </div>
             ) : (
-                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: isDarkMode ? 'night' : 'stripe' } }}>
+                <Elements
+                    stripe={stripePromise}
+                    options={{
+                        clientSecret,
+                        appearance: {
+                            theme: isDarkMode ? 'night' : 'stripe',
+                            variables: {
+                                colorPrimary: '#0ea5e9',
+                                borderRadius: '12px',
+                                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                                colorBackground: isDarkMode ? '#1f2937' : '#ffffff',
+                                colorText: isDarkMode ? '#f3f4f6' : '#111827',
+                            },
+                            rules: {
+                                '.Input': {
+                                    border: isDarkMode ? '1px solid #374151' : '1px solid #e5e7eb',
+                                    padding: '12px',
+                                },
+                                '.Input:focus': {
+                                    border: '1px solid #0ea5e9',
+                                    boxShadow: '0 0 0 2px rgba(14, 165, 233, 0.2)',
+                                }
+                            }
+                        }
+                    }}
+                >
                     {useNewCard ? (
                         <CheckoutForm
                             onSuccess={handleInternalSuccess}

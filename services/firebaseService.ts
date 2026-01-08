@@ -108,6 +108,18 @@ export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   try {
     const result = await signInWithPopup(auth, provider);
+    // Create user doc if not exists
+    const userRef = doc(db!, 'users', result.user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        email: result.user.email,
+        displayName: result.user.displayName,
+        createdAt: serverTimestamp(),
+        role: 'customer',
+        photoURL: result.user.photoURL
+      });
+    }
     return result.user;
   } catch (error) {
     console.error("Google Sign In Error", error);
@@ -128,6 +140,18 @@ export const signInWithFacebook = async () => {
   const provider = new FacebookAuthProvider();
   try {
     const result = await signInWithPopup(auth, provider);
+    // Create user doc if not exists
+    const userRef = doc(db!, 'users', result.user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        email: result.user.email,
+        displayName: result.user.displayName,
+        createdAt: serverTimestamp(),
+        role: 'customer',
+        photoURL: result.user.photoURL
+      });
+    }
     return result.user;
   } catch (error) {
     console.error("Facebook Sign In Error", error);
@@ -1432,7 +1456,10 @@ export const subscribeToGlobalOrders = (callback: (orders: Order[]) => void) => 
     const orders = snap.docs.map(d => ({ id: d.id, ...d.data() } as Order));
     orders.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
     callback(orders);
-  }, () => callback([]));
+  }, (error) => {
+    console.error("Failed to subscribe to global orders:", error);
+    callback([]);
+  });
 };
 
 // --- Payments Collection ---
@@ -1503,7 +1530,10 @@ export const subscribeToPayments = (callback: (payments: Payment[]) => void) => 
     const payments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Payment));
     payments.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     callback(payments);
-  }, () => callback([]));
+  }, (error) => {
+    console.error("Failed to subscribe to payments:", error);
+    callback([]);
+  });
 };
 
 export const updatePaymentStatus = async (paymentId: string, status: Payment['status']): Promise<void> => {
@@ -2098,10 +2128,17 @@ export const subscribeToAllUsers = (callback: (users: any[]) => void) => {
   }
 
   const usersRef = collection(db, 'users');
-  const q = query(usersRef, orderBy('createdAt', 'desc'));
+  // Use client-side sorting to avoid index issues
+  const q = query(usersRef);
 
   return onSnapshot(q, (snapshot) => {
     const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt desc
+    users.sort((a: any, b: any) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateB - dateA;
+    });
     callback(users);
   }, (err) => {
     console.warn("Failed to subscribe to users:", err);
@@ -2207,7 +2244,14 @@ export const addUserPaymentMethod = async (userId: string, method: any): Promise
   if (isMockFallback || !db) return method;
   try {
     const methodsRef = collection(db, 'users', userId, 'paymentMethods');
-    const docRef = await addDoc(methodsRef, method);
+    let docRef;
+    if (method.id) {
+      // Use the provided ID (Stripe ID) as the document ID
+      docRef = doc(methodsRef, method.id);
+      await setDoc(docRef, method);
+    } else {
+      docRef = await addDoc(methodsRef, method);
+    }
     return { id: docRef.id, ...method };
   } catch (e) {
     console.error("Failed to add payment method:", e);
@@ -2471,4 +2515,61 @@ export const deleteBuilderAsset = async (id: string) => {
 export const updateBuilderAsset = async (id: string, data: Partial<BuilderAsset>) => {
   if (isMockFallback || !db) return;
   await updateDoc(doc(db, 'builder_assets', id), data);
+};
+
+// --- Global Stripe Configuration ---
+export const subscribeToStripeConfig = (callback: (config: any) => void) => {
+  if (db) {
+    return onSnapshot(doc(db, 'settings', 'stripe'), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        callback({ mode: 'test' });
+      }
+    });
+  }
+  const saved = localStorage.getItem('freshstl_stripe_config');
+  if (saved) callback(JSON.parse(saved));
+  else callback({ mode: 'test' });
+  return () => { };
+};
+
+export const updateStripeConfig = async (config: any) => {
+  if (db) {
+    await setDoc(doc(db, 'settings', 'stripe'), config, { merge: true });
+  }
+  localStorage.setItem('freshstl_stripe_config', JSON.stringify(config));
+};
+
+export const makeMeAdmin = async () => {
+  if (!auth?.currentUser || !db) {
+    console.error("Cannot make admin: No user or DB");
+    return;
+  }
+  try {
+    const userRef = doc(db, 'users', auth.currentUser.uid);
+    await setDoc(userRef, { role: 'admin' }, { merge: true });
+    console.log("Successfully updated user role to admin");
+    alert("You are now an Admin! The page will reload.");
+    window.location.reload();
+  } catch (error) {
+    console.error("Failed to make admin:", error);
+    alert("Failed to make admin. See console.");
+  }
+};
+
+import { terminate, clearIndexedDbPersistence } from 'firebase/firestore';
+
+export const clearPersistence = async () => {
+  if (!db) return;
+  try {
+    await terminate(db);
+    await clearIndexedDbPersistence(db);
+    console.log("Persistence cleared");
+    alert("Cache cleared. Reloading...");
+    window.location.reload();
+  } catch (e) {
+    console.error("Failed to clear persistence:", e);
+    alert("Failed to clear cache. See console.");
+  }
 };

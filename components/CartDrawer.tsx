@@ -458,12 +458,39 @@ export const CartDrawer: React.FC = () => {
                   </div>
                 </div>
 
-                <StripeCheckout
-                  amount={total}
-                  onSuccess={handleStripeSuccess}
-                  onCancel={() => setCheckoutStep('customer-info')}
-                  customerInfo={customerInfo}
-                />
+                {total > 0 ? (
+                  <StripeCheckout
+                    amount={total}
+                    onSuccess={handleStripeSuccess}
+                    onCancel={() => setCheckoutStep('customer-info')}
+                    customerInfo={customerInfo}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 rounded-lg text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+                      <Check size={16} /> Order is free! No payment required.
+                    </div>
+                    <button
+                      onClick={() => handleStripeSuccess('free_order', { card: { brand: 'none', last4: '0000' } })}
+                      disabled={isProcessing}
+                      className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-brand-400 dark:disabled:bg-brand-900 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-500/30 dark:shadow-brand-900/30 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" /> Processing...
+                        </>
+                      ) : (
+                        'Complete Order'
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setCheckoutStep('customer-info')}
+                      className="w-full text-gray-500 hover:text-gray-900 dark:hover:text-dark-text-primary text-sm"
+                    >
+                      Back
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

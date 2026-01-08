@@ -63,6 +63,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onSuccess 
                 // We DO NOT save the full token or sensitive data, just the display info
                 // In a real app, you'd save the paymentMethod.id to the customer in Stripe via your backend
                 const newMethod = await firebaseService.addUserPaymentMethod(auth.currentUser.uid, {
+                    id: paymentMethod.id,
                     brand: paymentMethod.card.brand,
                     last4: paymentMethod.card.last4,
                     expiryMonth: paymentMethod.card.exp_month,

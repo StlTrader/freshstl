@@ -101,7 +101,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg pt-8 pb-20 animate-in fade-in duration-500">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg pt-4 pb-32 lg:pb-20 animate-in fade-in duration-500">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Breadcrumb / Back */}
@@ -143,10 +143,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         </div>
 
                         {/* Media Gallery */}
-                        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide snap-x">
                             <button
                                 onClick={() => setActiveMedia('model')}
-                                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${activeMedia === 'model' ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeMedia === 'model' ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
                             >
                                 <div className="w-full h-full bg-gray-800 dark:bg-dark-surface flex items-center justify-center text-white">
                                     <Box size={24} />
@@ -157,7 +157,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                     <button
                                         key={idx}
                                         onClick={() => setActiveMedia(img)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${activeMedia === img ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeMedia === img ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                                     </button>
@@ -167,7 +167,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 product.imageUrl && (
                                     <button
                                         onClick={() => setActiveMedia(product.imageUrl)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${activeMedia === product.imageUrl ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeMedia === product.imageUrl ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <img src={product.imageUrl} alt="Main View" className="w-full h-full object-cover" />
                                     </button>
@@ -176,8 +176,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         </div>
 
                         {/* Mobile-only Title (visible on small screens) */}
-                        <div className="lg:hidden">
-                            <h1 className="text-3xl font-black text-gray-900 dark:text-dark-text-primary mb-2">{product.name}</h1>
+                        <div className="lg:hidden px-1">
+                            <h1 className="text-2xl font-black text-gray-900 dark:text-dark-text-primary mb-2 leading-tight">{product.name}</h1>
                             <div className="flex items-center gap-4 text-sm text-gray-500">
                                 <span className="bg-brand-100 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 px-2 py-0.5 rounded-full font-bold text-xs uppercase tracking-wider">
                                     {product.category}
@@ -415,37 +415,37 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Mobile Sticky Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border lg:hidden z-40 flex flex-col gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-t border-gray-200 dark:border-dark-border lg:hidden z-50 flex flex-col gap-3 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500 pb-[env(safe-area-inset-bottom,20px)]">
                 {product.isBuilderEnabled && (
                     <button
                         onClick={handleCustomize}
-                        className="w-full font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 bg-purple-600 text-white shadow-purple-500/20"
+                        className="w-full font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 bg-purple-600 text-white shadow-purple-500/20 text-sm"
                     >
-                        <Box className="w-5 h-5" />
+                        <Box className="w-4 h-4" />
                         Customize in 3D Builder
                     </button>
                 )}
-                <div className="flex items-center justify-between gap-4 w-full">
-                    <div className="flex flex-col">
-                        <span className="text-xs text-gray-500 dark:text-dark-text-secondary font-medium">Total Price</span>
-                        <span className="text-xl font-black text-gray-900 dark:text-dark-text-primary">${(product.price / 100).toFixed(2)}</span>
+                <div className="flex items-center justify-between gap-3 w-full">
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-dark-text-secondary font-bold">Total</span>
+                        <span className="text-2xl font-black text-gray-900 dark:text-dark-text-primary truncate">${(product.price / 100).toFixed(2)}</span>
                     </div>
                     <button
                         onClick={() => isPurchased ? handleSecureDownload() : handleAddToCart()}
                         disabled={isDownloading}
-                        className={`flex-1 font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 ${isPurchased
+                        className={`flex-1 font-bold py-3 px-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 text-sm whitespace-nowrap ${isPurchased
                             ? 'bg-green-600 text-white shadow-green-500/20'
                             : 'bg-brand-600 text-white shadow-brand-500/20'
                             }`}
                     >
                         {isPurchased ? (
                             <>
-                                {isDownloading ? <Loader2 className="animate-spin w-5 h-5" /> : <Download className="w-5 h-5" />}
+                                {isDownloading ? <Loader2 className="animate-spin w-4 h-4" /> : <Download className="w-4 h-4" />}
                                 {isDownloading ? '...' : 'Download'}
                             </>
                         ) : (
                             <>
-                                <ShoppingCart className="w-5 h-5" />
+                                <ShoppingCart className="w-4 h-4" />
                                 Add to Cart
                             </>
                         )}
