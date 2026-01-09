@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
             console.error("GEMINI_API_KEY is missing from process.env");
             return NextResponse.json({ error: 'GEMINI_API_KEY is not set in environment. Please check App Hosting secrets.' }, { status: 500 });
         }
+        const key = process.env.GEMINI_API_KEY;
+        console.log(`Using GEMINI_API_KEY ending in: ...${key.slice(-4)}`);
+        console.log(`Key length: ${key.length}, Contains newline: ${/\n/.test(key)}`);
 
         // Remove data URL prefix if present to get raw base64
         const base64Image = image.replace(/^data:image\/(png|jpeg|webp);base64,/, '');
