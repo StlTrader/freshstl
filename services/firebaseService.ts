@@ -118,7 +118,7 @@ export const signInWithGoogle = async () => {
         createdAt: serverTimestamp(),
         role: 'customer',
         photoURL: result.user.photoURL
-      });
+      }, { merge: true });
     }
     return result.user;
   } catch (error) {
@@ -150,7 +150,7 @@ export const signInWithFacebook = async () => {
         createdAt: serverTimestamp(),
         role: 'customer',
         photoURL: result.user.photoURL
-      });
+      }, { merge: true });
     }
     return result.user;
   } catch (error) {
@@ -179,7 +179,7 @@ try {
     config = window.__firebase_config;
     console.log("Firebase Config Source: Window Object");
   } else {
-    console.log("Firebase Config Source: Env/Default");
+    console.warn("WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.");
   }
   console.log("Firebase Project ID:", config.projectId);
   // console.log("Firebase Config:", config); // Uncomment for full debug if needed
@@ -734,6 +734,23 @@ export const login = async (email: string, password: string): Promise<User> => {
   if (auth) {
     try {
       const creds = await signInWithEmailAndPassword(auth, email, password);
+
+      // Self-healing: Ensure Firestore document exists
+      if (db && creds.user) {
+        const userRef = doc(db, 'users', creds.user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          console.warn("User document missing for existing auth user. Re-creating...");
+          await setDoc(userRef, {
+            email: email,
+            displayName: creds.user.displayName || email.split('@')[0],
+            createdAt: serverTimestamp(),
+            role: 'customer',
+            photoURL: creds.user.photoURL
+          });
+        }
+      }
+
       return creds.user;
     } catch (e: any) {
       // Only fallback if it's a network/internal error, not wrong credentials
@@ -765,12 +782,19 @@ export const register = async (email: string, pass: string, name: string): Promi
       if (creds.user) {
         await updateProfile(creds.user, { displayName: name });
         // Create user document in Firestore
-        await setDoc(doc(db!, 'users', creds.user.uid), {
-          email: email,
-          displayName: name,
-          createdAt: serverTimestamp(),
-          role: 'customer'
-        });
+        try {
+          await setDoc(doc(db!, 'users', creds.user.uid), {
+            email: email,
+            displayName: name,
+            createdAt: serverTimestamp(),
+            role: 'customer'
+          });
+        } catch (fsError) {
+          console.error("Firestore user creation failed during registration:", fsError);
+          // Optional: Delete the auth user to rollback? 
+          // For now, we rely on the self-healing in 'login' to fix this next time.
+          // But we should probably alert the user or try again.
+        }
       }
       return creds.user;
     } catch (e: any) {
@@ -2151,6 +2175,29 @@ export const deleteUser = async (userId: string) => {
     // Mock delete
     return;
   }
+
+  try {
+    const token = await auth?.currentUser?.getIdToken();
+    if (token) {
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete user via API');
+      }
+      return;
+    }
+  } catch (e) {
+    console.error("Failed to delete user via API, falling back to Firestore only:", e);
+  }
+
   await deleteDoc(doc(db, 'users', userId));
 };
 
@@ -2161,19 +2208,34 @@ export const toggleUserBlockStatus = async (userId: string, isBlocked: boolean) 
 
 export const adminCreateUser = async (userData: any) => {
   if (isMockFallback || !db) return;
-  // Create a placeholder user document. 
-  // Note: This does not create an Auth account. The user must sign up with this email.
-  // Or we could use a Cloud Function to create the Auth user.
-  // For now, we'll just create the Firestore record.
-  const userId = 'user_' + Date.now(); // Temporary ID until they sign up? 
-  // Actually, if we want them to match, we should probably wait for signup.
-  // But if the admin wants to pre-populate data:
-  await setDoc(doc(db, 'users', userId), {
-    ...userData,
-    createdAt: serverTimestamp(),
-    role: userData.role || 'customer',
-    isBlocked: false
-  });
+
+  try {
+    const token = await auth?.currentUser?.getIdToken();
+    if (token) {
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password || 'password123', // Default password if not provided
+          displayName: userData.displayName,
+          role: userData.role || 'customer'
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create user via API');
+      }
+      return;
+    }
+  } catch (e) {
+    console.error("Failed to create user via API:", e);
+    throw e; // Re-throw to let UI handle it
+  }
 };
 
 // --- Cart Management ---
@@ -2377,6 +2439,44 @@ export const updateUser = async (userId: string, data: Partial<CustomerInfo>): P
   }
 };
 
+export const updateUserRole = async (userId: string, role: 'admin' | 'customer' | 'tester') => {
+  if (isMockFallback || !db) {
+    // Mock update
+    const currentUser = JSON.parse(localStorage.getItem(LS_KEYS.USER) || 'null');
+    if (currentUser && currentUser.uid === userId) {
+      const updatedUser = { ...currentUser, role };
+      localStorage.setItem(LS_KEYS.USER, JSON.stringify(updatedUser));
+      emitChange(LS_KEYS.USER);
+    }
+    return;
+  }
+
+  try {
+    const token = await auth?.currentUser?.getIdToken();
+    if (token) {
+      const response = await fetch('/api/admin/update-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId, role })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update user role via API');
+      }
+      return;
+    }
+  } catch (e) {
+    console.error("Failed to update user role via API, falling back to Firestore only:", e);
+  }
+
+  // Fallback to Firestore only if API fails
+  await updateDoc(doc(db, 'users', userId), { role });
+};
+
 // Send Order Confirmation Email (via Trigger Email Extension)
 export const sendOrderConfirmationEmail = async (
   userId: string,
@@ -2571,5 +2671,66 @@ export const clearPersistence = async () => {
   } catch (e) {
     console.error("Failed to clear persistence:", e);
     alert("Failed to clear cache. See console.");
+  }
+};
+
+export const deleteDataForTestUsers = async (testerEmails: string[]) => {
+  if (isMockFallback || !db) {
+    console.log("Mock delete data for:", testerEmails);
+    return;
+  }
+
+  if (testerEmails.length === 0) return;
+
+  try {
+    // 1. Get UIDs for these emails
+    // 'in' query supports max 10 values. If more, we need to batch or loop.
+    // Assuming < 10 testers for now.
+    const usersRef = collection(db, 'users');
+    const qUsers = query(usersRef, where('email', 'in', testerEmails.slice(0, 10)));
+    const userSnaps = await getDocs(qUsers);
+    const uids = userSnaps.docs.map(doc => doc.id);
+
+    if (uids.length === 0) {
+      console.log("No user accounts found for tester emails.");
+      return;
+    }
+
+    console.log(`Found ${uids.length} tester accounts. Deleting data...`);
+
+    // Helper to delete query results
+    const deleteQueryBatch = async (queryRef: any) => {
+      const snapshot = await getDocs(queryRef);
+      const batch = writeBatch(db!);
+      let count = 0;
+      snapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref);
+        count++;
+      });
+      if (count > 0) {
+        await batch.commit();
+        console.log(`Deleted ${count} docs.`);
+      }
+    };
+
+    for (const uid of uids) {
+      // Delete Orders
+      await deleteQueryBatch(query(collection(db, 'orders'), where('userId', '==', uid)));
+
+      // Delete Payments
+      await deleteQueryBatch(query(collection(db, 'payments'), where('userId', '==', uid)));
+
+      // Delete Checkout Sessions
+      await deleteQueryBatch(collection(db, 'customers', uid, 'checkout_sessions'));
+
+      // Delete Purchases (User Subcollection)
+      await deleteQueryBatch(collection(db, 'users', uid, 'purchases'));
+    }
+
+    console.log("Test data deletion complete.");
+
+  } catch (error) {
+    console.error("Error deleting test data:", error);
+    throw error;
   }
 };

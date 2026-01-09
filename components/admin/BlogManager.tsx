@@ -330,7 +330,68 @@ export default function BlogManager() {
 
             {/* List */}
             <div className="bg-white dark:bg-dark-surface rounded-2xl border border-gray-200 dark:border-dark-border overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
+                {/* Mobile List View */}
+                <div className="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
+                    {loading ? (
+                        <div className="p-8 text-center text-gray-500">Loading posts...</div>
+                    ) : filteredPosts.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">No posts found.</div>
+                    ) : (
+                        filteredPosts.map((post) => (
+                            <div key={post.id} className="p-4 flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 dark:text-dark-text-primary line-clamp-2">{post.title}</h3>
+                                        <div className="text-xs text-gray-500 font-mono mt-1">/{post.slug}</div>
+                                    </div>
+                                    <div className="flex gap-1 shrink-0 ml-2">
+                                        <button
+                                            onClick={() => handleOpenModal(post)}
+                                            className="p-2 text-gray-400 hover:text-brand-600 bg-gray-50 hover:bg-brand-50 dark:bg-dark-bg dark:hover:bg-brand-900/20 rounded-lg transition-colors"
+                                        >
+                                            <Edit size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(post.id)}
+                                            className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 dark:bg-dark-bg dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2 text-sm">
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold ${post.published
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                        }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${post.published ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                                        {post.published ? 'Published' : 'Draft'}
+                                    </span>
+
+                                    {post.category && (
+                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-dark-text-secondary border border-gray-200 dark:border-dark-border">
+                                            {post.category}
+                                        </span>
+                                    )}
+
+                                    <span className="text-gray-400 text-xs ml-auto">
+                                        {(() => {
+                                            if (!post.createdAt) return '';
+                                            if (typeof post.createdAt === 'string') return new Date(post.createdAt).toLocaleDateString();
+                                            if (typeof post.createdAt === 'number') return new Date(post.createdAt).toLocaleDateString();
+                                            if (post.createdAt?.toDate) return post.createdAt.toDate().toLocaleDateString();
+                                            return '';
+                                        })()}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-dark-bg/50 text-gray-500 dark:text-dark-text-secondary uppercase text-sm font-semibold">
                             <tr>
@@ -418,11 +479,11 @@ export default function BlogManager() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                        <form onSubmit={handleSubmit} className="p-4 md:p-8 space-y-8">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 <div className="lg:col-span-2 space-y-6">
                                     {/* AI Generation Section */}
-                                    <div className="bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-900/20 dark:to-purple-900/20 p-6 rounded-2xl border border-brand-100 dark:border-brand-900/50">
+                                    <div className="bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-900/20 dark:to-purple-900/20 p-4 md:p-6 rounded-2xl border border-brand-100 dark:border-brand-900/50">
                                         <h4 className="font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
                                             <Sparkles size={18} className="text-brand-500" /> AI Content Generator
                                         </h4>

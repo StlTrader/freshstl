@@ -73,6 +73,7 @@ export interface Order {
     country?: string;
   };
   paymentId?: string;
+  isTest?: boolean;
 }
 
 export interface Review {
@@ -110,13 +111,11 @@ export interface StripeConfig {
   minDelay: number;
   maxDelay: number;
   publicKey?: string;
-  secretKey?: string;
   testPublicKey?: string;
-  testSecretKey?: string;
   livePublicKey?: string;
-  liveSecretKey?: string;
   mode: 'test' | 'live';
   isConnected: boolean;
+  testerEmails?: string[];
 }
 export interface BlogPost {
   id: string;
@@ -156,6 +155,7 @@ export interface Payment {
   cardLast4?: string;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  isTest?: boolean;
 }
 
 export interface CustomerInfo {

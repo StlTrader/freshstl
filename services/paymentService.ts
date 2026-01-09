@@ -17,17 +17,12 @@ const DEFAULT_CONFIG: StripeConfig = {
   minDelay: 1000,
   maxDelay: 2500,
   publicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  secretKey: '',
   testPublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  testSecretKey: '',
   livePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  liveSecretKey: '',
   mode: 'test',
-  isConnected: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  isConnected: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  testerEmails: ['yassinebouomrine@gmail.com']
 };
-
-// Users allowed to use Test Mode
-const TEST_MODE_WHITELIST = ['yassinebouomrine@gmail.com'];
 
 // Load config from localStorage if available
 const loadConfig = (): StripeConfig => {
@@ -35,7 +30,10 @@ const loadConfig = (): StripeConfig => {
   try {
     const saved = localStorage.getItem('freshstl_stripe_config');
     if (saved) {
-      return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      // Ensure testerEmails exists if loading from old config
+      if (!parsed.testerEmails) parsed.testerEmails = DEFAULT_CONFIG.testerEmails;
+      return { ...DEFAULT_CONFIG, ...parsed };
     }
   } catch (e) {
     console.warn("Failed to load Stripe config", e);
@@ -59,18 +57,15 @@ let stripePromise: Promise<Stripe | null> | null = null;
 let lastPublicKey: string | null = null;
 
 // Get the active keys based on current mode
-// Get the active keys based on current mode
 const getActiveKeys = () => {
   const mode = getStripeMode();
   if (mode === 'live') {
     return {
-      publicKey: config.livePublicKey || config.publicKey || '',
-      secretKey: config.liveSecretKey || config.secretKey || ''
+      publicKey: config.livePublicKey || config.publicKey || ''
     };
   }
   return {
-    publicKey: config.testPublicKey || config.publicKey || '',
-    secretKey: config.testSecretKey || config.secretKey || ''
+    publicKey: config.testPublicKey || config.publicKey || ''
   };
 };
 
@@ -107,7 +102,9 @@ export const getStripeMode = () => {
   if (config.mode === 'test') {
     // Only allow whitelisted users to use Test Mode
     const user = auth?.currentUser;
-    if (user && user.email && TEST_MODE_WHITELIST.includes(user.email)) {
+    const whitelist = config.testerEmails || DEFAULT_CONFIG.testerEmails || [];
+
+    if (user && user.email && whitelist.includes(user.email)) {
       return 'test';
     }
     // Everyone else falls back to Live Mode
@@ -370,4 +367,18 @@ export const savePaymentMethod = async (userId: string, method: Omit<PaymentMeth
 export const deletePaymentMethod = async (userId: string, methodId: string): Promise<void> => {
   // Use Firebase persistence
   await firebaseService.removeUserPaymentMethod(userId, methodId);
+};
+
+export const deleteTestData = async () => {
+  const whitelist = config.testerEmails || [];
+  if (whitelist.length === 0) {
+    console.warn("No tester emails defined. Cannot delete test data.");
+    return;
+  }
+
+  console.log("Deleting test data for users:", whitelist);
+
+  // We will call a firebaseService method to handle the actual deletion
+  // as it requires access to collections and batch operations
+  await firebaseService.deleteDataForTestUsers(whitelist);
 };

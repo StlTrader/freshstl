@@ -50,7 +50,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onForgotPa
       onLoginSuccess();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Google sign in failed.");
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        setError("An account with this email already exists. Please sign in using your original method (e.g., Email/Password).");
+      } else {
+        setError(err.message || "Google sign in failed.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +68,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onForgotPa
       onLoginSuccess();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Facebook sign in failed.");
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        setError("An account with this email already exists. Please sign in using your original method (e.g., Email/Password).");
+      } else {
+        setError(err.message || "Facebook sign in failed.");
+      }
     } finally {
       setIsLoading(false);
     }

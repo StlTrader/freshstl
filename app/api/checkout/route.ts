@@ -6,19 +6,24 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { amount, currency, customerInfo, paymentMethodId, saveCard } = body;
 
-        // Initialize Stripe with Test Secret Key
-        // Note: In a real app, you might want to fetch this from Firestore or Secret Manager if not in env
-        // But for security, Env vars are best.
-        const stripe = new Stripe(process.env.STRIPE_TEST_SECRET_KEY || '', {
-            apiVersion: '2025-11-17.clover' as any, // Cast to any to avoid strict type checking if types update
-        });
+        // Determine mode and key
+        const mode = process.env.NEXT_PUBLIC_STRIPE_MODE || 'test';
+        const secretKey = mode === 'live'
+            ? process.env.STRIPE_SECRET_KEY
+            : process.env.STRIPE_TEST_SECRET_KEY;
 
-        if (!process.env.STRIPE_TEST_SECRET_KEY) {
+        if (!secretKey) {
+            console.error(`Stripe Secret Key is missing for mode: ${mode}`);
             return NextResponse.json(
-                { error: 'Stripe Test Secret Key is not configured on the server.' },
+                { error: 'Stripe configuration error on server.' },
                 { status: 500 }
             );
         }
+
+        // Initialize Stripe
+        const stripe = new Stripe(secretKey, {
+            apiVersion: '2023-10-16' as any, // Cast to any to avoid strict type checking
+        });
 
         // Prepare PaymentIntent parameters
         const params: Stripe.PaymentIntentCreateParams = {

@@ -5,6 +5,8 @@ import { User } from 'firebase/auth';
 import { Product, CartItem, Purchase, Order } from '../types';
 import * as firebaseService from '../services/firebaseService';
 
+import * as paymentService from '../services/paymentService';
+
 interface SystemStatus {
     isOnline: boolean;
     storageMode: string;
@@ -220,6 +222,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!user) return;
         const uid = user.uid;
         const totalAmount = items.reduce((sum, item) => sum + item.price, 0) - discount;
+        const isTest = paymentService.getStripeMode() === 'test';
 
         const purchaseRecords: Omit<Purchase, 'id'>[] = items.map(item => ({
             transactionId,
@@ -235,7 +238,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             amount: totalAmount,
             discountApplied: discount,
             items: items.map(i => ({ id: i.id, name: i.name, price: i.price, imageUrl: i.imageUrl })),
-            customerInfo: customerInfo
+            customerInfo: customerInfo,
+            isTest
         };
 
         await firebaseService.processSuccessfulCheckout(uid, orderData, purchaseRecords);
@@ -249,7 +253,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             paymentMethod: 'card',
             stripePaymentIntentId: transactionId,
             cardBrand: paymentMethod?.cardBrand || 'visa',
-            cardLast4: paymentMethod?.cardLast4 || '4242'
+            cardLast4: paymentMethod?.cardLast4 || '4242',
+            isTest
         };
 
         await firebaseService.savePayment(paymentData);

@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Tag,
   Database,
+  Loader2,
   Box,
   FileText,
   Ban,
@@ -37,7 +38,8 @@ import {
   Move,
   Shield,
   RefreshCw,
-  CreditCard
+  CreditCard,
+  Menu
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig } from '../types';
@@ -56,6 +58,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Subscribe to products for real-time updates (handling deletions/additions)
   useEffect(() => {
@@ -110,12 +113,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
             onClick={() => setActiveTab('users')}
           />
           <SidebarItem
-            icon={<DollarSign size={20} />}
-            label="Payments"
-            active={activeTab === 'payments'}
-            onClick={() => setActiveTab('payments')}
-          />
-          <SidebarItem
             icon={<Tag size={20} />}
             label="Categories"
             active={activeTab === 'settings'}
@@ -166,36 +163,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border z-50 flex justify-between px-6 py-3 pb-safe">
-        <button onClick={() => setActiveTab('dashboard')} className={`p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <LayoutDashboard size={24} />
-        </button>
-        <button onClick={() => setActiveTab('products')} className={`p-2 rounded-xl transition-all ${activeTab === 'products' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <Package size={24} />
-        </button>
-        <button onClick={() => setActiveTab('orders')} className={`p-2 rounded-xl transition-all ${activeTab === 'orders' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <ShoppingCart size={24} />
-        </button>
-        <button onClick={() => setActiveTab('users')} className={`p-2 rounded-xl transition-all ${activeTab === 'users' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <Users size={24} />
-        </button>
-        <button onClick={() => setActiveTab('payments')} className={`p-2 rounded-xl transition-all ${activeTab === 'payments' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <DollarSign size={24} />
-        </button>
-
-        <button onClick={() => setActiveTab('blog')} className={`p-2 rounded-xl transition-all ${activeTab === 'blog' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <BookOpen size={24} />
-        </button>
-        <button onClick={() => setActiveTab('hero')} className={`p-2 rounded-xl transition-all ${activeTab === 'hero' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <Sparkles size={24} />
-        </button>
-        <button onClick={() => setActiveTab('settings')} className={`p-2 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <Tag size={24} />
-        </button>
-        <button onClick={() => setActiveTab('payment_settings')} className={`p-2 rounded-xl transition-all ${activeTab === 'payment_settings' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <CreditCard size={24} />
-        </button>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border z-50 flex justify-around px-2 py-3 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <NavBtn icon={<LayoutDashboard size={22} />} label="Home" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+        <NavBtn icon={<Package size={22} />} label="Products" active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
+        <NavBtn icon={<ShoppingCart size={22} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
+        <NavBtn icon={<Menu size={22} />} label="Menu" active={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen(true)} />
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:hidden animate-in fade-in duration-200" onClick={() => setIsMobileMenuOpen(false)}>
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white dark:bg-dark-surface rounded-t-3xl p-6 pb-24 animate-in slide-in-from-bottom duration-300 border-t border-gray-200 dark:border-dark-border shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 px-2">Menu</h3>
+            <div className="grid grid-cols-4 gap-4">
+              <MenuBtn icon={<Users size={24} />} label="Users" active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} color="blue" />
+              <MenuBtn icon={<BookOpen size={24} />} label="Blog" active={activeTab === 'blog'} onClick={() => { setActiveTab('blog'); setIsMobileMenuOpen(false); }} color="pink" />
+              <MenuBtn icon={<Sparkles size={24} />} label="Hero" active={activeTab === 'hero'} onClick={() => { setActiveTab('hero'); setIsMobileMenuOpen(false); }} color="purple" />
+              <MenuBtn icon={<Tag size={24} />} label="Cats" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} color="orange" />
+              <MenuBtn icon={<CreditCard size={24} />} label="Payments" active={activeTab === 'payment_settings'} onClick={() => { setActiveTab('payment_settings'); setIsMobileMenuOpen(false); }} color="green" />
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full mt-8 flex items-center justify-center gap-2 p-4 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold"
+            >
+              <X size={20} /> Close Admin
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Header - Minimal */}
       <div className="md:hidden absolute top-4 right-4 z-50">
@@ -214,8 +213,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
           {activeTab === 'products' && <ProductsManager products={localProducts} />}
           {activeTab === 'orders' && <OrdersManager orders={orders} />}
           {activeTab === 'users' && <UsersManager orders={orders} />}
-          {activeTab === 'payments' && <PaymentsManager />}
-          {activeTab === 'settings' && <CategoriesManager />}
           {activeTab === 'payment_settings' && <PaymentSetting />}
 
           {activeTab === 'blog' && <BlogManager />}
@@ -292,7 +289,26 @@ const CategoriesManager = () => {
       </div>
 
       <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm transition-colors">
-        <div className="overflow-x-auto">
+        {/* Mobile List View */}
+        <div className="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
+          {categories.map((cat) => (
+            <div key={cat.id} className="p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-dark-text-primary">{cat.name}</h3>
+                <span className="text-xs text-gray-500 font-mono bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{cat.slug}</span>
+              </div>
+              <button
+                onClick={() => handleDelete(cat.id)}
+                className="p-2 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-dark-bg/50 text-gray-500 dark:text-dark-text-secondary text-sm uppercase">
               <tr>
@@ -351,6 +367,43 @@ const SidebarItem = ({ icon, label, active, onClick }: any) => (
     <span className="font-medium">{label}</span>
   </button>
 );
+
+const NavBtn = ({ icon, label, active, onClick }: any) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all w-16 ${active
+      ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20'
+      : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-bg/50'
+      }`}
+  >
+    {icon}
+    <span className="text-[10px] font-medium">{label}</span>
+  </button>
+);
+
+const MenuBtn = ({ icon, label, active, onClick, color = 'brand' }: any) => {
+  const colors: any = {
+    brand: 'bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400',
+    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    pink: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
+    purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+    orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+    green: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${active ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'hover:bg-gray-50 dark:hover:bg-dark-bg/50'
+        }`}
+    >
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${colors[color]}`}>
+        {icon}
+      </div>
+      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{label}</span>
+    </button>
+  );
+};
 
 const DashboardView = ({ products, orders }: { products: Product[], orders: Order[] }) => {
   const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
@@ -1015,7 +1068,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
 
   if (isEditing) {
     return (
-      <div className="max-w-2xl mx-auto bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm animate-in zoom-in-95 duration-200">
+      <div className="max-w-2xl mx-auto bg-white dark:bg-dark-surface p-4 md:p-8 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm animate-in zoom-in-95 duration-200">
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => { setIsEditing(false); setCurrentProduct({ tags: [] }); }}
@@ -1098,7 +1151,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
             <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Product Images</label>
 
             {/* Image Gallery Preview */}
-            <div className="grid grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               {existingImages.map((url, index) => (
                 <div
                   key={`existing-${index}`}
@@ -1172,9 +1225,9 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
             </div>
 
             <div className="flex flex-col gap-2 mt-2">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <p className="text-xs text-gray-500">Upload a new image to replace the current one.</p>
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-wrap gap-2 items-center">
                   <select
                     value={imageGenerationContext}
                     onChange={(e) => setImageGenerationContext(e.target.value)}
@@ -1319,7 +1372,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                 {/* Assets (formerly Categories) */}
                 <div className="bg-gray-50 dark:bg-dark-bg/50 p-4 rounded-xl border border-gray-200 dark:border-dark-border">
                   <h4 className="font-bold text-sm mb-3">Add New Asset</h4>
-                  <div className="flex gap-2 mb-3">
+                  <div className="flex flex-col md:flex-row gap-2 mb-3">
                     <input
                       type="text"
                       value={newBuilderCatName}
@@ -1375,7 +1428,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                       placeholder="Variation Name"
                       className="p-2 rounded-lg border border-gray-300 dark:border-dark-border bg-white dark:bg-dark-surface text-sm"
                     />
-                    <div className="col-span-2 grid grid-cols-2 gap-4">
+                    <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">Model (.glb)</label>
                         <input type="file" accept=".glb,.gltf" onChange={e => setBuilderModelFile(e.target.files?.[0] || null)} className="w-full text-sm" />
@@ -1407,34 +1460,36 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                           <h4 className="font-bold text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300">{cat.name}</h4>
                           <span className="text-xs text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">{catAssets.length} Variations</span>
                         </div>
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-gray-50 dark:bg-dark-bg/30 text-gray-500 dark:text-dark-text-secondary uppercase text-xs">
-                            <tr>
-                              <th className="px-4 py-2 font-semibold">Variation Number</th>
-                              <th className="px-4 py-2 font-semibold">Preview</th>
-                              <th className="px-4 py-2 text-right font-semibold">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 dark:divide-dark-border">
-                            {catAssets.map((asset, index) => (
-                              <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-dark-bg/30">
-                                <td className="px-4 py-2 font-medium text-gray-900 dark:text-dark-text-primary">
-                                  {index + 1}
-                                </td>
-                                <td className="px-4 py-2">
-                                  {asset.thumbnailUrl ? (
-                                    <img src={asset.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover bg-gray-100" />
-                                  ) : (
-                                    <span className="text-xs text-gray-400">No image</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-2 text-right">
-                                  <button onClick={() => handleDeleteBuilderAsset(asset.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
-                                </td>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 dark:bg-dark-bg/30 text-gray-500 dark:text-dark-text-secondary uppercase text-xs">
+                              <tr>
+                                <th className="px-4 py-2 font-semibold">Variation Number</th>
+                                <th className="px-4 py-2 font-semibold">Preview</th>
+                                <th className="px-4 py-2 text-right font-semibold">Actions</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-dark-border">
+                              {catAssets.map((asset, index) => (
+                                <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-dark-bg/30">
+                                  <td className="px-4 py-2 font-medium text-gray-900 dark:text-dark-text-primary">
+                                    {index + 1}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    {asset.thumbnailUrl ? (
+                                      <img src={asset.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover bg-gray-100" />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">No image</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2 text-right">
+                                    <button onClick={() => handleDeleteBuilderAsset(asset.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     );
                   })}
@@ -1514,7 +1569,56 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
       </div>
 
       <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm transition-colors">
-        <div className="overflow-x-auto">
+        {/* Mobile List View */}
+        <div className="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
+          {products.map((product) => (
+            <div key={product.id} className="p-4 flex gap-4 items-start">
+              <div className="relative shrink-0">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt="" className="w-20 h-20 rounded-lg object-cover bg-gray-100" />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                    <Package size={24} />
+                  </div>
+                )}
+                {product.status === 'draft' && (
+                  <span className="absolute -top-2 -right-2 bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-200 shadow-sm">Draft</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-gray-900 dark:text-dark-text-primary truncate pr-2">{product.name}</h3>
+                  <div className="flex gap-1">
+                    <button onClick={() => {
+                      setCurrentProduct(product);
+                      setExistingImages(product.images || (product.imageUrl ? [product.imageUrl] : []));
+                      setImageFiles([]);
+                      setIsEditing(true);
+                    }}
+                      className="p-1.5 text-blue-600 bg-blue-50 rounded-lg"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(product.id)} className="p-1.5 text-red-600 bg-red-50 rounded-lg">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mb-1">{product.description}</p>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="font-mono font-bold text-gray-900 dark:text-dark-text-primary">${(product.price / 100).toFixed(2)}</span>
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">{product.category}</span>
+                  <div className="flex items-center gap-1 text-xs text-emerald-600 ml-auto">
+                    <TrendingUp size={12} /> {product.sales || 0}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-dark-bg/50 text-gray-500 dark:text-dark-text-secondary text-sm uppercase">
               <tr>
@@ -1663,7 +1767,65 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
       </div>
 
       <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm transition-colors">
-        <div className="overflow-x-auto">
+        {/* Mobile List View */}
+        <div className="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
+          {filteredOrders.map((order) => (
+            <div key={order.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-900 dark:text-dark-text-primary">#{order.transactionId ? order.transactionId.slice(-6) : 'N/A'}</span>
+                    {order.isTest && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-orange-100 text-orange-700">TEST</span>}
+                  </div>
+                  <div className="text-xs text-gray-500">{order.date ? order.date.toDate().toLocaleString() : 'N/A'}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
+                  <select
+                    value={order.status}
+                    onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
+                    className={`mt-1 text-[10px] font-bold uppercase px-2 py-1 rounded-full border appearance-none ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                      order.status === 'refunded' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                        order.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200' :
+                          'bg-blue-100 text-blue-700 border-blue-200'
+                      }`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="refunded">Refunded</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-dark-bg/50 rounded-lg p-3 text-sm">
+                <div className="font-medium text-gray-900 dark:text-dark-text-primary mb-1">{order.customerInfo?.fullName || 'Unknown User'}</div>
+                <div className="text-gray-500 text-xs">{order.customerInfo?.email}</div>
+              </div>
+
+              <div className="space-y-1">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-400"></div>
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+
+              {order.status === 'completed' && (
+                <button
+                  onClick={() => handleRefund(order)}
+                  className="w-full py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  Refund Order
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-dark-bg/50 text-gray-500 dark:text-dark-text-secondary text-sm uppercase">
               <tr>
@@ -1671,6 +1833,7 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
                 <th className="px-6 py-4 font-semibold tracking-wider">Customer</th>
                 <th className="px-6 py-4 font-semibold tracking-wider">Items</th>
                 <th className="px-6 py-4 font-semibold tracking-wider">Total</th>
+                <th className="px-6 py-4 font-semibold tracking-wider">Payment ID</th>
                 <th className="px-6 py-4 font-semibold tracking-wider">Status</th>
                 <th className="px-6 py-4 font-semibold tracking-wider">Actions</th>
               </tr>
@@ -1716,6 +1879,14 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-bold text-gray-900 dark:text-dark-text-primary font-mono">${(order.amount / 100).toFixed(2)}</td>
+                  <td className="px-6 py-4 font-mono text-xs text-gray-500 select-all">
+                    {order.paymentId || 'N/A'}
+                    {order.isTest && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-orange-100 text-orange-700 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800">
+                        TEST
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="relative">
                       <select
@@ -1768,105 +1939,7 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
 
 
 
-const PaymentsManager = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const unsubscribe = firebaseService.subscribeToPayments((data) => {
-      setPayments(data);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const filteredPayments = payments.filter(p =>
-    p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.userId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary mb-6">Payment History</h1>
-
-      <div className="bg-white dark:bg-dark-surface p-4 rounded-2xl border border-gray-200 dark:border-dark-border mb-6 shadow-sm">
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <input
-            type="text"
-            placeholder="Search by Payment ID, Order ID, or User ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl pl-12 pr-4 py-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-          />
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm transition-colors">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 dark:bg-dark-bg/50 text-gray-500 dark:text-dark-text-secondary text-sm uppercase">
-              <tr>
-                <th className="px-6 py-4 font-semibold tracking-wider">Date</th>
-                <th className="px-6 py-4 font-semibold tracking-wider">Payment ID</th>
-                <th className="px-6 py-4 font-semibold tracking-wider">Order ID</th>
-                <th className="px-6 py-4 font-semibold tracking-wider">Amount</th>
-                <th className="px-6 py-4 font-semibold tracking-wider">Method</th>
-                <th className="px-6 py-4 font-semibold tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-dark-border">
-              {filteredPayments.map((payment, index) => (
-                <tr
-                  key={payment.id}
-                  className="hover:bg-gray-50 dark:hover:bg-dark-bg/30 transition-colors animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <td className="px-6 py-4 text-gray-700 dark:text-dark-text-secondary">
-                    <div className="font-medium">
-                      {payment.createdAt ? (payment.createdAt as any).toDate ? (payment.createdAt as any).toDate().toLocaleDateString() : new Date(payment.createdAt as any).toLocaleDateString() : 'N/A'}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {payment.createdAt ? (payment.createdAt as any).toDate ? (payment.createdAt as any).toDate().toLocaleTimeString() : new Date(payment.createdAt as any).toLocaleTimeString() : ''}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{payment.id}</td>
-                  <td className="px-6 py-4 font-mono text-xs text-gray-500">{payment.orderId || 'N/A'}</td>
-                  <td className="px-6 py-4 font-bold text-gray-900 dark:text-dark-text-primary font-mono">${(payment.amount / 100).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-5 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-[10px] font-bold uppercase text-gray-500">
-                        {payment.cardBrand || 'Card'}
-                      </div>
-                      <span>â€¢â€¢â€¢â€¢ {payment.cardLast4}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase border ${payment.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
-                      payment.status === 'refunded' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800' :
-                        'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
-                      }`}>
-                      {payment.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredPayments.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-full mb-4">
-              <DollarSign size={32} className="opacity-50" />
-            </div>
-            <p className="text-lg font-medium">No payments found</p>
-            <p className="text-sm opacity-70">Try adjusting your search terms.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const UsersManager = ({ orders }: { orders: Order[] }) => {
   const [users, setUsers] = useState<any[]>([]);
@@ -1902,8 +1975,14 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
 
   const handleDeleteUser = async (userId: string) => {
     if (confirm('Are you sure you want to delete this user? This cannot be undone.')) {
-      await firebaseService.deleteUser(userId);
-      if (selectedUser?.id === userId) setIsModalOpen(false);
+      try {
+        await firebaseService.deleteUser(userId);
+        if (selectedUser?.id === userId) setIsModalOpen(false);
+        alert('User deleted successfully.');
+      } catch (error: any) {
+        console.error("Failed to delete user:", error);
+        alert(`Failed to delete user: ${error.message}`);
+      }
     }
   };
 
@@ -1965,7 +2044,49 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
 
       {/* Users Table */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm transition-colors">
-        <div className="overflow-x-auto">
+        {/* Mobile List View */}
+        <div className="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
+          {filteredUsers.map((user) => {
+            const userOrders = orders.filter(o => o.userId === user.id);
+            const totalSpent = userOrders.reduce((sum, o) => sum + o.amount, 0);
+            return (
+              <div key={user.id} className="p-4 flex gap-4 items-start">
+                <div className="w-12 h-12 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg shrink-0">
+                  {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-gray-900 dark:text-dark-text-primary truncate">{user.displayName || 'Unknown'}</h3>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
+                      {user.role || 'Cust'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate mb-2">{user.email}</p>
+
+                  <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 mb-3">
+                    <span className="flex items-center gap-1"><ShoppingCart size={12} /> {userOrders.length} Orders</span>
+                    <span className="font-bold text-emerald-600">${(totalSpent / 100).toFixed(2)}</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => handleViewUser(user)} className="flex-1 py-1.5 text-xs font-bold bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300">
+                      Details
+                    </button>
+                    <button onClick={() => handleBlockUser(user)} className={`px-3 py-1.5 rounded-lg ${user.isBlocked ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      <Ban size={14} />
+                    </button>
+                    <button onClick={() => handleDeleteUser(user.id)} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50/50 dark:bg-dark-bg/50 backdrop-blur-sm text-gray-500 dark:text-dark-text-secondary text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
               <tr>
@@ -2007,6 +2128,11 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                         }`}>
                         {user.role || 'Customer'}
                       </span>
+                      {user.email === 'yassinebouomrine@gmail.com' && (
+                        <span className="ml-2 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800">
+                          Tester
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border ${user.isBlocked
@@ -2072,317 +2198,354 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
       </div>
 
       {/* Add User Modal */}
-      {isAddingUser && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col p-8 animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-dark-border relative">
-            <button
-              onClick={() => setIsAddingUser(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-            >
-              <X size={20} />
-            </button>
-            <div className="mb-6">
-              <div className="w-12 h-12 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4">
-                <UserPlus size={24} />
+      {
+        isAddingUser && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col p-8 animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-dark-border relative">
+              <button
+                onClick={() => setIsAddingUser(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="mb-6">
+                <div className="w-12 h-12 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4">
+                  <UserPlus size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">Add New User</h2>
+                <p className="text-gray-500 dark:text-dark-text-secondary text-sm mt-1">Create a new account manually.</p>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">Add New User</h2>
-              <p className="text-gray-500 dark:text-dark-text-secondary text-sm mt-1">Create a new account manually.</p>
-            </div>
 
-            <form onSubmit={handleAddUser} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Display Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newUser.displayName}
-                  onChange={e => setNewUser({ ...newUser, displayName: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={newUser.email}
-                  onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Role</label>
-                <div className="relative">
-                  <select
-                    value={newUser.role}
-                    onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none appearance-none transition-all"
-                  >
-                    <option value="customer">Customer</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+              <form onSubmit={handleAddUser} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Display Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.displayName}
+                    onChange={e => setNewUser({ ...newUser, displayName: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={newUser.email}
+                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-1.5">Role</label>
+                  <div className="relative">
+                    <select
+                      value={newUser.role}
+                      onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl p-3.5 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none appearance-none transition-all"
+                    >
+                      <option value="customer">Customer</option>
+                      <option value="tester">Tester</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-8 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddingUser(false)}
-                  className="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm"
-                >
-                  Create User
-                </button>
-              </div>
-            </form>
+                <div className="flex justify-end gap-3 mt-8 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingUser(false)}
+                    className="px-5 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm"
+                  >
+                    Create User
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* User Details Modal */}
-      {isModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-dark-surface rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-dark-border relative">
-            <div className="p-6 border-b border-gray-200 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-3">
-                <User size={24} className="text-brand-600 dark:text-brand-400" />
-                User Details
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500 dark:text-dark-text-secondary"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8 space-y-8">
-              {/* User Info */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-300 font-bold text-4xl shadow-inner border-4 border-white dark:border-gray-700 shrink-0">
-                  {selectedUser.displayName ? selectedUser.displayName.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div className="text-center sm:text-left flex-1 w-full">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
-                    <h3 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary">{selectedUser.displayName || 'Unknown User'}</h3>
-                    <div className="flex gap-2 justify-center sm:justify-start flex-wrap">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${selectedUser.role === 'admin'
-                        ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800'
-                        : 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'}`}>
-                        {selectedUser.role || 'Customer'}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${selectedUser.isBlocked
-                        ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
-                        : 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'}`}>
-                        {selectedUser.isBlocked ? 'Blocked' : 'Active'}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gray-500 dark:text-dark-text-secondary text-lg mb-2">{selectedUser.email}</p>
-                  <p className="text-xs text-gray-400 font-mono bg-gray-100 dark:bg-dark-bg px-3 py-1.5 rounded-lg w-fit mx-auto sm:mx-0 select-all border border-gray-200 dark:border-dark-border">
-                    ID: {selectedUser.id}
-                  </p>
-
-                  <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
-                    <button
-                      onClick={() => handleBlockUser(selectedUser)}
-                      className={`px-5 py-2.5 rounded-xl font-bold text-white transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 ${selectedUser.isBlocked
-                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/30'
-                        : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/30'}`}
-                    >
-                      <Ban size={18} /> {selectedUser.isBlocked ? 'Unblock User' : 'Block User'}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(selectedUser.id)}
-                      className="px-5 py-2.5 rounded-xl font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all flex items-center gap-2"
-                    >
-                      <Trash2 size={18} /> Delete User
-                    </button>
-                  </div>
-                </div>
+      {
+        isModalOpen && selectedUser && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-dark-surface rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-dark-border relative">
+              <div className="p-6 border-b border-gray-200 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm sticky top-0 z-10">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-3">
+                  <User size={24} className="text-brand-600 dark:text-brand-400" />
+                  User Details
+                </h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500 dark:text-dark-text-secondary"
+                >
+                  <X size={24} />
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Live Cart */}
-                <div className="bg-gray-50 dark:bg-dark-bg/30 rounded-2xl p-6 border border-gray-200 dark:border-dark-border h-full">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
-                    <div className="p-2 bg-brand-100 dark:bg-brand-900/50 rounded-lg text-brand-600 dark:text-brand-400">
-                      <ShoppingCart size={20} />
+              <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                {/* User Info */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-300 font-bold text-4xl shadow-inner border-4 border-white dark:border-gray-700 shrink-0">
+                    {selectedUser.displayName ? selectedUser.displayName.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div className="text-center sm:text-left flex-1 w-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                      <h3 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary">{selectedUser.displayName || 'Unknown User'}</h3>
+                      <div className="flex gap-2 justify-center sm:justify-start flex-wrap items-center">
+                        <div className="relative group/role">
+                          <button
+                            className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border flex items-center gap-1 cursor-pointer transition-all hover:scale-105 ${selectedUser.role === 'admin'
+                              ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800'
+                              : selectedUser.role === 'tester'
+                                ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800'
+                                : 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'}`}
+                          >
+                            {selectedUser.role || 'Customer'}
+                            <Edit size={10} className="opacity-50" />
+                          </button>
+
+                          {/* Role Dropdown */}
+                          <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-dark-surface rounded-lg shadow-xl border border-gray-200 dark:border-dark-border overflow-hidden opacity-0 invisible group-hover/role:opacity-100 group-hover/role:visible transition-all z-20">
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Change role to Customer?`)) {
+                                  try {
+                                    await firebaseService.updateUserRole(selectedUser.id, 'customer');
+                                    setSelectedUser({ ...selectedUser, role: 'customer' });
+                                    alert('Role updated to Customer');
+                                  } catch (e: any) { alert(e.message); }
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-gray-700 dark:text-dark-text-primary"
+                            >
+                              Customer
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Change role to Tester?`)) {
+                                  try {
+                                    await firebaseService.updateUserRole(selectedUser.id, 'tester');
+                                    setSelectedUser({ ...selectedUser, role: 'tester' });
+                                    alert('Role updated to Tester');
+                                  } catch (e: any) { alert(e.message); }
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-indigo-600 dark:text-indigo-400 font-medium"
+                            >
+                              Tester
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Change role to Admin?`)) {
+                                  try {
+                                    await firebaseService.updateUserRole(selectedUser.id, 'admin');
+                                    setSelectedUser({ ...selectedUser, role: 'admin' });
+                                    alert('Role updated to Admin');
+                                  } catch (e: any) { alert(e.message); }
+                                }
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-purple-600 dark:text-purple-400 font-medium"
+                            >
+                              Admin
+                            </button>
+                          </div>
+                        </div>
+
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${selectedUser.isBlocked
+                          ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
+                          : 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'}`}>
+                          {selectedUser.isBlocked ? 'Blocked' : 'Active'}
+                        </span>
+                      </div>
                     </div>
-                    Live Cart ({userCart.length})
+                    <p className="text-gray-500 dark:text-dark-text-secondary text-lg mb-2">{selectedUser.email}</p>
+                    <p className="text-xs text-gray-400 font-mono bg-gray-100 dark:bg-dark-bg px-3 py-1.5 rounded-lg w-fit mx-auto sm:mx-0 select-all border border-gray-200 dark:border-dark-border">
+                      ID: {selectedUser.id}
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
+                      <button
+                        onClick={() => handleBlockUser(selectedUser)}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-white transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 ${selectedUser.isBlocked
+                          ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/30'
+                          : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/30'}`}
+                      >
+                        <Ban size={18} /> {selectedUser.isBlocked ? 'Unblock User' : 'Block User'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(selectedUser.id)}
+                        className="px-5 py-2.5 rounded-xl font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all flex items-center gap-2"
+                      >
+                        <Trash2 size={18} /> Delete User
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Customer Details Section */}
+                <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
+                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
+                      <User size={20} />
+                    </div>
+                    Customer Information
                   </h3>
-                  {userCart.length > 0 ? (
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                      {userCart.map((item, idx) => (
-                        <div key={idx} className="flex gap-4 items-center bg-white dark:bg-dark-surface p-3 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow">
-                          <NextLink href={`/3d-print/${item.slug}`} target="_blank" className="block shrink-0 group">
-                            {item.imageUrl ? (
-                              <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
-                            ) : (
-                              <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
-                                <Package size={20} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Full Name</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">{selectedUser.fullName || selectedUser.displayName || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">{selectedUser.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">{selectedUser.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Address</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">{selectedUser.address || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">City / Zip</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">
+                        {selectedUser.city ? `${selectedUser.city}, ` : ''}{selectedUser.zipCode || 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Country</label>
+                      <p className="font-medium text-gray-900 dark:text-dark-text-primary">{selectedUser.country || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Live Cart */}
+                  <div className="bg-gray-50 dark:bg-dark-bg/30 rounded-2xl p-6 border border-gray-200 dark:border-dark-border h-full">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
+                      <div className="p-2 bg-brand-100 dark:bg-brand-900/50 rounded-lg text-brand-600 dark:text-brand-400">
+                        <ShoppingCart size={20} />
+                      </div>
+                      Live Cart ({userCart.length})
+                    </h3>
+                    {userCart.length > 0 ? (
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {userCart.map((item, idx) => (
+                          <div key={idx} className="flex gap-4 items-center bg-white dark:bg-dark-surface p-3 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow">
+                            <NextLink href={`/3d-print/${item.slug}`} target="_blank" className="block shrink-0 group">
+                              {item.imageUrl ? (
+                                <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
+                              ) : (
+                                <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
+                                  <Package size={20} />
+                                </div>
+                              )}
+                            </NextLink>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-gray-900 dark:text-dark-text-primary truncate">{item.name}</div>
+                              <div className="text-sm font-medium text-brand-600 dark:text-brand-400">${(item.price / 100).toFixed(2)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-dark-border">
+                        <ShoppingCart size={40} className="opacity-20 mb-3" />
+                        <span className="text-sm font-medium">Cart is empty</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Order History */}
+                  <div className="bg-gray-50 dark:bg-dark-bg/30 rounded-2xl p-6 border border-gray-200 dark:border-dark-border h-full">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400">
+                        <FileText size={20} />
+                      </div>
+                      Order History
+                    </h3>
+                    {orders.filter(o => o.userId === selectedUser.id).length > 0 ? (
+                      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {orders.filter(o => o.userId === selectedUser.id).map(order => (
+                          <div key={order.id} className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2 group">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                                  #{order.transactionId ? order.transactionId.slice(-8) : order.id.slice(-8)}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-0.5">{order.date ? new Date(order.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                               </div>
-                            )}
-                          </NextLink>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 dark:text-dark-text-primary truncate">{item.name}</div>
-                            <div className="text-sm font-medium text-brand-600 dark:text-brand-400">${(item.price / 100).toFixed(2)}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-dark-border">
-                      <ShoppingCart size={40} className="opacity-20 mb-3" />
-                      <span className="text-sm font-medium">Cart is empty</span>
-                    </div>
-                  )}
-                </div>
+                              <div className="text-right">
+                                <div className="font-bold text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
+                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mt-1 inline-block ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                  }`}>
+                                  {order.status}
+                                </span>
+                              </div>
+                            </div>
 
-                {/* Order History */}
-                <div className="bg-gray-50 dark:bg-dark-bg/30 rounded-2xl p-6 border border-gray-200 dark:border-dark-border h-full">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400">
-                      <FileText size={20} />
-                    </div>
-                    Recent Orders
-                  </h3>
-                  {orders.filter(o => o.userId === selectedUser.id).length > 0 ? (
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                      {orders.filter(o => o.userId === selectedUser.id).slice(0, 5).map(order => (
-                        <div key={order.id} className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow flex justify-between items-center group">
-                          <div>
-                            <div className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">#{order.transactionId.slice(-8)}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{order.date ? new Date(order.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
+                            {/* Payment Details */}
+                            <div className="pt-2 mt-1 border-t border-gray-100 dark:border-gray-800 text-xs flex flex-col gap-1">
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Payment ID:</span>
+                                <span className="font-mono text-gray-700 dark:text-gray-300 select-all">{order.paymentId || 'N/A'}</span>
+                              </div>
+                              {order.transactionId && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Transaction ID:</span>
+                                  <span className="font-mono text-gray-700 dark:text-gray-300 select-all">{order.transactionId}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
-                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mt-1 inline-block ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                              }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-dark-border">
-                      <FileText size={40} className="opacity-20 mb-3" />
-                      <span className="text-sm font-medium">No orders placed yet</span>
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-dark-border">
+                        <FileText size={40} className="opacity-20 mb-3" />
+                        <span className="text-sm font-medium">No orders placed yet</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6 border-t border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg/50 flex justify-end rounded-b-3xl">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium shadow-sm"
-              >
-                Close
-              </button>
+              <div className="p-6 border-t border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-bg/50 flex justify-end rounded-b-3xl">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2.5 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium shadow-sm"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-
-  );
-};
-
-// Database Management Buttons
-const SeedDatabaseButton = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const handleSeed = async () => {
-    setIsLoading(true);
-    setResult(null);
-    const res = await firebaseService.seedDatabase();
-    setResult(res);
-    setIsLoading(false);
-  };
-
-  return (
-    <div className="flex-1">
-      <button
-        onClick={handleSeed}
-        disabled={isLoading}
-        className="w-full bg-green-600 hover:bg-green-500 disabled:bg-green-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-all font-medium"
-      >
-        {isLoading ? (
-          <span className="flex items-center gap-2"><span className="animate-spin">â³</span> Seeding...</span>
-        ) : (
-          <span className="flex items-center gap-2"><Plus size={18} /> Seed Database</span>
-        )}
-      </button>
-      {result && (
-        <p className={`mt-2 text-sm ${result.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {result.message}
-        </p>
-      )}
+        )
+      }
     </div>
   );
 };
 
-const ClearDatabaseButton = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [confirm, setConfirm] = useState(false);
 
-  const handleClear = async () => {
-    if (!confirm) {
-      setConfirm(true);
-      return;
-    }
-    setIsLoading(true);
-    setResult(null);
-    const res = await firebaseService.clearDatabase();
-    setResult(res);
-    setIsLoading(false);
-    setConfirm(false);
-  };
-
-  return (
-    <div className="flex-1">
-      <button
-        onClick={handleClear}
-        disabled={isLoading}
-        className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-all font-medium ${confirm
-          ? 'bg-red-600 hover:bg-red-500 text-white'
-          : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-dark-text-secondary'
-          }`}
-      >
-        {isLoading ? (
-          <span className="flex items-center gap-2"><span className="animate-spin">â³</span> Clearing...</span>
-        ) : confirm ? (
-          <span className="flex items-center gap-2"><AlertCircle size={18} /> Confirm Clear?</span>
-        ) : (
-          <span className="flex items-center gap-2"><Trash2 size={18} /> Clear Database</span>
-        )}
-      </button>
-      {result && (
-        <p className={`mt-2 text-sm ${result.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {result.message}
-        </p>
-      )}
-    </div>
-  );
-};
 
 const PaymentSetting = () => {
   const [config, setConfig] = useState(paymentService.getStripeConfig());
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const status = firebaseService.getSystemStatus();
 
   useEffect(() => {
@@ -2412,7 +2575,7 @@ const PaymentSetting = () => {
         <div>
           <h3 className="font-bold text-blue-800 dark:text-blue-300">Access Restricted</h3>
           <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-            Test Mode is currently restricted to <strong>yassinebouomrine@gmail.com</strong>.
+            Test Mode is currently restricted to <strong>{config.testerEmails?.join(', ') || 'yassinebouomrine@gmail.com'}</strong>.
             All other users will process payments in Live Mode regardless of the setting below.
           </p>
         </div>
@@ -2451,22 +2614,7 @@ const PaymentSetting = () => {
         )}
       </div>
 
-      {/* Database Management Section */}
-      <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 border border-gray-200 dark:border-dark-border mb-8 relative overflow-hidden shadow-sm transition-colors">
-        <div className="absolute top-0 right-0 p-4 opacity-5">
-          <Box size={120} />
-        </div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2 mb-4 relative z-10">
-          Database Management
-        </h2>
-        <p className="text-gray-500 dark:text-dark-text-secondary text-sm mb-6">
-          Populate your store with sample products or clear existing data.
-        </p>
-        <div className="flex gap-4 relative z-10">
-          <SeedDatabaseButton />
-          <ClearDatabaseButton />
-        </div>
-      </div>
+
 
       {/* Stripe Connection Section */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 border border-gray-200 dark:border-dark-border mb-8 relative overflow-hidden shadow-sm transition-colors">
@@ -2572,13 +2720,10 @@ const PaymentSetting = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Test Secret Key</label>
-                  <input
-                    type="password"
-                    value={config.testSecretKey || ''}
-                    onChange={(e) => setConfig({ ...config, testSecretKey: e.target.value })}
-                    placeholder="sk_test_..."
-                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
-                  />
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-dark-border rounded-lg p-3 text-gray-500 dark:text-gray-500 font-mono text-sm flex items-center gap-2">
+                    <CheckCircle size={14} className="text-green-500" />
+                    Configured via Environment Variables
+                  </div>
                 </div>
               </div>
             </div>
@@ -2605,13 +2750,10 @@ const PaymentSetting = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Live Secret Key</label>
-                  <input
-                    type="password"
-                    value={config.liveSecretKey || ''}
-                    onChange={(e) => setConfig({ ...config, liveSecretKey: e.target.value })}
-                    placeholder="sk_live_..."
-                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                  />
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-dark-border rounded-lg p-3 text-gray-500 dark:text-gray-500 font-mono text-sm flex items-center gap-2">
+                    <CheckCircle size={14} className="text-green-500" />
+                    Configured via Environment Variables
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-red-600 dark:text-red-400 mt-3 flex items-center gap-1">
@@ -2622,62 +2764,43 @@ const PaymentSetting = () => {
         )}
       </div>
 
-      {/* Simulation Controls */}
-      <div className="bg-white dark:bg-dark-surface rounded-xl p-8 border border-gray-200 dark:border-dark-border space-y-6 shadow-sm transition-colors">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-4">Simulation Parameters</h2>
-        <div>
-          <label className="block text-gray-700 dark:text-dark-text-secondary font-medium mb-2">Simulated Failure Rate (0 - 1)</label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={config.failureRate}
-              onChange={(e) => setConfig({ ...config, failureRate: parseFloat(e.target.value) })}
-              className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
-            />
-            <span className="bg-gray-100 dark:bg-dark-bg px-3 py-1 rounded text-gray-900 dark:text-dark-text-primary font-mono w-16 text-center border border-gray-200 dark:border-dark-border">
-              {(config.failureRate * 100).toFixed(0)}%
-            </span>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Probability that the mock payment API will return an error.</p>
-        </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 dark:text-dark-text-secondary font-medium mb-2">Min Delay (ms)</label>
-            <input
-              type="number"
-              value={config.minDelay}
-              onChange={(e) => setConfig({ ...config, minDelay: parseInt(e.target.value) })}
-              className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 dark:text-dark-text-secondary font-medium mb-2">Max Delay (ms)</label>
-            <input
-              type="number"
-              value={config.maxDelay}
-              onChange={(e) => setConfig({ ...config, maxDelay: parseInt(e.target.value) })}
-              className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
-            />
-          </div>
-        </div>
 
-        <div className="pt-4 flex items-center justify-between border-t border-gray-200 dark:border-dark-border mt-6">
-          <p className="text-sm text-yellow-600 dark:text-yellow-500/80">
-            Changes affect all subsequent checkout attempts in this session.
-          </p>
-          <button
-            onClick={handleSave}
-            className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-brand-500/30 dark:shadow-brand-900/50"
-          >
-            {saved ? <span className="flex items-center gap-2"><CheckCircle size={20} /> Saved</span> : <span className="flex items-center gap-2"><Save size={20} /> Save Settings</span>}
-          </button>
+      {/* Database Management */}
+      <div className="bg-white dark:bg-dark-surface rounded-xl p-8 border border-gray-200 dark:border-dark-border space-y-6 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-4">Database Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30">
+            <h3 className="font-medium text-red-800 dark:text-red-400 mb-2 flex items-center gap-2">
+              <Trash2 size={18} /> Delete Test Data
+            </h3>
+            <p className="text-sm text-red-600 dark:text-red-400/80 mb-4">
+              Removes all orders and payments created in Test Mode. This checks against your Stripe Test account.
+            </p>
+            <button
+              onClick={async () => {
+                if (!confirm('Are you sure you want to delete all test data? This cannot be undone.')) return;
+                setDeleting(true);
+                try {
+                  await paymentService.deleteTestData();
+                  alert('Test data deleted successfully.');
+                } catch (e: any) {
+                  console.error(e);
+                  alert('Failed to delete test data: ' + e.message);
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              disabled={deleting}
+              className="w-full bg-white dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+              {deleting ? 'Deleting...' : 'Delete Test Data'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
