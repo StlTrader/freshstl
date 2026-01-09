@@ -19,6 +19,8 @@ env:
     value: test
   - variable: FIREBASE_PROJECT_ID
     value: freshstlstore-99511217-ca510
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
 secrets:
   - variable: GEMINI_API_KEY
     secret: GEMINI_API_KEY
