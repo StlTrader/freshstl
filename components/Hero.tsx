@@ -4,6 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowRight, Box, ShieldCheck, Zap, Star } from 'lucide-react';
 import { Product, HeroConfig } from '../types';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useStore } from '../contexts/StoreContext';
+import { getStripeConfig } from '../services/paymentService';
 
 interface HeroProps {
     products: Product[];
@@ -11,8 +14,21 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ products, config }) => {
+    const { user } = useStore();
     const layout = config?.layout || 'standard';
     const effect = config?.visualEffect || 'none';
+
+    // Filter Drafts
+    const filteredProducts = products.filter(p => {
+        if (p.status === 'draft') {
+            const config = getStripeConfig();
+            const testerEmails = config.testerEmails || [];
+            const isAdmin = user?.email === 'stltraderltd@gmail.com';
+            const isTester = user?.email && testerEmails.includes(user.email);
+            return isAdmin || isTester;
+        }
+        return true;
+    });
 
     // Parallax State
     const [scrollY, setScrollY] = useState(0);
@@ -139,10 +155,13 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
 
     const ProductCard = ({ product, index }: { product: Product, index: number }) => (
         <TiltCard className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-border group">
-            <img
+            <Image
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                fill
+                priority={index === 0}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transform group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                 <div>
@@ -162,7 +181,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
                     <Content center />
                     <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {products.slice(0, 4).map((p, i) => (
+                        {filteredProducts.slice(0, 4).map((p, i) => (
                             <ProductCard key={p.id} product={p} index={i} />
                         ))}
                     </div>
@@ -179,7 +198,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <Content />
                         <div className="grid grid-cols-2 gap-4">
-                            {products.slice(0, 4).map((p, i) => (
+                            {filteredProducts.slice(0, 4).map((p, i) => (
                                 <div key={p.id} className={i % 2 === 1 ? 'mt-12' : ''}>
                                     <ProductCard product={p} index={i} />
                                 </div>
@@ -201,7 +220,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
                             <Content />
                         </div>
                         <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-                            {products.slice(0, 4).map((p, i) => (
+                            {filteredProducts.slice(0, 4).map((p, i) => (
                                 <ProductCard key={p.id} product={p} index={i} />
                             ))}
                         </div>
@@ -218,12 +237,19 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row items-center">
                         <div className="w-full lg:w-3/5 relative z-10">
-                            {products[0] && (
-                                <TiltCard className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-                                    <img src={products[0].imageUrl} alt={products[0].name} className="w-full h-full object-cover" />
+                            {filteredProducts[0] && (
+                                <TiltCard className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl relative">
+                                    <Image
+                                        src={filteredProducts[0].imageUrl}
+                                        alt={filteredProducts[0].name}
+                                        fill
+                                        priority
+                                        sizes="(max-width: 1024px) 100vw, 60vw"
+                                        className="object-cover"
+                                    />
                                     <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
-                                        <h3 className="text-3xl font-bold text-white">{products[0].name}</h3>
-                                        <p className="text-brand-300 text-xl font-medium mt-2">${(products[0].price / 100).toFixed(2)}</p>
+                                        <h3 className="text-3xl font-bold text-white">{filteredProducts[0].name}</h3>
+                                        <p className="text-brand-300 text-xl font-medium mt-2">${(filteredProducts[0].price / 100).toFixed(2)}</p>
                                     </div>
                                 </TiltCard>
                             )}
@@ -248,15 +274,21 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
                         <div className="relative w-full aspect-square max-w-[320px] sm:max-w-lg mx-auto">
                             <div className={`absolute inset-0 bg-gradient-to-tr from-brand-500/10 to-blue-500/10 rounded-full blur-3xl ${effect === 'glow' ? 'animate-pulse' : ''}`} />
 
-                            {products.length > 0 ? (
+                            {filteredProducts.length > 0 ? (
                                 <div className="relative w-full h-full">
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-20 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500">
-                                        <ProductCard product={products[0]} index={0} />
+                                        <ProductCard product={filteredProducts[0]} index={0} />
                                     </div>
-                                    {products.length > 1 && (
+                                    {filteredProducts.length > 1 && (
                                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-10 transform rotate-[6deg] translate-x-8 translate-y-4 sm:translate-x-12 opacity-80">
-                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-surface shadow-xl">
-                                                <img src={products[1].imageUrl} alt={products[1].name} className="w-full h-full object-cover grayscale" />
+                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-surface shadow-xl relative">
+                                                <Image
+                                                    src={filteredProducts[1].imageUrl}
+                                                    alt={filteredProducts[1].name}
+                                                    fill
+                                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                                    className="object-cover grayscale"
+                                                />
                                             </div>
                                         </div>
                                     )}

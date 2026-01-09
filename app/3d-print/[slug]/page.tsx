@@ -33,10 +33,7 @@ async function getProduct(slug: string): Promise<Product | null> {
             const docSnap = querySnapshot.docs[0];
             const data = docSnap.data();
 
-            // Don't show draft products
-            if (data.status === 'draft') {
-                return null;
-            }
+
 
             const serializeTimestamp = (ts: any) => {
                 if (!ts) return null;

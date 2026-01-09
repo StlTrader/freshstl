@@ -6,6 +6,7 @@ const ai = new GoogleGenAI({
 });
 
 export async function POST(req: NextRequest) {
+
     try {
         const { prompt, referenceImage, context } = await req.json();
 

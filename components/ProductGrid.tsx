@@ -8,6 +8,7 @@ import { Product } from '../types';
 import { Plus, Eye, Heart, Search, ArrowUpDown, ShoppingCart, Download, Filter } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { ProductCard } from './ProductCard';
+import { getStripeConfig } from '../services/paymentService';
 
 interface ProductGridProps {
   initialProducts: Product[];
@@ -17,7 +18,7 @@ type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'name-asc';
 
 export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
   const router = useRouter();
-  const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen } = useStore();
+  const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
@@ -34,6 +35,19 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => 
 
   const filteredProducts = useMemo(() => {
     let result = products;
+
+    // Filter Drafts (Client-Side Security)
+    // Only Admin and Testers can see drafts
+    result = result.filter(p => {
+      if (p.status === 'draft') {
+        const config = getStripeConfig();
+        const testerEmails = config.testerEmails || [];
+        const isAdmin = user?.email === 'stltraderltd@gmail.com';
+        const isTester = user?.email && testerEmails.includes(user.email);
+        return isAdmin || isTester;
+      }
+      return true;
+    });
 
     // Filter Category
     if (selectedCategory !== 'All') {

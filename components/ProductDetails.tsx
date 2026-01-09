@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Product, Review } from '../types';
 import { useStore } from '../contexts/StoreContext';
 import { SketchfabViewer } from './SketchfabViewer';
 import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box, Heart, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as firebaseService from '../services/firebaseService';
+import { getStripeConfig } from '../services/paymentService';
 
 interface ProductDetailsProps {
     product: Product;
@@ -14,7 +16,7 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
     const router = useRouter();
-    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user } = useStore();
+    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user, isAuthReady } = useStore();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
@@ -22,6 +24,24 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
     const [isDownloading, setIsDownloading] = useState(false);
     const [activeMedia, setActiveMedia] = useState<string>('model'); // 'model' or image URL
+    const [isAuthorized, setIsAuthorized] = useState(product.status !== 'draft');
+
+    useEffect(() => {
+        if (product.status === 'draft') {
+            if (!isAuthReady) return;
+
+            const config = getStripeConfig();
+            const testerEmails = config.testerEmails || [];
+            const isAdmin = user?.email === 'stltraderltd@gmail.com';
+            const isTester = user?.email && testerEmails.includes(user.email);
+
+            if (isAdmin || isTester) {
+                setIsAuthorized(true);
+            } else {
+                router.replace('/');
+            }
+        }
+    }, [product, user, isAuthReady, router]);
 
     const isPurchased = purchases.some(p => p.productId === product.id);
     const isWishlisted = wishlist.includes(product.id);
@@ -100,9 +120,35 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         router.push(`/builder/${product.id}`);
     };
 
+
+
+    if (!isAuthorized) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg pt-4 pb-32 lg:pb-20 animate-in fade-in duration-500">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* Draft Banner */}
+                {product.status === 'draft' && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <ShieldCheck className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    <span className="font-bold">Draft Mode:</span> This product is not visible to the public.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Breadcrumb / Back */}
                 <button
@@ -120,7 +166,16 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                             {activeMedia === 'model' ? (
                                 <SketchfabViewer modelUrl={viewerUrl} />
                             ) : (
-                                <img src={activeMedia} alt={product.name} className="w-full h-full object-contain bg-black" />
+                                <div className="relative w-full h-full bg-black">
+                                    <Image
+                                        src={activeMedia}
+                                        alt={product.name}
+                                        fill
+                                        sizes="(max-width: 1024px) 100vw, 66vw"
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
                             )}
 
                             {/* Carousel Navigation */}
@@ -128,13 +183,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 <>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
                                     >
                                         <ChevronLeft size={24} />
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleNext(); }}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm z-10"
                                     >
                                         <ChevronRight size={24} />
                                     </button>
@@ -159,7 +214,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                         onClick={() => setActiveMedia(img)}
                                         className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeMedia === img ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
-                                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <div className="relative w-full h-full">
+                                            <Image src={img} alt={`View ${idx + 1}`} fill sizes="80px" className="object-cover" />
+                                        </div>
                                     </button>
                                 ))
                             ) : (
@@ -169,7 +226,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                         onClick={() => setActiveMedia(product.imageUrl)}
                                         className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all snap-start ${activeMedia === product.imageUrl ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
-                                        <img src={product.imageUrl} alt="Main View" className="w-full h-full object-cover" />
+                                        <div className="relative w-full h-full">
+                                            <Image src={product.imageUrl} alt="Main View" fill sizes="80px" className="object-cover" />
+                                        </div>
                                     </button>
                                 )
                             )}

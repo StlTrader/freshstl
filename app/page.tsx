@@ -32,7 +32,11 @@ export default async function Home() {
                     createdAt: serializeTimestamp(data.createdAt),
                     updatedAt: serializeTimestamp(data.updatedAt),
                 } as Product;
-            }).filter(product => product.status !== 'draft');
+            }).map(product => {
+                // Ensure status is set, default to published if missing for legacy data
+                if (!product.status) product.status = 'published';
+                return product;
+            });
         } else {
             console.error("Admin DB not initialized. Check environment variables.");
         }

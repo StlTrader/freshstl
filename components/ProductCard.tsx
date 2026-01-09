@@ -41,6 +41,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     )}
                 </Link>
 
+                {/* Draft Badge */}
+                {product.status === 'draft' && (
+                    <div className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-md z-20 shadow-md border border-yellow-500">
+                        DRAFT
+                    </div>
+                )}
+
                 {/* Wishlist Button (Top Right) */}
                 <button
                     onClick={(e) => {
@@ -109,7 +116,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                     onClick={(e) => { e.stopPropagation(); setActiveImage(img); }}
                                     className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 shadow-sm ${activeImage === img ? 'border-brand-500 scale-105' : 'border-white/30 hover:border-white/80'}`}
                                 >
-                                    <Image src={img} alt={`View ${idx}`} fill className="object-cover" />
+                                    <Image src={img} alt={`View ${idx}`} fill sizes="40px" className="object-cover" />
                                 </button>
                             ))}
                         </div>

@@ -23,6 +23,7 @@ interface StoreContextType {
     isCartOpen: boolean;
     systemStatus: SystemStatus;
     isLoadingPurchases: boolean;
+    isAuthReady: boolean;
 
     // Actions
     toggleTheme: () => void;
@@ -64,7 +65,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [wishlist, setWishlist] = useState<string[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [isLoadingPurchases, setIsLoadingPurchases] = useState(false);
+
     const [systemStatus, setSystemStatus] = useState<SystemStatus>({ isOnline: false, storageMode: 'Checking...' });
+    const [isAuthReady, setIsAuthReady] = useState(false);
 
     // Theme State
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -99,6 +102,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (isMounted) {
                 setUser(currentUser);
                 setSystemStatus(firebaseService.getSystemStatus());
+                setIsAuthReady(true);
             }
         });
 
@@ -107,6 +111,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 setUser((prev) => prev || resultUser);
                 setSystemStatus(firebaseService.getSystemStatus());
             }
+            if (isMounted) setIsAuthReady(true);
         });
 
         return () => {
@@ -286,6 +291,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             isCartOpen,
             systemStatus,
             isLoadingPurchases,
+            isAuthReady,
             toggleTheme,
             addToCart,
             removeFromCart,
