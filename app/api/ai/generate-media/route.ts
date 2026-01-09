@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
         }
 
         if (!process.env.GEMINI_API_KEY) {
-            return NextResponse.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 });
+            console.error("GEMINI_API_KEY is missing from process.env");
+            return NextResponse.json({ error: 'GEMINI_API_KEY is not set in environment. Please check App Hosting secrets.' }, { status: 500 });
         }
 
         const isTextOnly = context === 'asset_generation';
