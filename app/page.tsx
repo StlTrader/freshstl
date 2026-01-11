@@ -2,8 +2,9 @@ import { FieldPath } from 'firebase-admin/firestore';
 import React from 'react';
 import { ProductGrid } from '../components/ProductGrid';
 import { Hero } from '../components/Hero';
+import { LearningHub } from '../components/LearningHub';
 import { adminDb } from '../services/firebaseAdmin';
-import { Product } from '../types';
+import { Product, BlogPost, Collection } from '../types';
 
 export const revalidate = 60;
 
@@ -12,9 +13,12 @@ export const revalidate = 60;
 export default async function Home() {
     // Fetch products on the server
     let products: Product[] = [];
+    let recentBlogPosts: BlogPost[] = [];
+    let collections: Collection[] = [];
 
     try {
         if (adminDb) {
+            // Fetch Products
             const snapshot = await adminDb.collection('products').get();
             products = snapshot.docs.map(doc => {
                 const data = doc.data();
@@ -37,11 +41,38 @@ export default async function Home() {
                 if (!product.status) product.status = 'published';
                 return product;
             });
+
+            // Fetch Recent Blog Posts
+            const blogSnapshot = await adminDb.collection('posts')
+                .where('published', '==', true)
+                .limit(6) // Fetch enough for grid + hub
+                .get();
+
+            recentBlogPosts = blogSnapshot.docs.map(doc => {
+                const data = doc.data();
+                const serializeTimestamp = (ts: any) => {
+                    if (!ts) return null;
+                    if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+                    if (ts._seconds !== undefined) return new Date(ts._seconds * 1000).toISOString();
+                    return ts;
+                };
+                return {
+                    id: doc.id,
+                    ...data,
+                    createdAt: serializeTimestamp(data.createdAt),
+                    updatedAt: serializeTimestamp(data.updatedAt),
+                } as BlogPost;
+            }).sort((a, b) => {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateB - dateA;
+            });
+
         } else {
             console.error("Admin DB not initialized. Check environment variables.");
         }
     } catch (error) {
-        console.error("Error fetching products server-side:", error);
+        console.error("Error fetching data server-side:", error);
     }
 
     // Fetch Hero Config
@@ -111,8 +142,10 @@ export default async function Home() {
                     </h2>
                     {/* Filter controls could go here, managed by client state in ProductGrid or a wrapper */}
                 </div>
-                <ProductGrid initialProducts={products} />
+                <ProductGrid initialProducts={products} blogPosts={recentBlogPosts} collections={collections} />
             </div>
+
+            <LearningHub posts={recentBlogPosts.slice(0, 3)} />
         </div>
     );
 }

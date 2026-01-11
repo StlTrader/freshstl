@@ -42,17 +42,19 @@ import {
   Menu
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
+import CollectionManager from './admin/CollectionManager';
 import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig } from '../types';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
+import Image from 'next/image';
 
 interface AdminPanelProps {
   products: Product[];
   onClose: () => void;
 }
 
-type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings';
+type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings' | 'collections';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
@@ -137,6 +139,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
             active={activeTab === 'hero'}
             onClick={() => setActiveTab('hero')}
           />
+          <SidebarItem
+            icon={<Box size={20} />}
+            label="Collections"
+            active={activeTab === 'collections'}
+            onClick={() => setActiveTab('collections')}
+          />
         </nav>
         <div className="p-4 border-t border-gray-200 dark:border-dark-border">
           <button
@@ -185,6 +193,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
               <MenuBtn icon={<Sparkles size={24} />} label="Hero" active={activeTab === 'hero'} onClick={() => { setActiveTab('hero'); setIsMobileMenuOpen(false); }} color="purple" />
               <MenuBtn icon={<Tag size={24} />} label="Cats" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} color="orange" />
               <MenuBtn icon={<CreditCard size={24} />} label="Payments" active={activeTab === 'payment_settings'} onClick={() => { setActiveTab('payment_settings'); setIsMobileMenuOpen(false); }} color="green" />
+              <MenuBtn icon={<Box size={24} />} label="Collections" active={activeTab === 'collections'} onClick={() => { setActiveTab('collections'); setIsMobileMenuOpen(false); }} color="purple" />
             </div>
             <button
               onClick={onClose}
@@ -217,6 +226,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
 
           {activeTab === 'blog' && <BlogManager />}
           {activeTab === 'hero' && <HeroManager products={localProducts} />}
+          {activeTab === 'collections' && <CollectionManager products={localProducts} />}
         </div>
       </main>
     </div>
@@ -1158,7 +1168,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                   className={`relative group aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${selectedCoverIndex === index ? 'border-brand-500 ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'border-gray-200 dark:border-dark-border hover:border-brand-300'}`}
                   onClick={() => setSelectedCoverIndex(index)}
                 >
-                  <img src={url} alt={`Existing ${index}`} className="w-full h-full object-cover" />
+                  <Image src={url} alt={`Existing ${index}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
                   {selectedCoverIndex === index && (
                     <div className="absolute top-2 left-2 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                       Cover
@@ -1186,7 +1196,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                     className={`relative group aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${selectedCoverIndex === globalIndex ? 'border-brand-500 ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'border-gray-200 dark:border-dark-border hover:border-brand-300'}`}
                     onClick={() => setSelectedCoverIndex(globalIndex)}
                   >
-                    <img src={URL.createObjectURL(file)} alt={`New ${index}`} className="w-full h-full object-cover" />
+                    <Image src={URL.createObjectURL(file)} alt={`New ${index}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
                     {selectedCoverIndex === globalIndex && (
                       <div className="absolute top-2 left-2 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                         Cover
@@ -1477,7 +1487,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                                   </td>
                                   <td className="px-4 py-2">
                                     {asset.thumbnailUrl ? (
-                                      <img src={asset.thumbnailUrl} alt="" className="w-8 h-8 rounded object-cover bg-gray-100" />
+                                      <Image src={asset.thumbnailUrl} alt="" width={32} height={32} className="rounded object-cover bg-gray-100" />
                                     ) : (
                                       <span className="text-xs text-gray-400">No image</span>
                                     )}
@@ -1575,7 +1585,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
             <div key={product.id} className="p-4 flex gap-4 items-start">
               <div className="relative shrink-0">
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt="" className="w-20 h-20 rounded-lg object-cover bg-gray-100" />
+                  <Image src={product.imageUrl} alt="" width={80} height={80} className="rounded-lg object-cover bg-gray-100" />
                 ) : (
                   <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
                     <Package size={24} />
@@ -1640,7 +1650,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                     <div className="flex items-center gap-4">
                       <NextLink href={`/3d-print/${product.slug}`} target="_blank" className="block relative group/img">
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover bg-gray-200 dark:bg-gray-900 shadow-sm group-hover/img:shadow-md transition-all" />
+                          <Image src={product.imageUrl} alt="" width={48} height={48} className="rounded-lg object-cover bg-gray-200 dark:bg-gray-900 shadow-sm group-hover/img:shadow-md transition-all" />
                         ) : (
                           <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-900 flex items-center justify-center shadow-sm">
                             <Package size={20} className="text-gray-400" />
@@ -2448,7 +2458,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                           <div key={idx} className="flex gap-4 items-center bg-white dark:bg-dark-surface p-3 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow">
                             <NextLink href={`/3d-print/${item.slug}`} target="_blank" className="block shrink-0 group">
                               {item.imageUrl ? (
-                                <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
+                                <Image src={item.imageUrl} alt={item.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
                               ) : (
                                 <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
                                   <Package size={20} />
@@ -2999,7 +3009,7 @@ const HeroManager = ({ products }: { products: Product[] }) => {
                       }`}>
                       {isSelected && <CheckCircle size={14} />}
                     </div>
-                    <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded object-cover bg-gray-100" />
+                    <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded object-cover bg-gray-100" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary truncate">{product.name}</p>
                       <p className="text-xs text-gray-500 dark:text-dark-text-secondary">${(product.price / 100).toFixed(2)}</p>

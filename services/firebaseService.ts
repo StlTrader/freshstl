@@ -69,7 +69,7 @@ import {
   updatePassword,
   deleteUser as deleteAuthUser
 } from 'firebase/auth';
-import { Product, CartItem, Purchase, Order, Review, Coupon, Payment, CustomerInfo, Category, BuilderCategory, BuilderAsset, BlogPost } from '../types';
+import { Product, CartItem, Purchase, Order, Review, Coupon, Payment, CustomerInfo, Category, BuilderCategory, BuilderAsset, BlogPost, Collection } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // --- Configuration ---
@@ -2733,4 +2733,62 @@ export const deleteDataForTestUsers = async (testerEmails: string[]) => {
     console.error("Error deleting test data:", error);
     throw error;
   }
+};
+
+export const getRecentBlogPosts = async (limitCount: number = 3): Promise<BlogPost[]> => {
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, 'posts'),
+      where('published', '==', true),
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    const posts = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      // Ensure dates are serializable if needed, but for now passing as is
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
+    } as BlogPost));
+
+    // Sort in memory to avoid needing a composite index
+    return posts.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
+  } catch (error) {
+    console.error("Error fetching recent blog posts:", error);
+    return [];
+  }
+};
+
+// --- Collection Management ---
+
+export const subscribeToCollections = (callback: (collections: Collection[]) => void) => {
+  if (!db) return () => { };
+  const q = query(collection(db, 'collections'), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const collections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Collection));
+    callback(collections);
+  });
+};
+
+export const addCollection = async (collectionData: Omit<Collection, 'id'>) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await addDoc(collection(db, 'collections'), {
+    ...collectionData,
+    createdAt: serverTimestamp()
+  });
+};
+
+export const updateCollection = async (id: string, data: Partial<Collection>) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await updateDoc(doc(db, 'collections', id), data);
+};
+
+export const deleteCollection = async (id: string) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await deleteDoc(doc(db, 'collections', id));
 };

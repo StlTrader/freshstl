@@ -4,7 +4,15 @@
             "*"
         ],
         "method": [
-            "GET"
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE",
+            "HEAD"
+        ],
+        "responseHeader": [
+            "Content-Type",
+            "x-goog-resumable"
         ],
         "maxAgeSeconds": 3600
     }

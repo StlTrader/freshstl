@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Purchase, Product, PaymentMethod, Order } from '../types';
 import { User } from 'firebase/auth';
 import {
@@ -258,7 +259,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
         <div className="flex items-center gap-3 bg-white dark:bg-dark-surface p-2 rounded-lg border border-gray-200 dark:border-dark-border shadow-sm">
           <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg overflow-hidden">
             {avatarPreview ? (
-              <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+              <Image src={avatarPreview} alt="Profile" fill className="object-cover" sizes="128px" />
             ) : user?.displayName ? (
               user.displayName.charAt(0).toUpperCase()
             ) : (
@@ -324,7 +325,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     <div className="w-full aspect-video md:w-48 md:h-48 md:aspect-square bg-gray-100 dark:bg-dark-bg rounded-lg overflow-hidden flex-shrink-0 relative shadow-inner">
                       <Link href={`/3d-print/${product?.slug || purchase.productId}`} className="block w-full h-full">
                         {product?.imageUrl ? (
-                          <img src={product.imageUrl} alt={purchase.productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <Image
+                            src={product.imageUrl}
+                            alt={purchase.productName}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
                         ) : (
                           <div className="w-full h-full bg-gray-200 dark:bg-dark-bg flex items-center justify-center">
                             <span className="text-gray-400 text-xs">No Image</span>
@@ -441,7 +448,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-dark-bg">
                       <Link href={`/3d-print/${product.slug}`} className="block w-full h-full">
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
                         ) : (
                           <div className="w-full h-full bg-gray-200 dark:bg-dark-bg flex items-center justify-center">
                             <span className="text-gray-400 text-xs">No Image</span>
@@ -596,7 +609,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                     <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-dark-border flex items-center justify-center overflow-hidden border-4 border-white dark:border-dark-border shadow-md shrink-0">
                       {avatarPreview ? (
-                        <img src={avatarPreview} alt="Profile Preview" className="w-full h-full object-cover" />
+                        <Image src={avatarPreview} alt="Profile Preview" fill className="object-cover" sizes="128px" />
                       ) : (
                         <UserIcon size={40} className="text-gray-400" />
                       )}

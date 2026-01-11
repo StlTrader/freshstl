@@ -5,6 +5,7 @@ import { BlogPost } from '../../types';
 import { getPosts, createPost, updatePost, deletePost, storage, subscribeToCategories, subscribeToProducts, auth, app, uploadFile } from '../../services/firebaseService';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Plus, Edit, Trash2, Search, X, Upload, CheckCircle, Eye, Tag, Palette, Sparkles, Box } from 'lucide-react';
+import Image from 'next/image';
 import { Product } from '../../types';
 
 export default function BlogManager() {
@@ -676,7 +677,13 @@ export default function BlogManager() {
                                             <div className="space-y-3">
                                                 {coverImage ? (
                                                     <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-dark-border group">
-                                                        <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+                                                        <Image
+                                                            src={coverImage}
+                                                            alt="Cover"
+                                                            fill
+                                                            className="object-cover"
+                                                            sizes="(max-width: 768px) 100vw, 500px"
+                                                        />
                                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button
                                                                 type="button"

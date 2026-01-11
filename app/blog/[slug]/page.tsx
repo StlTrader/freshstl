@@ -151,11 +151,12 @@ export default async function BlogPostPage({ params }: Props) {
                 return (
                     <figure key={index} className="my-12 group">
                         <div className="rounded-3xl overflow-hidden shadow-2xl bg-gray-100 dark:bg-dark-surface relative aspect-video">
-                            <img
+                            <Image
                                 src={imgMatch[2]}
                                 alt={imgMatch[1]}
-                                className="w-full h-full object-cover transform group-hover:scale-[1.02] transition-transform duration-700"
-                                loading="lazy"
+                                fill
+                                className="object-cover transform group-hover:scale-[1.02] transition-transform duration-700"
+                                sizes="(max-width: 768px) 100vw, 800px"
                             />
                         </div>
                         {imgMatch[1] && (

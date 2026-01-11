@@ -4,19 +4,32 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Product } from '../types';
+import { Product, BlogPost, Collection } from '../types';
 import { Plus, Eye, Heart, Search, ArrowUpDown, ShoppingCart, Download, Filter } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { ProductCard } from './ProductCard';
 import { getStripeConfig } from '../services/paymentService';
+import { ProTipCard } from './ProTipCard';
+import { InsightCard } from './InsightCard';
+import { CollectionCard } from './CollectionCard';
 
 interface ProductGridProps {
   initialProducts: Product[];
+  blogPosts?: BlogPost[];
+  collections?: Collection[];
 }
 
 type SortOption = 'relevance' | 'price-asc' | 'price-desc' | 'name-asc';
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => {
+const PRO_TIPS = [
+  "Use a brim for better bed adhesion on large prints.",
+  "Calibrate your e-steps if you notice under-extrusion.",
+  "Keep your filament dry to prevent popping and stringing.",
+  "Level your bed while it's hot for better accuracy.",
+  "Use tree supports for complex organic shapes to save material."
+];
+
+export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogPosts = [], collections = [] }) => {
   const router = useRouter();
   const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -25,19 +38,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => 
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   // Use initialProducts from props (server-fetched)
-  // In a real app, we might also subscribe to updates or fetch more client-side
   const products = initialProducts;
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(products.map(p => p.category)));
-    return ['All', ...cats];
+    return ['All', 'Collections', ...cats];
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     let result = products;
 
     // Filter Drafts (Client-Side Security)
-    // Only Admin and Testers can see drafts
     result = result.filter(p => {
       if (p.status === 'draft') {
         const config = getStripeConfig();
@@ -50,7 +61,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => 
     });
 
     // Filter Category
-    if (selectedCategory !== 'All') {
+    if (selectedCategory === 'Collections') {
+      // If collections selected, we might want to return empty products array and handle rendering separately
+      // Or we can just return empty here and handle it in the render logic
+      result = [];
+    } else if (selectedCategory !== 'All') {
       result = result.filter(p => p.category === selectedCategory);
     }
 
@@ -73,11 +88,61 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => 
     }
 
     return result;
-  }, [products, selectedCategory, searchTerm, sortBy]);
+  }, [products, selectedCategory, searchTerm, sortBy, user]);
+
+  // Chunking Logic
+  const renderGridItems = () => {
+    const items: React.ReactNode[] = [];
+    const chunkSize = 8; // Insert something every ~8 items (2 rows of 4)
+
+    for (let i = 0; i < filteredProducts.length; i += chunkSize) {
+      const chunk = filteredProducts.slice(i, i + chunkSize);
+
+      // Add product cards
+      chunk.forEach(product => {
+        items.push(<ProductCard key={product.id} product={product} />);
+      });
+
+      // Insert content after chunk if not the last chunk
+      if (i + chunkSize < filteredProducts.length) {
+        const insertionIndex = i / chunkSize;
+
+        // Alternate between ProTip and Insight
+        if (insertionIndex % 2 === 0) {
+          // Insert Pro Tip
+          const tipIndex = (insertionIndex / 2) % PRO_TIPS.length;
+          items.push(
+            <div key={`tip-${insertionIndex}`} className="break-inside-avoid col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-1">
+              <ProTipCard tip={PRO_TIPS[tipIndex]} />
+            </div>
+          );
+        } else {
+          // Insert Insight (Blog Post)
+          const postIndex = Math.floor(insertionIndex / 2) % blogPosts.length;
+          if (blogPosts[postIndex]) {
+            items.push(
+              <div key={`insight-${insertionIndex}`} className="break-inside-avoid col-span-1">
+                <InsightCard post={blogPosts[postIndex]} />
+              </div>
+            );
+          }
+        }
+      }
+    }
+    return items;
+  };
+
+  // Render Collections Grid
+  const renderCollections = () => {
+    return collections.map(collection => (
+      <div key={collection.id} className="break-inside-avoid col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-1">
+        <CollectionCard collection={collection} />
+      </div>
+    ));
+  };
 
   return (
     <div className="space-y-8" id="products">
-      {/* Search & Filter Bar */}
       {/* Search & Filter Bar */}
       <div className="sticky top-16 z-20 py-4 bg-gray-50/95 dark:bg-dark-surface/95 backdrop-blur rounded-2xl transition-colors space-y-4 shadow-sm border border-gray-100 dark:border-dark-border px-4">
 
@@ -139,13 +204,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts }) => 
         </div>
       </div>
 
-      {/* Masonry Grid */}
+      {/* Masonry Grid with Interspersed Content */}
       <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 md:gap-6 space-y-4 md:space-y-6">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {selectedCategory === 'Collections' ? renderCollections() : renderGridItems()}
 
-        {filteredProducts.length === 0 && (
+        {filteredProducts.length === 0 && selectedCategory !== 'Collections' && (
           <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500 dark:text-dark-text-secondary">
             <div className="text-6xl mb-4">🔍</div>
             <p className="text-lg">No products found matching your criteria.</p>

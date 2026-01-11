@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, RotateCcw, Save, Box, Shuffle, Eye, EyeOff, Loader2, Share2, Download, Palette, ChevronRight, Lock, ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
 import { useGLTF } from '@react-three/drei';
 import { Scene } from './Scene';
 import { User } from 'firebase/auth';
@@ -240,7 +241,15 @@ export const CharacterBuilder: React.FC<CharacterBuilderProps> = ({ onBack, prod
                                 ${selected?.id === asset.id ? 'bg-brand-100 dark:bg-brand-900/20' : 'bg-gray-100 dark:bg-dark-bg group-hover:bg-gray-50 dark:group-hover:bg-dark-surface'}
                             `}>
                                 {asset.thumbnailUrl ? (
-                                    <img src={asset.thumbnailUrl} alt={asset.name} className="w-full h-full object-contain p-1" />
+                                    <div className="relative w-full h-full p-1">
+                                        <Image
+                                            src={asset.thumbnailUrl}
+                                            alt={asset.name}
+                                            fill
+                                            className="object-contain"
+                                            sizes="(max-width: 768px) 50vw, 33vw"
+                                        />
+                                    </div>
                                 ) : (
                                     <Box size={24} className={selected?.id === asset.id ? 'text-brand-500' : 'text-gray-400'} />
                                 )}

@@ -15,7 +15,12 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'placehold.co',
             },
+            {
+                protocol: 'https',
+                hostname: '*.googleusercontent.com',
+            },
         ],
+        formats: ['image/avif', 'image/webp'],
     },
 };
 

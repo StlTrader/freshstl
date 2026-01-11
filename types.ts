@@ -117,6 +117,18 @@ export interface StripeConfig {
   isConnected: boolean;
   testerEmails?: string[];
 }
+export interface Collection {
+  id: string;
+  title: string;
+  description: string;
+  price: number; // Optional, if it's a bundle with a specific price
+  productIds: string[];
+  imageUrl: string;
+  tags: string[];
+  status: 'draft' | 'published';
+  createdAt: any;
+}
+
 export interface BlogPost {
   id: string;
   title: string;

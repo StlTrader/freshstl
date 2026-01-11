@@ -9,6 +9,7 @@ import { useStore } from '../contexts/StoreContext';
 import { getStripeConfig } from '../services/paymentService';
 import { TiltCard } from './TiltCard';
 import { HeroBackground } from './HeroBackground';
+import { HeroCarousel } from './HeroCarousel';
 
 interface HeroProps {
     products: Product[];
@@ -117,137 +118,11 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
 
     // --- Layout Renders ---
 
-    if (layout === 'centered') {
-        return (
-            <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-                <HeroBackground effect={effect} />
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
-                    <Content center />
-                    <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {filteredProducts.slice(0, 4).map((p, i) => (
-                            <ProductCard key={p.id} product={p} index={i} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (layout === 'split') {
-        return (
-            <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border min-h-[90vh] flex items-center">
-                <HeroBackground effect={effect} />
-                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <Content />
-                        <div className="grid grid-cols-2 gap-4">
-                            {filteredProducts.slice(0, 4).map((p, i) => (
-                                <div key={p.id} className={i % 2 === 1 ? 'mt-12' : ''}>
-                                    <ProductCard product={p} index={i} />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (layout === 'grid') {
-        return (
-            <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-                <HeroBackground effect={effect} />
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
-                    <div className="grid lg:grid-cols-12 gap-12 items-center">
-                        <div className="lg:col-span-5">
-                            <Content />
-                        </div>
-                        <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-                            {filteredProducts.slice(0, 4).map((p, i) => (
-                                <ProductCard key={p.id} product={p} index={i} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (layout === 'asymmetrical') {
-        return (
-            <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border min-h-[80vh] flex items-center">
-                <HeroBackground effect={effect} />
-                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row items-center">
-                        <div className="w-full lg:w-3/5 relative z-10">
-                            {filteredProducts[0] && (
-                                <TiltCard enabled={effect === 'tilt'} className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl relative">
-                                    <Image
-                                        src={filteredProducts[0].imageUrl}
-                                        alt={filteredProducts[0].name}
-                                        fill
-                                        priority
-                                        sizes="(max-width: 1024px) 100vw, 60vw"
-                                        className="object-cover"
-                                    />
-                                    <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
-                                        <h3 className="text-3xl font-bold text-white">{filteredProducts[0].name}</h3>
-                                        <p className="text-brand-300 text-xl font-medium mt-2">${(filteredProducts[0].price / 100).toFixed(2)}</p>
-                                    </div>
-                                </TiltCard>
-                            )}
-                        </div>
-                        <div className="w-full lg:w-2/5 lg:-ml-20 relative z-20 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-xl border border-gray-200 dark:border-dark-border mt-8 lg:mt-0">
-                            <Content />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // Standard Layout (Default)
+    // Use the new Carousel layout by default or if specified
+    // For now, we are overriding to use the carousel as the primary view
     return (
-        <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-            <HeroBackground effect={effect} />
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-32 md:pb-32">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    <Content />
-                    <div className="relative block mt-12 lg:mt-0 animate-fade-in-up animation-delay-200">
-                        <div className="relative w-full aspect-square max-w-[320px] sm:max-w-lg mx-auto">
-                            <div className={`absolute inset-0 bg-gradient-to-tr from-brand-500/10 to-blue-500/10 rounded-full blur-3xl ${effect === 'glow' ? 'animate-pulse' : ''}`} />
-
-                            {filteredProducts.length > 0 ? (
-                                <div className="relative w-full h-full">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-20 transform rotate-[-6deg] hover:rotate-0 transition-all duration-500">
-                                        <ProductCard product={filteredProducts[0]} index={0} />
-                                    </div>
-                                    {filteredProducts.length > 1 && (
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 z-10 transform rotate-[6deg] translate-x-8 translate-y-4 sm:translate-x-12 opacity-80">
-                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-surface shadow-xl relative">
-                                                <Image
-                                                    src={filteredProducts[1].imageUrl}
-                                                    alt={filteredProducts[1].name}
-                                                    fill
-                                                    sizes="(max-width: 768px) 100vw, 33vw"
-                                                    className="object-cover grayscale"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 sm:w-80 sm:h-96 bg-white dark:bg-dark-surface rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border p-4 flex items-center justify-center">
-                                    <div className="text-center">
-                                        <Box className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                        <p className="text-gray-500 font-medium">Coming Soon</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="bg-white dark:bg-dark-bg transition-colors duration-300">
+            <HeroCarousel products={filteredProducts} />
         </div>
     );
 };

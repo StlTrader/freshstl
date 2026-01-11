@@ -4,6 +4,7 @@ import React from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Package, Download, Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const PurchasesList = () => {
     const { orders, user, isLoadingPurchases } = useStore();
@@ -66,7 +67,13 @@ export const PurchasesList = () => {
                                         <div className="flex items-center gap-4">
                                             {item.imageUrl && (
                                                 <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>
-                                                    <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-dark-bg" />
+                                                    <Image
+                                                        src={item.imageUrl}
+                                                        alt={item.name}
+                                                        width={64}
+                                                        height={64}
+                                                        className="rounded-lg object-cover bg-gray-100 dark:bg-dark-bg"
+                                                    />
                                                 </Link>
                                             )}
                                             <div>
