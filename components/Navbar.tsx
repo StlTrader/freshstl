@@ -184,6 +184,13 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 md:hidden">
+            <Link
+              href="/blog"
+              className="flex items-center justify-center px-2 py-1 rounded-lg text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors"
+              aria-label="Blog"
+            >
+              <span className="text-sm font-bold">Blog</span>
+            </Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-surface transition-colors"

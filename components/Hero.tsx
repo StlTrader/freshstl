@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { ArrowRight, Box, ShieldCheck, Zap, Star } from 'lucide-react';
 import { Product, HeroConfig } from '../types';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useStore } from '../contexts/StoreContext';
 import { getStripeConfig } from '../services/paymentService';
+import { TiltCard } from './TiltCard';
+import { HeroBackground } from './HeroBackground';
 
 interface HeroProps {
     products: Product[];
@@ -18,83 +20,21 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     const layout = config?.layout || 'standard';
     const effect = config?.visualEffect || 'none';
 
-    // Filter Drafts
-    const filteredProducts = products.filter(p => {
-        if (p.status === 'draft') {
-            const config = getStripeConfig();
-            const testerEmails = config.testerEmails || [];
-            const isAdmin = user?.email === 'stltraderltd@gmail.com';
-            const isTester = user?.email && testerEmails.includes(user.email);
-            return isAdmin || isTester;
-        }
-        return true;
-    });
-
-    // Parallax State
-    const [scrollY, setScrollY] = useState(0);
-    useEffect(() => {
-        if (effect === 'parallax') {
-            const handleScroll = () => setScrollY(window.scrollY);
-            window.addEventListener('scroll', handleScroll);
-            return () => window.removeEventListener('scroll', handleScroll);
-        }
-    }, [effect]);
-
-    // Tilt Effect Helper
-    const TiltCard = ({ children, className }: { children: React.ReactNode, className?: string }) => {
-        const ref = useRef<HTMLDivElement>(null);
-        const [rotate, setRotate] = useState({ x: 0, y: 0 });
-
-        const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-            if (!ref.current || effect !== 'tilt') return;
-            const rect = ref.current.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const rotateX = ((y - centerY) / centerY) * -10; // Max 10 deg
-            const rotateY = ((x - centerX) / centerX) * 10;
-
-            setRotate({ x: rotateX, y: rotateY });
-        };
-
-        const handleMouseLeave = () => {
-            setRotate({ x: 0, y: 0 });
-        };
-
-        return (
-            <div
-                ref={ref}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                className={`transition-transform duration-200 ease-out ${className}`}
-                style={{
-                    transform: effect === 'tilt' ? `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)` : 'none'
-                }}
-            >
-                {children}
-            </div>
-        );
-    };
+    // Filter Drafts - Memoized
+    const filteredProducts = useMemo(() => {
+        return products.filter(p => {
+            if (p.status === 'draft') {
+                const config = getStripeConfig();
+                const testerEmails = config.testerEmails || [];
+                const isAdmin = user?.email === 'stltraderltd@gmail.com';
+                const isTester = user?.email && testerEmails.includes(user.email);
+                return isAdmin || isTester;
+            }
+            return true;
+        });
+    }, [products, user]);
 
     // Common Elements
-    const Background = () => (
-        <div className="absolute inset-0 z-0 overflow-hidden">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-transparent to-transparent dark:from-dark-bg/80 dark:via-transparent dark:to-transparent" />
-
-            {/* Parallax Orbs */}
-            <div
-                className={`absolute top-0 right-0 w-[600px] h-[600px] bg-brand-500/20 rounded-full blur-[100px] opacity-50 pointer-events-none transition-transform duration-75 ease-out`}
-                style={{ transform: effect === 'parallax' ? `translateY(${scrollY * 0.2}px)` : 'none' }}
-            />
-            <div
-                className={`absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] opacity-30 pointer-events-none transition-transform duration-75 ease-out`}
-                style={{ transform: effect === 'parallax' ? `translateY(${scrollY * -0.2}px)` : 'none' }}
-            />
-        </div>
-    );
-
     const Content = ({ center = false }: { center?: boolean }) => (
         <div className={`space-y-8 ${center ? 'text-center mx-auto' : 'text-center lg:text-left'}`}>
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/50 backdrop-blur-sm animate-fade-in-up ${effect === 'glow' ? 'shadow-[0_0_15px_rgba(59,130,246,0.5)]' : ''}`}>
@@ -154,7 +94,10 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     );
 
     const ProductCard = ({ product, index }: { product: Product, index: number }) => (
-        <TiltCard className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-border group">
+        <TiltCard
+            enabled={effect === 'tilt'}
+            className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-border group"
+        >
             <Image
                 src={product.imageUrl}
                 alt={product.name}
@@ -177,7 +120,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     if (layout === 'centered') {
         return (
             <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-                <Background />
+                <HeroBackground effect={effect} />
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
                     <Content center />
                     <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -193,7 +136,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     if (layout === 'split') {
         return (
             <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border min-h-[90vh] flex items-center">
-                <Background />
+                <HeroBackground effect={effect} />
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <Content />
@@ -213,7 +156,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     if (layout === 'grid') {
         return (
             <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-                <Background />
+                <HeroBackground effect={effect} />
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
                     <div className="grid lg:grid-cols-12 gap-12 items-center">
                         <div className="lg:col-span-5">
@@ -233,12 +176,12 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     if (layout === 'asymmetrical') {
         return (
             <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border min-h-[80vh] flex items-center">
-                <Background />
+                <HeroBackground effect={effect} />
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col lg:flex-row items-center">
                         <div className="w-full lg:w-3/5 relative z-10">
                             {filteredProducts[0] && (
-                                <TiltCard className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl relative">
+                                <TiltCard enabled={effect === 'tilt'} className="w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl relative">
                                     <Image
                                         src={filteredProducts[0].imageUrl}
                                         alt={filteredProducts[0].name}
@@ -266,7 +209,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     // Standard Layout (Default)
     return (
         <div className="relative overflow-hidden bg-white dark:bg-dark-bg transition-colors duration-300 border-b border-gray-100 dark:border-dark-border">
-            <Background />
+            <HeroBackground effect={effect} />
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-32 md:pb-32">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     <Content />
