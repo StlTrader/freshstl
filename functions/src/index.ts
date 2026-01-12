@@ -125,3 +125,83 @@ export const onProductDeleted = functions.firestore
         await Promise.all(promises);
         console.log(`Cleaned up files for product ${context.params.productId}`);
     });
+
+// 3. Google Indexing API Function
+import { google } from "googleapis";
+
+export const requestIndexing = functions.https.onCall(async (data, context) => {
+    // Check Authentication (Admin only)
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            "unauthenticated",
+            "The function must be called while authenticated."
+        );
+    }
+
+    // Check if user is admin (using the same logic as getSecureStlUrl)
+    const isAdmin = context.auth.token.email === 'stltraderltd@gmail.com' || context.auth.token.admin === true;
+    if (!isAdmin) {
+        throw new functions.https.HttpsError(
+            "permission-denied",
+            "Only admins can request indexing."
+        );
+    }
+
+    const { url, type } = data; // type: 'URL_UPDATED' or 'URL_DELETED'
+
+    if (!url || !type) {
+        throw new functions.https.HttpsError(
+            "invalid-argument",
+            "The function must be called with 'url' and 'type' arguments."
+        );
+    }
+
+    try {
+        // Fetch Service Account Key from Firestore
+        // We assume the admin has saved the service account JSON in 'settings/indexing'
+        const settingsDoc = await admin.firestore().collection("settings").doc("indexing").get();
+
+        if (!settingsDoc.exists || !settingsDoc.data()?.serviceAccount) {
+            throw new functions.https.HttpsError(
+                "failed-precondition",
+                "Service account not configured. Please configure it in the Admin Panel."
+            );
+        }
+
+        const serviceAccount = JSON.parse(settingsDoc.data()?.serviceAccount);
+
+        const jwtClient = new google.auth.JWT(
+            serviceAccount.client_email,
+            undefined,
+            serviceAccount.private_key,
+            ["https://www.googleapis.com/auth/indexing"],
+            undefined
+        );
+
+        await jwtClient.authorize();
+
+        const indexing = google.indexing({
+            version: "v3",
+            auth: jwtClient,
+        });
+
+        const result = await indexing.urlNotifications.publish({
+            requestBody: {
+                url: url,
+                type: type,
+            },
+        });
+
+        return {
+            status: result.status,
+            data: result.data,
+        };
+
+    } catch (error: any) {
+        console.error("Indexing API Error:", error);
+        throw new functions.https.HttpsError(
+            "internal",
+            `Indexing failed: ${error.message}`
+        );
+    }
+});

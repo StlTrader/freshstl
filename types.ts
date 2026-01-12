@@ -32,6 +32,7 @@ export interface Product {
   status?: 'published' | 'draft'; // Product status
   createdAt?: any;
   updatedAt?: any;
+  lastIndexedAt?: any; // Timestamp of last Google Indexing request
 }
 
 export interface Category {
@@ -143,6 +144,7 @@ export interface BlogPost {
   published: boolean;
   createdAt: any; // Timestamp | string | number
   updatedAt: any; // Timestamp | string | number
+  lastIndexedAt?: any; // Timestamp of last Google Indexing request
 }
 
 export interface PaymentMethod {
@@ -221,9 +223,10 @@ export interface BuilderAssetVariation {
 }
 
 export interface HeroConfig {
-  mode: 'auto' | 'custom';
+  mode: 'auto' | 'custom' | 'collection';
   autoType?: 'newest' | 'popular' | 'random';
   customProductIds?: string[];
+  collectionId?: string;
   layout?: 'standard' | 'centered' | 'split' | 'asymmetrical' | 'grid';
   visualEffect?: 'none' | 'tilt' | 'glow' | 'parallax';
 }

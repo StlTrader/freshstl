@@ -40,10 +40,12 @@ import {
   RefreshCw,
   CreditCard,
   Menu,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import CollectionManager from './admin/CollectionManager';
+import IndexingManager from './admin/IndexingManager';
 import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig } from '../types';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
@@ -57,7 +59,7 @@ interface AdminPanelProps {
   initialEditId?: string;
 }
 
-type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings' | 'collections';
+type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings' | 'collections' | 'indexing';
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initialTab, initialEditId }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab || 'dashboard');
@@ -148,6 +150,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initi
             active={activeTab === 'collections'}
             onClick={() => setActiveTab('collections')}
           />
+          <SidebarItem
+            icon={<Globe size={20} />}
+            label="Indexing"
+            active={activeTab === 'indexing'}
+            onClick={() => setActiveTab('indexing')}
+          />
         </nav>
         <div className="p-4 border-t border-gray-200 dark:border-dark-border">
           <button
@@ -197,6 +205,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initi
               <MenuBtn icon={<Tag size={24} />} label="Cats" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} color="orange" />
               <MenuBtn icon={<CreditCard size={24} />} label="Payments" active={activeTab === 'payment_settings'} onClick={() => { setActiveTab('payment_settings'); setIsMobileMenuOpen(false); }} color="green" />
               <MenuBtn icon={<Box size={24} />} label="Collections" active={activeTab === 'collections'} onClick={() => { setActiveTab('collections'); setIsMobileMenuOpen(false); }} color="purple" />
+              <MenuBtn icon={<Globe size={24} />} label="Indexing" active={activeTab === 'indexing'} onClick={() => { setActiveTab('indexing'); setIsMobileMenuOpen(false); }} color="blue" />
             </div>
             <button
               onClick={onClose}
@@ -230,6 +239,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initi
           {activeTab === 'blog' && <BlogManager initialEditId={initialEditId} />}
           {activeTab === 'hero' && <HeroManager products={localProducts} />}
           {activeTab === 'collections' && <CollectionManager products={localProducts} />}
+          {activeTab === 'indexing' && <IndexingManager products={localProducts} />}
         </div>
       </main>
     </div>
@@ -2924,6 +2934,7 @@ const PaymentSetting = () => {
 
 const HeroManager = ({ products }: { products: Product[] }) => {
   const [config, setConfig] = useState<HeroConfig>({ mode: 'auto', autoType: 'newest' });
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -2932,6 +2943,11 @@ const HeroManager = ({ products }: { products: Product[] }) => {
       setConfig(data);
       setLoading(false);
     });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = firebaseService.subscribeToCollections(setCollections);
     return () => unsubscribe();
   }, []);
 
@@ -2975,7 +2991,7 @@ const HeroManager = ({ products }: { products: Product[] }) => {
         {/* Mode Selection */}
         <div>
           <label className="block text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-4">Display Mode</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => setConfig({ ...config, mode: 'auto' })}
               className={`p-6 rounded-xl border-2 text-left transition-all ${config.mode === 'auto'
@@ -3009,6 +3025,24 @@ const HeroManager = ({ products }: { products: Product[] }) => {
               </div>
               <p className="text-gray-500 dark:text-dark-text-secondary text-sm">
                 Manually select specific products to showcase in the hero section.
+              </p>
+            </button>
+
+            <button
+              onClick={() => setConfig({ ...config, mode: 'collection' })}
+              className={`p-6 rounded-xl border-2 text-left transition-all ${config.mode === 'collection'
+                ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-2 ring-brand-500/20'
+                : 'border-gray-200 dark:border-dark-border hover:border-brand-300 dark:hover:border-brand-700'
+                }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`p-2 rounded-lg ${config.mode === 'collection' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                  <Box size={24} />
+                </div>
+                <span className={`font-bold text-lg ${config.mode === 'collection' ? 'text-brand-700 dark:text-brand-400' : 'text-gray-900 dark:text-dark-text-primary'}`}>Featured Collection</span>
+              </div>
+              <p className="text-gray-500 dark:text-dark-text-secondary text-sm">
+                Highlight a specific collection of products.
               </p>
             </button>
           </div>
@@ -3126,6 +3160,56 @@ const HeroManager = ({ products }: { products: Product[] }) => {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Collection Selection */}
+        {config.mode === 'collection' && (
+          <div className="animate-in fade-in slide-in-from-top-2 space-y-4">
+            <label className="block text-sm font-bold text-gray-700 dark:text-dark-text-secondary">
+              Select Collection
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {collections.map(collection => (
+                <div
+                  key={collection.id}
+                  onClick={() => setConfig({ ...config, collectionId: collection.id })}
+                  className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${config.collectionId === collection.id
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500'
+                    : 'border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface hover:border-brand-300'
+                    }`}
+                >
+                  <div className="flex gap-4">
+                    <div className="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 relative">
+                      {collection.imageUrl ? (
+                        <Image src={collection.imageUrl} alt={collection.title} fill className="object-cover" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                          <Box size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 dark:text-dark-text-primary truncate">{collection.title}</h3>
+                      <p className="text-sm text-gray-500 dark:text-dark-text-secondary line-clamp-1">{collection.description}</p>
+                      <span className="text-xs text-brand-600 dark:text-brand-400 font-medium mt-1 inline-block">
+                        {collection.productIds.length} Products
+                      </span>
+                    </div>
+                  </div>
+                  {config.collectionId === collection.id && (
+                    <div className="absolute top-2 right-2 text-brand-500">
+                      <CheckCircle size={20} className="fill-brand-100" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {collections.length === 0 && (
+              <div className="text-center py-8 text-gray-500 bg-gray-50 dark:bg-dark-bg/50 rounded-xl border border-dashed border-gray-200 dark:border-dark-border">
+                <p>No collections found. Create one in the Collections tab first.</p>
+              </div>
+            )}
           </div>
         )}
 

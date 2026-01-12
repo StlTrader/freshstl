@@ -116,13 +116,32 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
         </TiltCard>
     );
 
+    // Collection Logic
+    const [collections, setCollections] = React.useState<any[]>([]);
+    const [featuredCollection, setFeaturedCollection] = React.useState<any | null>(null);
+
+    React.useEffect(() => {
+        if (config?.mode === 'collection' && config.collectionId) {
+            const unsubscribe = import('../services/firebaseService').then(mod => {
+                return mod.subscribeToCollections((cols) => {
+                    setCollections(cols);
+                    const found = cols.find(c => c.id === config.collectionId);
+                    setFeaturedCollection(found || null);
+                });
+            });
+            return () => { unsubscribe.then(unsub => unsub && unsub()); };
+        } else {
+            setFeaturedCollection(null);
+        }
+    }, [config?.mode, config?.collectionId]);
+
     // --- Layout Renders ---
 
     // Use the new Carousel layout by default or if specified
     // For now, we are overriding to use the carousel as the primary view
     return (
         <div className="bg-white dark:bg-dark-bg transition-colors duration-300">
-            <HeroCarousel products={filteredProducts} />
+            <HeroCarousel products={filteredProducts} featuredCollection={featuredCollection} />
         </div>
     );
 };

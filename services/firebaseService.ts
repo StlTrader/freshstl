@@ -2764,6 +2764,26 @@ export const getRecentBlogPosts = async (limitCount: number = 3): Promise<BlogPo
   }
 };
 
+export const getAllBlogPosts = async (): Promise<BlogPost[]> => {
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, 'posts'),
+      where('published', '==', true)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
+    } as BlogPost));
+  } catch (error) {
+    console.error("Error fetching all blog posts:", error);
+    return [];
+  }
+};
+
 // --- Collection Management ---
 
 export const subscribeToCollections = (callback: (collections: Collection[]) => void) => {
@@ -2791,6 +2811,49 @@ export const updateCollection = async (id: string, data: Partial<Collection>) =>
 export const deleteCollection = async (id: string) => {
   if (!db) throw new Error("Firestore not initialized");
   await deleteDoc(doc(db, 'collections', id));
+};
+
+// --- Google Indexing API ---
+
+export const saveIndexingSettings = async (serviceAccountJson: string) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await setDoc(doc(db, 'settings', 'indexing'), {
+    serviceAccount: serviceAccountJson,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+};
+
+export const saveIndexingConfig = async (config: { serviceAccount?: string, baseUrl?: string }) => {
+  if (!db) throw new Error("Firestore not initialized");
+  await setDoc(doc(db, 'settings', 'indexing'), {
+    ...config,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+};
+
+export const updateIndexingStatus = async (type: 'product' | 'post', id: string) => {
+  if (!db) return;
+  const collectionName = type === 'product' ? 'products' : 'posts';
+  await updateDoc(doc(db, collectionName, id), {
+    lastIndexedAt: serverTimestamp()
+  });
+};
+
+export const getIndexingSettings = async () => {
+  if (!db) return null;
+  const docSnap = await getDoc(doc(db, 'settings', 'indexing'));
+  if (docSnap.exists()) {
+    return docSnap.data();
+  }
+  return null;
+};
+
+export const requestIndexing = async (url: string, type: 'URL_UPDATED' | 'URL_DELETED') => {
+  if (!app) throw new Error("Firebase not initialized");
+  const functions = getFunctions(app);
+  const requestIndexingFn = httpsCallable(functions, 'requestIndexing');
+  const result = await requestIndexingFn({ url, type });
+  return result.data;
 };
 
 export const getFileDownloadUrl = async (path: string): Promise<string> => {

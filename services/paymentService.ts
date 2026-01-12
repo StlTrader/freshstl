@@ -16,11 +16,11 @@ const DEFAULT_CONFIG: StripeConfig = {
   failureRate: 0,
   minDelay: 1000,
   maxDelay: 2500,
-  publicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  testPublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  livePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-  mode: 'test',
-  isConnected: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  publicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || '', // Default to test key for safety
+  testPublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || '',
+  livePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || '',
+  mode: (process.env.NEXT_PUBLIC_STRIPE_MODE as 'test' | 'live') || 'test',
+  isConnected: !!(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE),
   testerEmails: ['yassinebouomrine@gmail.com']
 };
 
@@ -33,7 +33,14 @@ const loadConfig = (): StripeConfig => {
       const parsed = JSON.parse(saved);
       // Ensure testerEmails exists if loading from old config
       if (!parsed.testerEmails) parsed.testerEmails = DEFAULT_CONFIG.testerEmails;
-      return { ...DEFAULT_CONFIG, ...parsed };
+
+      // Always prioritize env vars for keys over localStorage to avoid stale keys
+      return {
+        ...DEFAULT_CONFIG,
+        ...parsed,
+        testPublicKey: DEFAULT_CONFIG.testPublicKey,
+        livePublicKey: DEFAULT_CONFIG.livePublicKey
+      };
     }
   } catch (e) {
     console.warn("Failed to load Stripe config", e);
@@ -61,11 +68,11 @@ const getActiveKeys = () => {
   const mode = getStripeMode();
   if (mode === 'live') {
     return {
-      publicKey: config.livePublicKey || config.publicKey || ''
+      publicKey: config.livePublicKey || ''
     };
   }
   return {
-    publicKey: config.testPublicKey || config.publicKey || ''
+    publicKey: config.testPublicKey || ''
   };
 };
 
@@ -99,17 +106,16 @@ export const getStripe = () => {
 };
 
 export const getStripeMode = () => {
-  if (config.mode === 'test') {
-    // Only allow whitelisted users to use Test Mode
-    const user = auth?.currentUser;
-    const whitelist = config.testerEmails || DEFAULT_CONFIG.testerEmails || [];
+  // STRICT ENFORCEMENT: Only whitelisted users can use Test Mode
+  const user = auth?.currentUser;
+  const whitelist = config.testerEmails || DEFAULT_CONFIG.testerEmails || [];
 
-    if (user && user.email && whitelist.includes(user.email)) {
-      return 'test';
-    }
-    // Everyone else falls back to Live Mode
+  // If user is NOT in whitelist, FORCE Live Mode
+  if (!user || !user.email || !whitelist.includes(user.email)) {
     return 'live';
   }
+
+  // If user IS in whitelist, respect the configured mode (which might be test or live)
   return config.mode;
 };
 

@@ -61,7 +61,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body className={inter.className}>
                 <Script
                     src="https://www.googletagmanager.com/gtag/js?id=G-BLQ4SENSQ2"

@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import { Product } from '../types';
+import { Product, Collection } from '../types';
 
 interface HeroCarouselProps {
     products: Product[];
+    featuredCollection?: Collection | null;
 }
 
-export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products }) => {
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCollection }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     // Mock data for the "Dragon Warriors" slide if not present in products
@@ -24,9 +25,20 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products }) => {
         isCustom: true
     };
 
+    // Determine the first slide: Featured Collection > Dragon Slide (Default)
+    const heroSlide = featuredCollection ? {
+        id: featuredCollection.id,
+        title: featuredCollection.title,
+        subtitle: 'Featured Collection',
+        description: featuredCollection.description,
+        image: featuredCollection.imageUrl,
+        link: `/collections/${featuredCollection.id}`, // Assuming we have a collection page or similar
+        isCustom: true
+    } : dragonSlide;
+
     // Combine custom slides with product slides
     const slides = [
-        dragonSlide,
+        heroSlide,
         ...products.slice(0, 4).map(p => ({
             id: p.id,
             title: p.name,

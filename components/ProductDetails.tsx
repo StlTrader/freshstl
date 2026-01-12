@@ -740,7 +740,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 {relatedProducts.map((related) => (
                                     <div
                                         key={related.id}
-                                        onClick={() => router.push(`/product/${related.id}`)}
+                                        onClick={() => router.push(`/3d-print/${related.slug}`)}
                                         className="group cursor-pointer bg-white dark:bg-dark-surface rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-dark-border"
                                     >
                                         <div className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-dark-bg">

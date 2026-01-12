@@ -7,16 +7,26 @@ export async function POST(request: Request) {
         const { amount, currency, customerInfo, paymentMethodId, saveCard } = body;
 
         // Determine mode and key
-        const mode = process.env.NEXT_PUBLIC_STRIPE_MODE || 'test';
-        const secretKey = mode === 'live'
-            ? process.env.STRIPE_SECRET_KEY
-            : process.env.STRIPE_TEST_SECRET_KEY;
+        // This route is STRICTLY for Test Mode. Live mode uses Firebase Extension.
+        const secretKey = process.env.STRIPE_SECRET_KEY_TEST;
 
         if (!secretKey) {
-            console.error(`Stripe Secret Key is missing for mode: ${mode}`);
+            console.error(`Stripe Test Secret Key is missing.`);
             return NextResponse.json(
                 { error: 'Stripe configuration error on server.' },
                 { status: 500 }
+            );
+        }
+
+        // STRICT ENFORCEMENT: Only whitelisted users can use this Test Mode route
+        const TESTER_EMAILS = ['yassinebouomrine@gmail.com'];
+        const userEmail = customerInfo?.email;
+
+        if (!userEmail || !TESTER_EMAILS.includes(userEmail)) {
+            console.warn(`Unauthorized access attempt to Test Mode by: ${userEmail}`);
+            return NextResponse.json(
+                { error: 'Unauthorized: This payment mode is restricted to testers.' },
+                { status: 403 }
             );
         }
 
