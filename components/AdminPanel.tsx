@@ -39,7 +39,8 @@ import {
   Shield,
   RefreshCw,
   CreditCard,
-  Menu
+  Menu,
+  ArrowRight
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import CollectionManager from './admin/CollectionManager';
@@ -52,12 +53,14 @@ import Image from 'next/image';
 interface AdminPanelProps {
   products: Product[];
   onClose: () => void;
+  initialTab?: AdminTab;
+  initialEditId?: string;
 }
 
 type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings' | 'collections';
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initialTab, initialEditId }) => {
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab || 'dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -219,12 +222,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose }) => 
       <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 transition-colors">
         <div className="max-w-7xl mx-auto">
           {activeTab === 'dashboard' && <DashboardView products={localProducts} orders={orders} />}
-          {activeTab === 'products' && <ProductsManager products={localProducts} />}
+          {activeTab === 'products' && <ProductsManager products={localProducts} initialEditId={initialEditId} />}
           {activeTab === 'orders' && <OrdersManager orders={orders} />}
           {activeTab === 'users' && <UsersManager orders={orders} />}
           {activeTab === 'payment_settings' && <PaymentSetting />}
 
-          {activeTab === 'blog' && <BlogManager />}
+          {activeTab === 'blog' && <BlogManager initialEditId={initialEditId} />}
           {activeTab === 'hero' && <HeroManager products={localProducts} />}
           {activeTab === 'collections' && <CollectionManager products={localProducts} />}
         </div>
@@ -516,13 +519,37 @@ const StatCard = ({ title, value, icon, trend, delay }: any) => (
   </div>
 );
 
-const ProductsManager = ({ products }: { products: Product[] }) => {
+const ProductsManager = ({ products, initialEditId }: { products: Product[], initialEditId?: string }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({ tags: [] });
+
+  useEffect(() => {
+    if (initialEditId && products.length > 0) {
+      const productToEdit = products.find(p => p.id === initialEditId);
+      if (productToEdit) {
+        setCurrentProduct(productToEdit);
+        const initialImages: ProductImageItem[] = (productToEdit.images || (productToEdit.imageUrl ? [productToEdit.imageUrl] : [])).map((url, index) => ({
+          id: `existing-${index}-${Date.now()}`,
+          type: 'url',
+          value: url,
+          preview: url
+        }));
+        setProductImages(initialImages);
+        setIsEditing(true);
+      }
+    }
+  }, [initialEditId, products]);
   const [tagInput, setTagInput] = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  // Unified Image State for Drag and Drop
+  type ProductImageItem = { id: string, type: 'url' | 'file', value: string | File, preview: string };
+  const [productImages, setProductImages] = useState<ProductImageItem[]>([]);
+  const dragItem = React.useRef<number | null>(null);
+  const dragOverItem = React.useRef<number | null>(null);
+
   const [imageGenerationContext, setImageGenerationContext] = useState('general');
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+
+
   const [previewFile, setPreviewFile] = useState<File | null>(null); // GLB
   const [sourceFile, setSourceFile] = useState<File | null>(null);   // STL
   const [videoFile, setVideoFile] = useState<File | null>(null);     // Video
@@ -570,6 +597,30 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
     }
   }, [isEditing, currentProduct.id, currentProduct.isBuilderEnabled]);
 
+  const handleSort = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+
+    const _productImages = [...productImages];
+    const draggedItemContent = _productImages[dragItem.current];
+
+    // Track the cover item ID before move
+    const coverItemId = productImages[selectedCoverIndex]?.id;
+
+    _productImages.splice(dragItem.current, 1);
+    _productImages.splice(dragOverItem.current, 0, draggedItemContent);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    setProductImages(_productImages);
+
+    // Restore cover selection
+    if (coverItemId) {
+      const newCoverIndex = _productImages.findIndex(item => item.id === coverItemId);
+      if (newCoverIndex !== -1) setSelectedCoverIndex(newCoverIndex);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentProduct.name || !currentProduct.price) return;
@@ -604,15 +655,14 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
       // Upload Images
       const uploadedImageUrls: string[] = [];
 
-      // Keep existing images that weren't removed
-      uploadedImageUrls.push(...existingImages);
-
-      // Upload new files
-      if (imageFiles.length > 0) {
-        for (let i = 0; i < imageFiles.length; i++) {
-          const file = imageFiles[i];
+      // Process productImages in order
+      for (const item of productImages) {
+        if (item.type === 'url') {
+          uploadedImageUrls.push(item.value as string);
+        } else {
+          const file = item.value as File;
           const ext = file.name.split('.').pop() || 'jpg';
-          const path = `${productFolder}/image_${i}_${Date.now()}.${ext}`;
+          const path = `${productFolder}/image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
           const url = await firebaseService.uploadFile(file, path);
           uploadedImageUrls.push(url);
         }
@@ -623,6 +673,8 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
         // Ensure index is within bounds
         const coverIndex = selectedCoverIndex >= 0 && selectedCoverIndex < uploadedImageUrls.length ? selectedCoverIndex : 0;
         imageUrl = uploadedImageUrls[coverIndex];
+      } else {
+        imageUrl = '';
       }
 
       // Upload Preview (GLB) -> Public (now in products folder)
@@ -686,8 +738,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
       }
       setIsEditing(false);
       setCurrentProduct({ tags: [] });
-      setImageFiles([]);
-      setExistingImages([]);
+      setProductImages([]);
       setPreviewFile(null);
       setSourceFile(null);
       setVideoFile(null);
@@ -939,7 +990,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
   };
 
   const handleGenerateAI = async () => {
-    if (imageFiles.length === 0 && existingImages.length === 0) {
+    if (productImages.length === 0) {
       alert("Please upload an image first to generate details.");
       return;
     }
@@ -947,17 +998,19 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
     setIsGeneratingAI(true);
     try {
       let base64Image = '';
+      const firstImage = productImages[0];
 
-      if (imageFiles.length > 0) {
-        // Convert first file to base64
+      if (firstImage.type === 'file') {
+        // Convert file to base64
         base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.readAsDataURL(imageFiles[0]);
+          reader.readAsDataURL(firstImage.value as File);
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = error => reject(error);
         });
-      } else if (existingImages.length > 0) {
-        const response = await fetch(existingImages[0]);
+      } else {
+        // Fetch URL and convert to base64
+        const response = await fetch(firstImage.value as string);
         const blob = await response.blob();
         base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -1005,15 +1058,14 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
       let referenceImage = null;
 
       // Determine the current cover image
-      if (existingImages.length > 0 || imageFiles.length > 0) {
-        const totalImages = existingImages.length + imageFiles.length;
-        const coverIndex = selectedCoverIndex >= 0 && selectedCoverIndex < totalImages ? selectedCoverIndex : 0;
+      if (productImages.length > 0) {
+        const coverIndex = selectedCoverIndex >= 0 && selectedCoverIndex < productImages.length ? selectedCoverIndex : 0;
+        const coverImage = productImages[coverIndex];
 
-        if (coverIndex < existingImages.length) {
+        if (coverImage.type === 'url') {
           // It's an existing image URL
-          const url = existingImages[coverIndex];
           try {
-            const response = await fetch(url);
+            const response = await fetch(coverImage.value as string);
             const blob = await response.blob();
             referenceImage = await new Promise<string>((resolve) => {
               const reader = new FileReader();
@@ -1025,11 +1077,10 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
           }
         } else {
           // It's a new file
-          const file = imageFiles[coverIndex - existingImages.length];
           referenceImage = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(coverImage.value as File);
           });
         }
       }
@@ -1056,7 +1107,12 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
         const blob = await res.blob();
         const file = new File([blob], "generated-image.png", { type: "image/png" });
 
-        setImageFiles(prev => [...prev, file]);
+        setProductImages(prev => [...prev, {
+          id: `new-${Date.now()}`,
+          type: 'file',
+          value: file,
+          preview: URL.createObjectURL(file)
+        }]);
         // Set the model name to what we are now using
         setCurrentProduct(prev => ({ ...prev, aiModel: 'Gemini 3 Pro Image' }));
       }
@@ -1090,6 +1146,134 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">{currentProduct.id ? 'Edit Product' : 'Add New Product'}</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Product Images - Moved to Top */}
+          <div>
+            <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Product Images</label>
+
+            {/* Image Gallery Preview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {/* Combine existing and new images for display to make reordering easier logically, 
+                  but we need to keep them separate in state until save. 
+                  Actually, to support true reordering, we might need to unify them or handle complex index mapping.
+                  
+                  Simpler approach: Allow swapping within their own lists, or just visualize them together.
+                  The user wants to reorder "2 to 3". If 2 is existing and 3 is new, that's tricky.
+                  
+                  Let's implement a helper to move items in the arrays.
+              */}
+
+              {productImages.map((item, index) => (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={(e) => { dragItem.current = index; }}
+                  onDragEnter={(e) => { dragOverItem.current = index; }}
+                  onDragEnd={handleSort}
+                  onDragOver={(e) => e.preventDefault()}
+                  className={`relative group aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${selectedCoverIndex === index ? 'border-brand-500 ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'border-gray-200 dark:border-dark-border hover:border-brand-300'}`}
+                  onClick={() => setSelectedCoverIndex(index)}
+                >
+                  <Image src={item.preview} alt={`Image ${index}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+                  {selectedCoverIndex === index && (
+                    <div className="absolute top-2 left-2 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
+                      Cover
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProductImages(prev => {
+                        const newImages = prev.filter((_, i) => i !== index);
+                        // Adjust cover index
+                        if (selectedCoverIndex === index) setSelectedCoverIndex(0);
+                        else if (selectedCoverIndex > index) setSelectedCoverIndex(selectedCoverIndex - 1);
+                        return newImages;
+                      });
+                    }}
+                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+
+              <label className="flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-dark-border hover:border-brand-500 dark:hover:border-brand-500 cursor-pointer transition-colors bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80">
+                <Plus size={24} className="text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Add Image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={e => {
+                    if (e.target.files) {
+                      const newFiles = Array.from(e.target.files).map(file => ({
+                        id: `new-${Date.now()}-${file.name}`,
+                        type: 'file' as const,
+                        value: file,
+                        preview: URL.createObjectURL(file)
+                      }));
+                      setProductImages(prev => [...prev, ...newFiles]);
+                    }
+                  }}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                <p className="text-xs text-gray-500">Drag and drop images to reorder. The highlighted image will be the cover.</p>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <select
+                    value={imageGenerationContext}
+                    onChange={(e) => setImageGenerationContext(e.target.value)}
+                    className="text-xs bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-brand-500"
+                  >
+                    <option value="general">General Enhancement</option>
+                    <option value="background">Change Background</option>
+                    <option value="view">Change View/Angle</option>
+                    <option value="lighting">Cinematic Lighting</option>
+                    <option value="material">Material Detail</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleGenerateImage}
+                    disabled={isGeneratingImage}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-xs font-bold rounded-lg hover:from-pink-500 hover:to-rose-500 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingImage ? (
+                      <>
+                        <span className="animate-spin">✨</span> Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Palette size={14} /> Generate Image
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGenerateAI}
+                    disabled={isGeneratingAI || productImages.length === 0}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-bold rounded-lg hover:from-purple-500 hover:to-blue-500 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGeneratingAI ? (
+                      <>
+                        <span className="animate-spin">✨</span> Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={14} /> Generate Details
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Name</label>
             <input
@@ -1157,134 +1341,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
             <p className="text-xs text-gray-500 mt-1">Press Enter or Comma to add tags.</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Product Images</label>
 
-            {/* Image Gallery Preview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {existingImages.map((url, index) => (
-                <div
-                  key={`existing-${index}`}
-                  className={`relative group aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${selectedCoverIndex === index ? 'border-brand-500 ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'border-gray-200 dark:border-dark-border hover:border-brand-300'}`}
-                  onClick={() => setSelectedCoverIndex(index)}
-                >
-                  <Image src={url} alt={`Existing ${index}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
-                  {selectedCoverIndex === index && (
-                    <div className="absolute top-2 left-2 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                      Cover
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExistingImages(prev => prev.filter((_, i) => i !== index));
-                      if (selectedCoverIndex === index) setSelectedCoverIndex(0);
-                      else if (selectedCoverIndex > index) setSelectedCoverIndex(prev => prev - 1);
-                    }}
-                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              {imageFiles.map((file, index) => {
-                const globalIndex = existingImages.length + index;
-                return (
-                  <div
-                    key={`new-${index}`}
-                    className={`relative group aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${selectedCoverIndex === globalIndex ? 'border-brand-500 ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-dark-surface' : 'border-gray-200 dark:border-dark-border hover:border-brand-300'}`}
-                    onClick={() => setSelectedCoverIndex(globalIndex)}
-                  >
-                    <Image src={URL.createObjectURL(file)} alt={`New ${index}`} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
-                    {selectedCoverIndex === globalIndex && (
-                      <div className="absolute top-2 left-2 bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                        Cover
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setImageFiles(prev => prev.filter((_, i) => i !== index));
-                        if (selectedCoverIndex === globalIndex) setSelectedCoverIndex(0);
-                        else if (selectedCoverIndex > globalIndex) setSelectedCoverIndex(prev => prev - 1);
-                      }}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                );
-              })}
-              <label className="flex flex-col items-center justify-center aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-dark-border hover:border-brand-500 dark:hover:border-brand-500 cursor-pointer transition-colors bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-bg/80">
-                <Plus size={24} className="text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Add Image</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={e => {
-                    if (e.target.files) {
-                      setImageFiles(prev => [...prev, ...Array.from(e.target.files!)]);
-                    }
-                  }}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-2">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                <p className="text-xs text-gray-500">Upload a new image to replace the current one.</p>
-                <div className="flex flex-wrap gap-2 items-center">
-                  <select
-                    value={imageGenerationContext}
-                    onChange={(e) => setImageGenerationContext(e.target.value)}
-                    className="text-xs bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value="general">General Enhancement</option>
-                    <option value="background">Change Background</option>
-                    <option value="view">Change View/Angle</option>
-                    <option value="lighting">Cinematic Lighting</option>
-                    <option value="material">Material Detail</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleGenerateImage}
-                    disabled={isGeneratingImage}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-xs font-bold rounded-lg hover:from-pink-500 hover:to-rose-500 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isGeneratingImage ? (
-                      <>
-                        <span className="animate-spin">âœ¨</span> Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Palette size={14} /> Generate Image
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleGenerateAI}
-                    disabled={isGeneratingAI || (imageFiles.length === 0 && existingImages.length === 0)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-bold rounded-lg hover:from-purple-500 hover:to-blue-500 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isGeneratingAI ? (
-                      <>
-                        <span className="animate-spin">âœ¨</span> Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={14} /> Generate Details
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -1307,20 +1364,34 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                   className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
                 />
               </div>
-              {currentProduct.previewStoragePath && <p className="text-xs text-green-600 mt-1">âœ“ Preview available</p>}
+              {currentProduct.previewStoragePath && (
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-green-600">✓ Preview available</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentProduct({ ...currentProduct, previewStoragePath: '', modelUrl: '' });
+                      setPreviewFile(null);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Source File (STL)</label>
+              <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Source File (STL/ZIP)</label>
               <div className="relative group">
                 <Database className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
                   type="file"
-                  accept=".stl"
+                  accept=".stl,.zip"
                   onChange={e => {
                     const file = e.target.files ? e.target.files[0] : null;
-                    if (file && !file.name.toLowerCase().endsWith('.stl')) {
-                      alert("Only .stl files are allowed for source.");
+                    if (file && !file.name.toLowerCase().match(/\.(stl|zip)$/)) {
+                      alert("Only .stl or .zip files are allowed for source.");
                       e.target.value = '';
                       setSourceFile(null);
                     } else {
@@ -1330,7 +1401,21 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                   className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
                 />
               </div>
-              {currentProduct.sourceStoragePath && <p className="text-xs text-green-600 mt-1">Source available</p>}
+              {currentProduct.sourceStoragePath && (
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-green-600">✓ Source available</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentProduct({ ...currentProduct, sourceStoragePath: '' });
+                      setSourceFile(null);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
@@ -1353,7 +1438,21 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                   className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
                 />
               </div>
-              {currentProduct.videoUrl && <p className="text-xs text-green-600 mt-1">Video available</p>}
+              {currentProduct.videoUrl && (
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-green-600">✓ Video available</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentProduct({ ...currentProduct, videoUrl: '' });
+                      setVideoFile(null);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -1568,8 +1667,7 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
         <button
           onClick={() => {
             setCurrentProduct({ tags: [] });
-            setExistingImages([]);
-            setImageFiles([]);
+            setProductImages([]);
             setIsEditing(true);
           }}
           className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm font-bold"
@@ -1601,8 +1699,13 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                   <div className="flex gap-1">
                     <button onClick={() => {
                       setCurrentProduct(product);
-                      setExistingImages(product.images || (product.imageUrl ? [product.imageUrl] : []));
-                      setImageFiles([]);
+                      const initialImages: ProductImageItem[] = (product.images || (product.imageUrl ? [product.imageUrl] : [])).map((url, index) => ({
+                        id: `existing-${index}-${Date.now()}`,
+                        type: 'url',
+                        value: url,
+                        preview: url
+                      }));
+                      setProductImages(initialImages);
                       setIsEditing(true);
                     }}
                       className="p-1.5 text-blue-600 bg-blue-50 rounded-lg"
@@ -1700,8 +1803,13 @@ const ProductsManager = ({ products }: { products: Product[] }) => {
                       <button
                         onClick={() => {
                           setCurrentProduct(product);
-                          setExistingImages(product.images || (product.imageUrl ? [product.imageUrl] : []));
-                          setImageFiles([]);
+                          const initialImages: ProductImageItem[] = (product.images || (product.imageUrl ? [product.imageUrl] : [])).map((url, index) => ({
+                            id: `existing-${index}-${Date.now()}`,
+                            type: 'url',
+                            value: url,
+                            preview: url
+                          }));
+                          setProductImages(initialImages);
                           setIsEditing(true);
                         }}
                         className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors"

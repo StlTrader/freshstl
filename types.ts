@@ -171,13 +171,24 @@ export interface Payment {
 }
 
 export interface CustomerInfo {
-  fullName: string;
+  fullName?: string;
+  displayName?: string;
   email: string;
   phone?: string;
   address?: string;
   city?: string;
   zipCode?: string;
   country?: string;
+  role?: 'admin' | 'customer' | 'tester';
+  photoURL?: string;
+  createdAt?: any;
+  isBlocked?: boolean;
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    facebook?: string;
+    linkedin?: string;
+  };
 }
 
 export interface BuilderCategory {

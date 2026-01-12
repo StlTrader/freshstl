@@ -31,7 +31,9 @@ export default async function AdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-            <AdminWrapper products={products} />
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen">Loading Admin Panel...</div>}>
+                <AdminWrapper products={products} />
+            </React.Suspense>
         </div>
     );
 }

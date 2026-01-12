@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export const PurchasesList = () => {
-    const { orders, user, isLoadingPurchases } = useStore();
+    const { orders, purchases, user, isLoadingPurchases } = useStore();
 
     if (isLoadingPurchases) {
         return <div className="flex justify-center py-20">Loading...</div>;
@@ -34,6 +34,29 @@ export const PurchasesList = () => {
             </div>
         );
     }
+
+    const handleDownload = async (downloadLink?: string) => {
+        if (!downloadLink) {
+            alert("Download link not available.");
+            return;
+        }
+
+        try {
+            let url = downloadLink;
+            // If it looks like a storage path (not a full URL), fetch the download URL
+            if (!downloadLink.startsWith('http')) {
+                // Import dynamically to avoid circular deps if any, or just use the service
+                const { getFileDownloadUrl } = await import('../services/firebaseService');
+                url = await getFileDownloadUrl(downloadLink);
+            }
+
+            // Open in new tab
+            window.open(url, '_blank');
+        } catch (error) {
+            console.error("Failed to get download URL", error);
+            alert("Failed to download file. Please contact support.");
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -62,36 +85,46 @@ export const PurchasesList = () => {
 
                         <div className="p-6">
                             <div className="space-y-4">
-                                {order.items.map((item, index) => (
-                                    <div key={index} className="flex items-center justify-between group">
-                                        <div className="flex items-center gap-4">
-                                            {item.imageUrl && (
-                                                <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>
-                                                    <Image
-                                                        src={item.imageUrl}
-                                                        alt={item.name}
-                                                        width={64}
-                                                        height={64}
-                                                        className="rounded-lg object-cover bg-gray-100 dark:bg-dark-bg"
-                                                    />
-                                                </Link>
-                                            )}
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 transition-colors">
-                                                    <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>{item.name}</Link>
-                                                </h3>
-                                                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">${(item.price / 100).toFixed(2)}</p>
+                                {order.items.map((item, index) => {
+                                    // Find matching purchase record to get the correct download link
+                                    // We match by productId and transactionId (order.transactionId)
+                                    const purchase = purchases.find(p => p.productId === item.id && p.transactionId === order.transactionId);
+
+                                    return (
+                                        <div key={index} className="flex items-center justify-between group">
+                                            <div className="flex items-center gap-4">
+                                                {item.imageUrl && (
+                                                    <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>
+                                                        <Image
+                                                            src={item.imageUrl}
+                                                            alt={item.name}
+                                                            width={64}
+                                                            height={64}
+                                                            className="rounded-lg object-cover bg-gray-100 dark:bg-dark-bg"
+                                                        />
+                                                    </Link>
+                                                )}
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 transition-colors">
+                                                        <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>{item.name}</Link>
+                                                    </h3>
+                                                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary">${(item.price / 100).toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {/* Download Button */}
+                                                <button
+                                                    onClick={() => handleDownload(purchase?.downloadLink)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-surface rounded-lg text-sm font-medium transition-colors"
+                                                    title={purchase?.downloadLink ? "Download File" : "Download not available"}
+                                                >
+                                                    <Download size={16} />
+                                                    <span className="hidden sm:inline">Download</span>
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            {/* Download Button - In a real app, this would link to a secure download URL */}
-                                            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-surface rounded-lg text-sm font-medium transition-colors">
-                                                <Download size={16} />
-                                                <span className="hidden sm:inline">Download</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>

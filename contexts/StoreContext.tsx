@@ -234,7 +234,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             productId: item.id,
             productName: item.name,
             purchaseDate: firebaseService.getFirestoreTimestamp(),
-            downloadLink: item.modelUrl || `https://freshstl.com/downloads/${transactionId}/${item.id}`
+            // Use sourceStoragePath if available (this is the protected STL/ZIP), 
+            // otherwise fallback to modelUrl (GLB preview), 
+            // otherwise fallback to a placeholder link.
+            // Note: sourceStoragePath is a path, not a full URL. The UI must handle fetching the download URL.
+            downloadLink: item.sourceStoragePath || item.modelUrl || `https://freshstl.com/downloads/${transactionId}/${item.id}`
         }));
 
         const orderData = {

@@ -2792,3 +2792,16 @@ export const deleteCollection = async (id: string) => {
   if (!db) throw new Error("Firestore not initialized");
   await deleteDoc(doc(db, 'collections', id));
 };
+
+export const getFileDownloadUrl = async (path: string): Promise<string> => {
+  if (isMockFallback || !storage) {
+    return path; // Return path as is in mock mode (or mock URL)
+  }
+  try {
+    const storageRef = ref(storage, path);
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error("Error getting download URL:", error);
+    throw error;
+  }
+};

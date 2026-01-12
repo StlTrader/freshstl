@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowLeft, Calendar, User, Tag, Share2, Clock, ArrowRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { BlogPost } from '../../../types';
+import { AdminEditButton } from '../../../components/AdminEditButton';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -420,6 +421,7 @@ export default async function BlogPostPage({ params }: Props) {
                     </div>
                 )}
             </article>
+            <AdminEditButton type="post" id={post.id} />
         </div>
     );
 }

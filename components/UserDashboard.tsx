@@ -51,7 +51,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
     address: '',
     city: '',
     zipCode: '',
-    country: ''
+    country: '',
+    socialLinks: {
+      twitter: '',
+      instagram: '',
+      facebook: '',
+      linkedin: ''
+    }
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -89,7 +95,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
             ...profile,
             // Prioritize Auth object for core identity, but fallback to Firestore
             email: user.email || profile.email || prev.email,
-            fullName: user.displayName || profile.fullName || prev.fullName
+            fullName: user.displayName || profile.fullName || prev.fullName,
+            socialLinks: {
+              twitter: profile.socialLinks?.twitter || '',
+              instagram: profile.socialLinks?.instagram || '',
+              facebook: profile.socialLinks?.facebook || '',
+              linkedin: profile.socialLinks?.linkedin || ''
+            }
           }));
         }
       };
@@ -257,7 +269,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
           <p className="text-gray-500 dark:text-dark-text-secondary mt-1">Manage your purchases, wishlist, and account settings.</p>
         </div>
         <div className="flex items-center gap-3 bg-white dark:bg-dark-surface p-2 rounded-lg border border-gray-200 dark:border-dark-border shadow-sm">
-          <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg overflow-hidden">
+          <div className="relative w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg overflow-hidden">
             {avatarPreview ? (
               <Image src={avatarPreview} alt="Profile" fill className="object-cover" sizes="128px" />
             ) : user?.displayName ? (
@@ -607,7 +619,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary mb-4 border-b border-gray-200 dark:border-dark-border pb-2">Profile Picture</h4>
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                    <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-dark-border flex items-center justify-center overflow-hidden border-4 border-white dark:border-dark-border shadow-md shrink-0">
+                    <div className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-dark-border flex items-center justify-center overflow-hidden border-4 border-white dark:border-dark-border shadow-md shrink-0">
                       {avatarPreview ? (
                         <Image src={avatarPreview} alt="Profile Preview" fill className="object-cover" sizes="128px" />
                       ) : (
@@ -660,6 +672,73 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                         placeholder="+1 555-123-4567"
                       />
                       <p className="text-xs text-gray-400 mt-1">Format: +1 555-123-4567</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Media Section */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-dark-text-primary mb-4 border-b border-gray-200 dark:border-dark-border pb-2">Social Media</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-2">Twitter</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={customerInfo.socialLinks?.twitter || ''}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, socialLinks: { ...customerInfo.socialLinks, twitter: e.target.value } })}
+                          className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                          placeholder="@username"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-2">Instagram</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={customerInfo.socialLinks?.instagram || ''}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, socialLinks: { ...customerInfo.socialLinks, instagram: e.target.value } })}
+                          className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                          placeholder="@username"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-2">Facebook</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={customerInfo.socialLinks?.facebook || ''}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, socialLinks: { ...customerInfo.socialLinks, facebook: e.target.value } })}
+                          className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                          placeholder="Profile URL or Username"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-2">LinkedIn</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={customerInfo.socialLinks?.linkedin || ''}
+                          onChange={(e) => setCustomerInfo({ ...customerInfo, socialLinks: { ...customerInfo.socialLinks, linkedin: e.target.value } })}
+                          className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 pl-10 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                          placeholder="Profile URL"
+                        />
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

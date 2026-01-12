@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { adminDb } from '../../../services/firebaseAdmin';
 import { Product } from '../../../types';
 import ProductDetails from '../../../components/ProductDetails';
+import { AdminEditButton } from '../../../components/AdminEditButton';
 import { Metadata } from 'next';
 
 export const revalidate = 60;
@@ -139,6 +140,7 @@ export default async function ProductPage({ params }: PageProps) {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <ProductDetails product={product} />
+            <AdminEditButton type="product" id={product.id} />
         </>
     );
 }

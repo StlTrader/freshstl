@@ -8,9 +8,18 @@ import { Plus, Edit, Trash2, Search, X, Upload, CheckCircle, Eye, Tag, Palette, 
 import Image from 'next/image';
 import { Product } from '../../types';
 
-export default function BlogManager() {
+export default function BlogManager({ initialEditId }: { initialEditId?: string }) {
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (initialEditId && posts.length > 0) {
+            const postToEdit = posts.find(p => p.id === initialEditId);
+            if (postToEdit) {
+                handleOpenModal(postToEdit);
+            }
+        }
+    }, [initialEditId, posts]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
