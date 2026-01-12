@@ -46,7 +46,7 @@ import {
 import BlogManager from './admin/BlogManager';
 import CollectionManager from './admin/CollectionManager';
 import IndexingManager from './admin/IndexingManager';
-import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig } from '../types';
+import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig, Collection } from '../types';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
