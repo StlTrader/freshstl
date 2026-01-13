@@ -39,7 +39,7 @@ export const AdminEditButton: React.FC<AdminEditButtonProps> = ({ type, id }) =>
     return (
         <Link
             href={`/admin?tab=${type === 'product' ? 'products' : 'blog'}&editId=${id}`}
-            className="fixed bottom-6 right-6 z-50 bg-brand-600 text-white p-4 rounded-full shadow-lg hover:bg-brand-700 transition-all hover:scale-110 flex items-center gap-2 font-bold animate-in fade-in slide-in-from-bottom-4 duration-500"
+            className="fixed bottom-6 right-6 z-[100] bg-brand-600 text-white p-4 rounded-full shadow-lg hover:bg-brand-700 transition-all hover:scale-110 flex items-center gap-2 font-bold animate-in fade-in slide-in-from-bottom-4 duration-500"
             title={`Edit this ${type}`}
         >
             <Edit size={24} />

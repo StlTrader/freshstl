@@ -5,9 +5,27 @@ import { Hero } from '../components/Hero';
 import { LearningHub } from '../components/LearningHub';
 import { adminDb } from '../services/firebaseAdmin';
 import { Product, BlogPost, Collection } from '../types';
+import { Metadata } from 'next';
 
 export const revalidate = 60;
 
+export const metadata: Metadata = {
+    title: 'FreshSTL | Premium 3D Print Files & Models',
+    description: 'Discover high-quality 3D print files, STL models, and creative designs for your 3D printer. Shop our curated collection of premium 3D models.',
+    keywords: '3D print files, STL models, 3D printing, digital downloads, premium 3D models',
+    openGraph: {
+        title: 'FreshSTL | Premium 3D Print Files & Models',
+        description: 'Discover high-quality 3D print files, STL models, and creative designs for your 3D printer.',
+        type: 'website',
+        locale: 'en_US',
+        siteName: 'FreshSTL',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'FreshSTL | Premium 3D Print Files & Models',
+        description: 'Discover high-quality 3D print files, STL models, and creative designs for your 3D printer.',
+    },
+};
 
 // Server Component
 export default async function Home() {
@@ -35,6 +53,7 @@ export default async function Home() {
                     ...(data as any),
                     createdAt: serializeTimestamp(data.createdAt),
                     updatedAt: serializeTimestamp(data.updatedAt),
+                    lastIndexedAt: serializeTimestamp(data.lastIndexedAt),
                 } as Product;
             }).map(product => {
                 // Ensure status is set, default to published if missing for legacy data
@@ -61,11 +80,32 @@ export default async function Home() {
                     ...data,
                     createdAt: serializeTimestamp(data.createdAt),
                     updatedAt: serializeTimestamp(data.updatedAt),
+                    lastIndexedAt: serializeTimestamp(data.lastIndexedAt),
                 } as BlogPost;
             }).sort((a, b) => {
                 const dateA = new Date(a.createdAt).getTime();
                 const dateB = new Date(b.createdAt).getTime();
                 return dateB - dateA;
+            });
+
+            // Fetch Collections
+            const collectionsSnapshot = await adminDb.collection('collections')
+                .where('status', '==', 'published')
+                .get();
+
+            collections = collectionsSnapshot.docs.map(doc => {
+                const data = doc.data();
+                const serializeTimestamp = (ts: any) => {
+                    if (!ts) return null;
+                    if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+                    if (ts._seconds !== undefined) return new Date(ts._seconds * 1000).toISOString();
+                    return ts;
+                };
+                return {
+                    id: doc.id,
+                    ...(data as any),
+                    createdAt: serializeTimestamp(data.createdAt),
+                } as Collection;
             });
 
         } else {
@@ -93,10 +133,22 @@ export default async function Home() {
                         .where(FieldPath.documentId(), 'in', heroConfig.customProductIds)
                         .get();
 
-                    const fetchedProducts = customDocs.docs.map(doc => ({
-                        id: doc.id,
-                        ...(doc.data() as any)
-                    } as Product));
+                    const fetchedProducts = customDocs.docs.map(doc => {
+                        const data = doc.data();
+                        const serializeTimestamp = (ts: any) => {
+                            if (!ts) return null;
+                            if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+                            if (ts._seconds !== undefined) return new Date(ts._seconds * 1000).toISOString();
+                            return ts;
+                        };
+                        return {
+                            id: doc.id,
+                            ...(data as any),
+                            createdAt: serializeTimestamp(data.createdAt),
+                            updatedAt: serializeTimestamp(data.updatedAt),
+                            lastIndexedAt: serializeTimestamp(data.lastIndexedAt),
+                        } as Product;
+                    });
 
                     // Sort by the order in customProductIds
                     heroProducts = heroConfig.customProductIds

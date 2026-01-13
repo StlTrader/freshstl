@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onProductDeleted = exports.getSecureStlUrl = void 0;
+exports.requestIndexing = exports.onProductDeleted = exports.getSecureStlUrl = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -98,5 +98,73 @@ exports.onProductDeleted = functions.firestore
     // Since we only explicitly stored paths, we only delete those.
     await Promise.all(promises);
     console.log(`Cleaned up files for product ${context.params.productId}`);
+});
+// 3. Google Indexing API Function
+const googleapis_1 = require("googleapis");
+exports.requestIndexing = functions.https.onCall(async (data, context) => {
+    var _a, _b;
+    // Check Authentication (Admin only)
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "The function must be called while authenticated.");
+    }
+    // Check if user is admin (using the same logic as getSecureStlUrl)
+    const isAdmin = context.auth.token.email === 'stltraderltd@gmail.com' || context.auth.token.admin === true;
+    if (!isAdmin) {
+        throw new functions.https.HttpsError("permission-denied", "Only admins can request indexing.");
+    }
+    const { url, type } = data; // type: 'URL_UPDATED' or 'URL_DELETED'
+    if (!url || !type) {
+        throw new functions.https.HttpsError("invalid-argument", "The function must be called with 'url' and 'type' arguments.");
+    }
+    try {
+        // Fetch Service Account Key from Firestore
+        // We assume the admin has saved the service account JSON in 'settings/indexing'
+        const settingsDoc = await admin.firestore().collection("settings").doc("indexing").get();
+        if (!settingsDoc.exists || !((_a = settingsDoc.data()) === null || _a === void 0 ? void 0 : _a.serviceAccount)) {
+            throw new functions.https.HttpsError("failed-precondition", "Service account not configured. Please configure it in the Admin Panel.");
+        }
+        let serviceAccount;
+        try {
+            serviceAccount = JSON.parse((_b = settingsDoc.data()) === null || _b === void 0 ? void 0 : _b.serviceAccount);
+        }
+        catch (e) {
+            throw new functions.https.HttpsError("failed-precondition", "Invalid Service Account JSON format.");
+        }
+        // Handle private key newlines if they are escaped
+        let privateKey = serviceAccount.private_key;
+        if (privateKey && typeof privateKey === 'string') {
+            // If the key contains literal \n characters that aren't actual newlines, fix them
+            if (privateKey.includes('\\n') && !privateKey.includes('\n')) {
+                privateKey = privateKey.replace(/\\n/g, '\n');
+            }
+        }
+        const auth = new googleapis_1.google.auth.GoogleAuth({
+            credentials: {
+                client_email: serviceAccount.client_email,
+                private_key: privateKey,
+            },
+            scopes: ["https://www.googleapis.com/auth/indexing"],
+        });
+        const client = await auth.getClient();
+        const indexing = googleapis_1.google.indexing({
+            version: "v3",
+            auth: client,
+        });
+        const result = await indexing.urlNotifications.publish({
+            requestBody: {
+                url: url,
+                type: type,
+            },
+        });
+        return {
+            status: result.status,
+            data: result.data,
+        };
+    }
+    catch (error) {
+        console.error("Indexing API Error:", error);
+        // Return the actual error message to the client
+        throw new functions.https.HttpsError("internal", `Indexing failed: ${error.message || error}`);
+    }
 });
 //# sourceMappingURL=index.js.map

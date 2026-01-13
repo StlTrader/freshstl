@@ -45,7 +45,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
             subtitle: 'New Arrival',
             description: 'Premium STL for 3D printing. Ready to print.',
             image: p.imageUrl,
-            link: `/product/${p.id}`,
+            link: `/3d-print/${p.slug}`,
             isCustom: false
         }))
     ];

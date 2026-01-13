@@ -32,9 +32,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         };
     }
 
+    const isDraft = product.status === 'draft';
+
     return {
         title: `${product.name} | FreshSTL`,
         description: product.description,
+        robots: isDraft ? { index: false, follow: false } : { index: true, follow: true },
         openGraph: {
             title: product.name,
             description: product.description,
@@ -71,6 +74,7 @@ export default async function ProductPage({ params }: Props) {
                 ...data,
                 createdAt: serializeTimestamp(data.createdAt),
                 updatedAt: serializeTimestamp(data.updatedAt),
+                lastIndexedAt: serializeTimestamp(data.lastIndexedAt),
             } as Product;
         }
     }
@@ -79,8 +83,36 @@ export default async function ProductPage({ params }: Props) {
         notFound();
     }
 
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        image: product.images || [product.imageUrl],
+        description: product.description,
+        brand: {
+            '@type': 'Brand',
+            name: 'FreshSTL'
+        },
+        offers: {
+            '@type': 'Offer',
+            url: `https://freshstl.com/3d-print/${product.slug}`,
+            priceCurrency: 'USD',
+            price: (product.price / 100).toFixed(2),
+            availability: 'https://schema.org/InStock'
+        },
+        aggregateRating: product.rating ? {
+            '@type': 'AggregateRating',
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount || 1
+        } : undefined
+    };
+
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <ProductDetails product={product} />
             <AdminEditButton type="product" id={product.id} />
         </>

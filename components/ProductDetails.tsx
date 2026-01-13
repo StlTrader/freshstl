@@ -190,13 +190,14 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                 )}
 
                 {/* Breadcrumb / Back */}
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-500 hover:text-brand-500 transition-colors mb-6 group"
-                >
-                    <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                    <span className="font-medium">Back</span>
-                </button>
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                    <button onClick={() => router.push('/')} className="hover:text-brand-500 transition-colors">Home</button>
+                    <ChevronRight size={14} />
+                    <button onClick={() => router.push('/#products')} className="hover:text-brand-500 transition-colors">3D Models</button>
+                    <ChevronRight size={14} />
+                    <span className="font-medium text-gray-900 dark:text-dark-text-primary truncate max-w-[200px] sm:max-w-none">{product.name}</span>
+                </nav>
 
                 <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
 
@@ -637,9 +638,14 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                             {/* Main Info Card */}
                             <div className="hidden lg:block bg-white dark:bg-dark-surface rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 dark:border-dark-border">
                                 <div className="hidden lg:block">
-                                    <span className="text-brand-600 dark:text-brand-400 font-bold text-xs uppercase tracking-widest mb-2 block">
-                                        {product.category}
-                                    </span>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-brand-600 dark:text-brand-400 font-bold text-xs uppercase tracking-widest">
+                                            {product.category}
+                                        </span>
+                                        <span className="flex items-center gap-1 text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+                                            <ShieldCheck size={12} /> VERIFIED
+                                        </span>
+                                    </div>
                                     <h1 className="text-3xl font-black text-gray-900 dark:text-dark-text-primary mb-4 leading-tight">{product.name}</h1>
                                     <div className="flex items-center gap-2 mb-6">
                                         <div className="flex text-yellow-400">
@@ -741,7 +747,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                     <div
                                         key={related.id}
                                         onClick={() => router.push(`/3d-print/${related.slug}`)}
-                                        className="group cursor-pointer bg-white dark:bg-dark-surface rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-dark-border"
+                                        className="group cursor-pointer bg-white dark:bg-dark-surface rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 dark:border-dark-border"
                                     >
                                         <div className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-dark-bg">
                                             <Image

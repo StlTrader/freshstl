@@ -21,7 +21,8 @@ export default async function AdminPage() {
                     id: doc.id,
                     ...(data as any),
                     createdAt: serializeTimestamp(data.createdAt),
-                    updatedAt: serializeTimestamp(data.updatedAt)
+                    updatedAt: serializeTimestamp(data.updatedAt),
+                    lastIndexedAt: serializeTimestamp(data.lastIndexedAt)
                 } as Product;
             });
         }

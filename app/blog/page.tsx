@@ -33,7 +33,8 @@ export default async function BlogPage() {
                         ...data,
                         // Serialize dates
                         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+                        lastIndexedAt: data.lastIndexedAt?.toDate ? data.lastIndexedAt.toDate().toISOString() : data.lastIndexedAt
                     };
                 })
                 .filter((post: any) => post.published); // Filter in memory

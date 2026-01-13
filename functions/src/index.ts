@@ -168,21 +168,38 @@ export const requestIndexing = functions.https.onCall(async (data, context) => {
             );
         }
 
-        const serviceAccount = JSON.parse(settingsDoc.data()?.serviceAccount);
+        let serviceAccount;
+        try {
+            serviceAccount = JSON.parse(settingsDoc.data()?.serviceAccount);
+        } catch (e) {
+            throw new functions.https.HttpsError(
+                "failed-precondition",
+                "Invalid Service Account JSON format."
+            );
+        }
 
-        const jwtClient = new google.auth.JWT(
-            serviceAccount.client_email,
-            undefined,
-            serviceAccount.private_key,
-            ["https://www.googleapis.com/auth/indexing"],
-            undefined
-        );
+        // Handle private key newlines if they are escaped
+        let privateKey = serviceAccount.private_key;
+        if (privateKey && typeof privateKey === 'string') {
+            // If the key contains literal \n characters that aren't actual newlines, fix them
+            if (privateKey.includes('\\n') && !privateKey.includes('\n')) {
+                privateKey = privateKey.replace(/\\n/g, '\n');
+            }
+        }
 
-        await jwtClient.authorize();
+        const auth = new google.auth.GoogleAuth({
+            credentials: {
+                client_email: serviceAccount.client_email,
+                private_key: privateKey,
+            },
+            scopes: ["https://www.googleapis.com/auth/indexing"],
+        });
+
+        const client = await auth.getClient();
 
         const indexing = google.indexing({
             version: "v3",
-            auth: jwtClient,
+            auth: client as any,
         });
 
         const result = await indexing.urlNotifications.publish({
@@ -199,9 +216,10 @@ export const requestIndexing = functions.https.onCall(async (data, context) => {
 
     } catch (error: any) {
         console.error("Indexing API Error:", error);
+        // Return the actual error message to the client
         throw new functions.https.HttpsError(
             "internal",
-            `Indexing failed: ${error.message}`
+            `Indexing failed: ${error.message || error}`
         );
     }
 });

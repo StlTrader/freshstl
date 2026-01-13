@@ -47,6 +47,7 @@ async function getProduct(slug: string): Promise<Product | null> {
                 ...(data as any),
                 createdAt: serializeTimestamp(data?.createdAt),
                 updatedAt: serializeTimestamp(data?.updatedAt),
+                lastIndexedAt: serializeTimestamp(data?.lastIndexedAt),
             } as Product;
         } else {
             console.log(`Product with slug ${slug} not found in Firestore.`);
@@ -69,9 +70,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
+    const isDraft = product.status === 'draft';
+
     return {
         title: `${product.name} | FreshSTL`,
         description: product.description.substring(0, 160),
+        robots: isDraft ? { index: false, follow: false } : { index: true, follow: true },
         alternates: {
             canonical: `/3d-print/${product.slug}`,
         },

@@ -205,7 +205,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
       </div>
 
       {/* Masonry Grid with Interspersed Content */}
-      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 md:gap-6 space-y-4 md:space-y-6">
+      <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-3 md:gap-6 space-y-3 md:space-y-6">
         {selectedCategory === 'Collections' ? renderCollections() : renderGridItems()}
 
         {filteredProducts.length === 0 && selectedCategory !== 'Collections' && (

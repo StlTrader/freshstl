@@ -31,7 +31,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             src={activeImage}
                             alt={product.name}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
                             className="object-cover transform transition-transform duration-700 group-hover:scale-110"
                         />
                     ) : (
@@ -125,7 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
 
             {/* Product Info */}
-            <Link href={`/3d-print/${product.slug}`} className="block p-4">
+            <Link href={`/3d-print/${product.slug}`} className="block p-3 md:p-4">
                 <h3 className="text-sm font-bold text-gray-800 dark:text-dark-text-primary truncate pr-4 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {product.name}
                 </h3>

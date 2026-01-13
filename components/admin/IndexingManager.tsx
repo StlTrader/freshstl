@@ -20,7 +20,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
     const [activeTab, setActiveTab] = useState<'request' | 'bulk' | 'selective' | 'settings'>('request');
     const [url, setUrl] = useState('');
     const [serviceAccountJson, setServiceAccountJson] = useState('');
-    const [baseUrl, setBaseUrl] = useState('');
+    const [baseUrl, setBaseUrl] = useState('https://freshstl.com');
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [isConfigured, setIsConfigured] = useState(false);
@@ -49,7 +49,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
                 slug: p.slug,
                 type: 'product',
                 lastIndexedAt: p.lastIndexedAt,
-                url: `${baseUrl.replace(/\/$/, '')}/products/${p.slug}`
+                url: `${baseUrl.replace(/\/$/, '')}/3d-print/${p.slug}`
             }));
 
             const postItems: IndexableItem[] = posts.map(p => ({
@@ -93,10 +93,15 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
         setStatus(null);
         try {
             JSON.parse(serviceAccountJson);
-            if (baseUrl && !baseUrl.startsWith('http')) {
+            let cleanBaseUrl = baseUrl.trim();
+            if (cleanBaseUrl && !cleanBaseUrl.startsWith('http')) {
                 throw new Error("Base URL must start with http:// or https://");
             }
-            await firebaseService.saveIndexingConfig({ serviceAccount: serviceAccountJson, baseUrl });
+            // Remove trailing slash
+            cleanBaseUrl = cleanBaseUrl.replace(/\/$/, '');
+
+            await firebaseService.saveIndexingConfig({ serviceAccount: serviceAccountJson, baseUrl: cleanBaseUrl });
+            setBaseUrl(cleanBaseUrl); // Update state with cleaned URL
             setIsConfigured(true);
             setStatus({ type: 'success', message: 'Configuration saved successfully.' });
             setActiveTab('request');
@@ -114,6 +119,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
             return true;
         } catch (error: any) {
             console.error("Indexing request failed", error);
+            // Throw the error so the caller can handle it and display the message
             throw error;
         }
     };
@@ -126,6 +132,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
             setStatus({ type: 'success', message: `Successfully requested ${type === 'URL_UPDATED' ? 'update' : 'removal'} for ${url}` });
             setUrl('');
         } catch (error: any) {
+            // Display the error message from the Cloud Function
             setStatus({ type: 'error', message: 'Request failed: ' + (error.message || 'Unknown error') });
         } finally {
             setIsLoading(false);
@@ -134,7 +141,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
 
     const runBulkIndexing = async (itemsToIndex: IndexableItem[]) => {
         if (!baseUrl) {
-            setStatus({ type: 'error', message: 'Base URL is not configured. Please go to Settings.' });
+            setStatus({ type: 'error', message: `Base URL is not configured (Current value: '${baseUrl}'). Please go to Settings and save it.` });
             return;
         }
 
@@ -219,8 +226,8 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize whitespace-nowrap ${activeTab === tab
-                                    ? 'bg-white dark:bg-dark-surface text-brand-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                                ? 'bg-white dark:bg-dark-surface text-brand-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                                 }`}
                         >
                             {tab === 'request' ? 'Single Request' : tab}
@@ -243,8 +250,8 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
 
             {status && (
                 <div className={`p-4 rounded-xl mb-6 flex items-start gap-3 ${status.type === 'success'
-                        ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                        : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                    : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
                     }`}>
                     {status.type === 'success' ? <CheckCircle className="text-green-600" /> : <AlertCircle className="text-red-600" />}
                     <div>
@@ -417,7 +424,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
                     <form onSubmit={handleSaveSettings}>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
-                            <input type="url" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://freshstl.store" className="w-full p-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" required />
+                            <input type="url" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://freshstl.com" className="w-full p-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" required />
                         </div>
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Account JSON</label>

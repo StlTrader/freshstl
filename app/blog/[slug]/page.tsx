@@ -26,7 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
                 id: doc.id,
                 ...data,
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
+                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+                lastIndexedAt: data.lastIndexedAt?.toDate ? data.lastIndexedAt.toDate().toISOString() : data.lastIndexedAt
             } as BlogPost;
         }
     } else {
@@ -80,7 +81,8 @@ export default async function BlogPostPage({ params }: Props) {
                 id: doc.id,
                 ...data,
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
+                updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+                lastIndexedAt: data.lastIndexedAt?.toDate ? data.lastIndexedAt.toDate().toISOString() : data.lastIndexedAt
             } as BlogPost;
         }
 
@@ -99,7 +101,8 @@ export default async function BlogPostPage({ params }: Props) {
                         id: doc.id,
                         ...data,
                         createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
-                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
+                        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+                        lastIndexedAt: data.lastIndexedAt?.toDate ? data.lastIndexedAt.toDate().toISOString() : data.lastIndexedAt
                     } as BlogPost;
                 })
                 .filter((p: any) => p.published && p.slug !== slug)
@@ -112,13 +115,15 @@ export default async function BlogPostPage({ params }: Props) {
             post = {
                 ...post,
                 createdAt: post.createdAt?.toDate ? post.createdAt.toDate().toISOString() : post.createdAt,
-                updatedAt: post.updatedAt?.toDate ? post.updatedAt.toDate().toISOString() : post.updatedAt
+                updatedAt: post.updatedAt?.toDate ? post.updatedAt.toDate().toISOString() : post.updatedAt,
+                lastIndexedAt: post.lastIndexedAt?.toDate ? post.lastIndexedAt.toDate().toISOString() : post.lastIndexedAt
             };
             const rawRelated = await getRelatedPosts(slug, 3);
             relatedPosts = rawRelated.map(p => ({
                 ...p,
                 createdAt: p.createdAt?.toDate ? p.createdAt.toDate().toISOString() : p.createdAt,
-                updatedAt: p.updatedAt?.toDate ? p.updatedAt.toDate().toISOString() : p.updatedAt
+                updatedAt: p.updatedAt?.toDate ? p.updatedAt.toDate().toISOString() : p.updatedAt,
+                lastIndexedAt: p.lastIndexedAt?.toDate ? p.lastIndexedAt.toDate().toISOString() : p.lastIndexedAt
             }));
         }
     }
