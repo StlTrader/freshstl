@@ -91,9 +91,9 @@ service cloud.firestore {
       allow write: if isAdmin(); // Or specific trigger rules
     }
 
-    // Settings: Public read, Admin write
-    match /settings/{document=**} {
-      allow read: if true;
+    // Settings: Public read (except sensitive), Admin write
+    match /settings/{settingId} {
+      allow read: if settingId != 'indexing' || isAdmin();
       allow write: if isAdmin();
     }
 

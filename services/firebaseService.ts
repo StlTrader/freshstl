@@ -2831,8 +2831,8 @@ export const saveIndexingConfig = async (config: { serviceAccount?: string, base
   }, { merge: true });
 };
 
-export const updateIndexingStatus = async (type: 'product' | 'post', id: string) => {
-  if (!db) return;
+export const updateIndexingStatus = async (type: 'product' | 'post' | 'static', id: string) => {
+  if (!db || type === 'static') return;
   const collectionName = type === 'product' ? 'products' : 'posts';
   await updateDoc(doc(db, collectionName, id), {
     lastIndexedAt: serverTimestamp()

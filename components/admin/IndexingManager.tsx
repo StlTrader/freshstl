@@ -11,7 +11,7 @@ interface IndexableItem {
     id: string;
     title: string;
     slug: string;
-    type: 'product' | 'post';
+    type: 'product' | 'post' | 'static';
     lastIndexedAt?: any;
     url: string;
 }
@@ -43,14 +43,16 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
 
     useEffect(() => {
         if (baseUrl) {
-            const productItems: IndexableItem[] = products.map(p => ({
-                id: p.id,
-                title: p.name,
-                slug: p.slug,
-                type: 'product',
-                lastIndexedAt: p.lastIndexedAt,
-                url: `${baseUrl.replace(/\/$/, '')}/3d-print/${p.slug}`
-            }));
+            const productItems: IndexableItem[] = products
+                .filter(p => p.status !== 'draft')
+                .map(p => ({
+                    id: p.id,
+                    title: p.name,
+                    slug: p.slug,
+                    type: 'product',
+                    lastIndexedAt: p.lastIndexedAt,
+                    url: `${baseUrl.replace(/\/$/, '')}/3d-print/${p.slug}`
+                }));
 
             const postItems: IndexableItem[] = posts.map(p => ({
                 id: p.id,
@@ -205,13 +207,13 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
     });
 
     // Simple Bulk Handlers (wrappers)
-    const handleIndexHome = () => runBulkIndexing([{ id: 'home', title: 'Home Page', slug: '', type: 'product', url: baseUrl } as any]); // Mock item for home
+    const handleIndexHome = () => runBulkIndexing([{ id: 'home', title: 'Home Page', slug: '', type: 'static', url: baseUrl } as any]);
     const handleIndexProducts = () => runBulkIndexing(items.filter(i => i.type === 'product'));
     const handleIndexBlog = () => runBulkIndexing(items.filter(i => i.type === 'post'));
     const handleIndexImportant = () => {
         const paths = ['/about', '/contact', '/faq', '/terms', '/privacy'];
-        const impItems = paths.map(p => ({ id: p, title: p, slug: p, type: 'product', url: `${baseUrl}${p}` } as any));
-        runBulkIndexing([{ id: 'home', title: 'Home Page', slug: '', type: 'product', url: baseUrl } as any, ...impItems]);
+        const impItems = paths.map(p => ({ id: p, title: p, slug: p, type: 'static', url: `${baseUrl}${p}` } as any));
+        runBulkIndexing([{ id: 'home', title: 'Home Page', slug: '', type: 'static', url: baseUrl } as any, ...impItems]);
     };
 
     return (
