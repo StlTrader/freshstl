@@ -156,12 +156,15 @@ export const requestIndexing = functions.https.onCall(async (data, context) => {
         );
     }
 
+    console.log(`Requesting indexing for ${url} (${type})`);
+
     try {
         // Fetch Service Account Key from Firestore
         // We assume the admin has saved the service account JSON in 'settings/indexing'
         const settingsDoc = await admin.firestore().collection("settings").doc("indexing").get();
 
         if (!settingsDoc.exists || !settingsDoc.data()?.serviceAccount) {
+            console.error("Service account not configured in Firestore.");
             throw new functions.https.HttpsError(
                 "failed-precondition",
                 "Service account not configured. Please configure it in the Admin Panel."
@@ -171,7 +174,9 @@ export const requestIndexing = functions.https.onCall(async (data, context) => {
         let serviceAccount;
         try {
             serviceAccount = JSON.parse(settingsDoc.data()?.serviceAccount);
+            console.log("Service account JSON parsed successfully.");
         } catch (e) {
+            console.error("Failed to parse Service Account JSON.");
             throw new functions.https.HttpsError(
                 "failed-precondition",
                 "Invalid Service Account JSON format."
@@ -208,6 +213,8 @@ export const requestIndexing = functions.https.onCall(async (data, context) => {
                 type: type,
             },
         });
+
+        console.log(`Indexing API response: ${result.status}`, result.data);
 
         return {
             status: result.status,

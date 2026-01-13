@@ -4,7 +4,7 @@ import { adminDb } from '../../../services/firebaseAdmin';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, User, Tag, Share2, Clock, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Tag, Share2, Clock, ArrowRight, Facebook, Twitter, Linkedin, Link as LinkIcon, ChevronRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { BlogPost } from '../../../types';
 import { AdminEditButton } from '../../../components/AdminEditButton';
@@ -132,6 +132,16 @@ export default async function BlogPostPage({ params }: Props) {
         notFound();
     }
 
+    // Extract Headings for TOC
+    const headings = post.content.split('\n')
+        .filter(line => line.startsWith('# ') || line.startsWith('## '))
+        .map(line => {
+            const level = line.startsWith('## ') ? 2 : 1;
+            const text = line.replace(/^#+ /, '').trim();
+            const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+            return { level, text, id };
+        });
+
     // Simple Markdown Parser (Enhanced)
     const renderMarkdown = (text: string) => {
         if (!text) return null;
@@ -139,24 +149,32 @@ export default async function BlogPostPage({ params }: Props) {
         const lines = text.split('\n');
         return lines.map((line, index) => {
             // Headers
-            if (line.startsWith('# ')) return <h1 key={index} className="text-4xl md:text-5xl font-extrabold mt-16 mb-8 text-gray-900 dark:text-dark-text-primary leading-tight tracking-tight">{line.slice(2)}</h1>;
-            if (line.startsWith('## ')) return <h2 key={index} className="text-3xl md:text-4xl font-bold mt-12 mb-6 text-gray-900 dark:text-dark-text-primary leading-tight tracking-tight border-b border-gray-100 dark:border-dark-border pb-4">{line.slice(3)}</h2>;
-            if (line.startsWith('### ')) return <h3 key={index} className="text-2xl md:text-3xl font-bold mt-10 mb-5 text-gray-900 dark:text-dark-text-primary leading-tight">{line.slice(4)}</h3>;
+            if (line.startsWith('# ')) {
+                const text = line.slice(2).trim();
+                const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+                return <h1 id={id} key={index} className="scroll-mt-32 text-3xl md:text-4xl font-black mt-12 mb-6 text-gray-900 dark:text-dark-text-primary leading-tight tracking-tight">{text}</h1>;
+            }
+            if (line.startsWith('## ')) {
+                const text = line.slice(3).trim();
+                const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+                return <h2 id={id} key={index} className="scroll-mt-32 text-2xl md:text-3xl font-bold mt-10 mb-5 text-gray-900 dark:text-dark-text-primary leading-tight tracking-tight border-b border-gray-100 dark:border-dark-border pb-3">{text}</h2>;
+            }
+            if (line.startsWith('### ')) return <h3 key={index} className="text-xl md:text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-dark-text-primary leading-tight">{line.slice(4)}</h3>;
 
             // Lists
-            if (line.startsWith('- ')) return <li key={index} className="ml-6 list-disc text-gray-700 dark:text-dark-text-secondary mb-3 pl-2 marker:text-brand-500 text-lg leading-relaxed">{parseInline(line.slice(2))}</li>;
-            if (line.startsWith('* ')) return <li key={index} className="ml-6 list-disc text-gray-700 dark:text-dark-text-secondary mb-3 pl-2 marker:text-brand-500 text-lg leading-relaxed">{parseInline(line.slice(2))}</li>;
-            if (line.match(/^\d+\. /)) return <li key={index} className="ml-6 list-decimal text-gray-700 dark:text-dark-text-secondary mb-3 pl-2 marker:text-brand-500 marker:font-bold text-lg leading-relaxed">{parseInline(line.replace(/^\d+\. /, ''))}</li>;
+            if (line.startsWith('- ')) return <li key={index} className="ml-6 list-disc text-gray-700 dark:text-dark-text-secondary mb-2 pl-2 marker:text-brand-500 text-lg leading-relaxed">{parseInline(line.slice(2))}</li>;
+            if (line.startsWith('* ')) return <li key={index} className="ml-6 list-disc text-gray-700 dark:text-dark-text-secondary mb-2 pl-2 marker:text-brand-500 text-lg leading-relaxed">{parseInline(line.slice(2))}</li>;
+            if (line.match(/^\d+\. /)) return <li key={index} className="ml-6 list-decimal text-gray-700 dark:text-dark-text-secondary mb-2 pl-2 marker:text-brand-500 marker:font-bold text-lg leading-relaxed">{parseInline(line.replace(/^\d+\. /, ''))}</li>;
 
             // Blockquotes
-            if (line.startsWith('> ')) return <blockquote key={index} className="border-l-4 border-brand-500 pl-8 italic text-xl md:text-2xl text-gray-600 dark:text-dark-text-secondary my-10 py-4 bg-gray-50 dark:bg-dark-surface rounded-r-2xl shadow-sm">{parseInline(line.slice(2))}</blockquote>;
+            if (line.startsWith('> ')) return <blockquote key={index} className="border-l-4 border-brand-500 pl-6 italic text-xl text-gray-600 dark:text-dark-text-secondary my-8 py-2 bg-gray-50 dark:bg-dark-surface/50 rounded-r-xl">{parseInline(line.slice(2))}</blockquote>;
 
             // Images ![alt](url)
             const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
             if (imgMatch) {
                 return (
-                    <figure key={index} className="my-12 group">
-                        <div className="rounded-3xl overflow-hidden shadow-2xl bg-gray-100 dark:bg-dark-surface relative aspect-video">
+                    <figure key={index} className="my-10 group">
+                        <div className="rounded-2xl overflow-hidden shadow-lg bg-gray-100 dark:bg-dark-surface relative aspect-video">
                             <Image
                                 src={imgMatch[2]}
                                 alt={imgMatch[1]}
@@ -166,7 +184,7 @@ export default async function BlogPostPage({ params }: Props) {
                             />
                         </div>
                         {imgMatch[1] && (
-                            <figcaption className="text-center text-sm font-medium text-gray-500 mt-4 flex items-center justify-center gap-2">
+                            <figcaption className="text-center text-sm font-medium text-gray-500 mt-3 flex items-center justify-center gap-2">
                                 <span className="w-8 h-px bg-gray-300 dark:bg-dark-border"></span>
                                 {imgMatch[1]}
                                 <span className="w-8 h-px bg-gray-300 dark:bg-dark-border"></span>
@@ -180,7 +198,7 @@ export default async function BlogPostPage({ params }: Props) {
             if (line.trim() === '') return <div key={index} className="h-4"></div>;
 
             // Paragraphs
-            return <p key={index} className="mb-6 text-lg md:text-xl text-gray-700 dark:text-dark-text-secondary leading-relaxed font-serif-safe">{parseInline(line)}</p>;
+            return <p key={index} className="mb-6 text-lg text-gray-700 dark:text-dark-text-secondary leading-relaxed font-serif-safe">{parseInline(line)}</p>;
         });
     };
 
@@ -256,167 +274,194 @@ export default async function BlogPostPage({ params }: Props) {
             />
 
             {/* Progress Bar (Simulated) */}
-            <div className="fixed top-0 left-0 w-full h-1.5 bg-gray-100 dark:bg-dark-surface z-50">
+            <div className="fixed top-0 left-0 w-full h-1 bg-gray-100 dark:bg-dark-surface z-50">
                 <div className="h-full bg-gradient-to-r from-brand-500 to-purple-600 w-1/3 animate-pulse"></div>
             </div>
 
-            <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <article className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Navigation */}
-                <nav className="flex items-center justify-between mb-12 animate-in fade-in slide-in-from-top-4 duration-500">
+                <nav className="flex items-center justify-between mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
                     <Link href="/blog" className="group inline-flex items-center text-gray-500 hover:text-brand-600 font-medium transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-surface flex items-center justify-center mr-3 group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30 transition-colors shadow-sm">
-                            <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-surface flex items-center justify-center mr-2 group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30 transition-colors shadow-sm">
+                            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                         </div>
-                        <span className="text-sm uppercase tracking-wider font-bold">Back to Blog</span>
+                        <span className="text-sm font-bold">Back to Blog</span>
                     </Link>
-
-                    <div className="flex gap-3">
-                        <button
-                            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-brand-600 hover:bg-gray-100 dark:hover:bg-dark-surface rounded-full transition-colors"
-                            title="Share this article"
-                        >
-                            <Share2 size={20} />
-                        </button>
-                    </div>
                 </nav>
 
-                {/* Header */}
-                <header className="mb-16 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="flex flex-wrap justify-center gap-2 mb-8">
-                        {post.category && (
-                            <span className="px-5 py-2 bg-gradient-to-r from-brand-50 to-purple-50 dark:from-brand-900/30 dark:to-purple-900/30 text-brand-700 dark:text-brand-300 rounded-full text-sm font-bold uppercase tracking-widest shadow-sm border border-brand-100 dark:border-brand-800">
-                                {post.category}
-                            </span>
-                        )}
-                    </div>
-
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 dark:text-dark-text-primary mb-10 leading-[1.1] tracking-tight">
-                        {post.title}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-gray-500 dark:text-dark-text-secondary border-y border-gray-100 dark:border-dark-border py-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 ring-4 ring-white dark:ring-dark-bg">
-                                <User size={22} />
+                <div className="grid lg:grid-cols-12 gap-12">
+                    {/* Main Content Column */}
+                    <div className="lg:col-span-8">
+                        {/* Header */}
+                        <header className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {post.category && (
+                                    <span className="px-3 py-1 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 rounded-lg text-xs font-bold uppercase tracking-widest border border-brand-100 dark:border-brand-800">
+                                        {post.category}
+                                    </span>
+                                )}
                             </div>
-                            <div className="text-left">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Written by</div>
-                                <div className="font-bold text-gray-900 dark:text-dark-text-primary text-lg">{post.authorName}</div>
-                            </div>
-                        </div>
 
-                        <div className="w-px h-12 bg-gray-200 dark:bg-dark-border hidden sm:block"></div>
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 dark:text-dark-text-primary mb-6 leading-[1.1] tracking-tight">
+                                {post.title}
+                            </h1>
 
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-dark-surface flex items-center justify-center text-gray-500 dark:text-dark-text-secondary border border-gray-100 dark:border-dark-border">
-                                <Calendar size={22} />
-                            </div>
-                            <div className="text-left">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Published on</div>
-                                <div className="font-bold text-gray-900 dark:text-dark-text-primary text-lg">
-                                    {post.createdAt?.toDate
-                                        ? new Date(post.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                        : 'Unknown'}
+                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-dark-text-secondary">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-purple-600 flex items-center justify-center text-white shadow-md">
+                                        <User size={14} />
+                                    </div>
+                                    <span className="font-bold text-gray-900 dark:text-dark-text-primary">{post.authorName}</span>
+                                </div>
+                                <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-dark-border"></div>
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar size={14} />
+                                    <span>
+                                        {post.createdAt?.toDate
+                                            ? new Date(post.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                            : 'Unknown'}
+                                    </span>
+                                </div>
+                                <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-dark-border"></div>
+                                <div className="flex items-center gap-1.5">
+                                    <Clock size={14} />
+                                    <span>5 min read</span>
                                 </div>
                             </div>
+                        </header>
+
+                        {/* Cover Image */}
+                        {post.coverImage && (
+                            <div className="mb-12 rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50 dark:shadow-black/50 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 relative aspect-[16/9]">
+                                <Image
+                                    src={post.coverImage}
+                                    alt={post.title}
+                                    fill
+                                    priority
+                                    className="object-cover"
+                                />
+                            </div>
+                        )}
+
+                        {/* Content */}
+                        <div className="prose prose-lg dark:prose-invert max-w-none animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600 dark:prose-a:text-brand-400 prose-img:rounded-2xl prose-img:shadow-lg">
+                            {renderMarkdown(post.content)}
                         </div>
 
-                        <div className="w-px h-12 bg-gray-200 dark:bg-dark-border hidden sm:block"></div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-dark-surface flex items-center justify-center text-gray-500 dark:text-dark-text-secondary border border-gray-100 dark:border-dark-border">
-                                <Clock size={22} />
-                            </div>
-                            <div className="text-left">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Read Time</div>
-                                <div className="font-bold text-gray-900 dark:text-dark-text-primary text-lg">5 min read</div>
+                        {/* Footer / Tags */}
+                        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-dark-border">
+                            <div className="flex flex-wrap gap-2">
+                                {post.tags.map(tag => (
+                                    <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary rounded-lg text-xs font-bold hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 transition-colors cursor-pointer">
+                                        #{tag}
+                                    </span>
+                                ))}
                             </div>
                         </div>
                     </div>
-                </header>
 
-                {/* Cover Image */}
-                {post.coverImage && (
-                    <div className="mb-20 -mx-4 sm:-mx-0 rounded-[2rem] overflow-hidden shadow-2xl shadow-gray-200/50 dark:shadow-black/50 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 relative aspect-[21/9]">
-                        <Image
-                            src={post.coverImage}
-                            alt={post.title}
-                            fill
-                            priority
-                            className="object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
-                    </div>
-                )}
+                    {/* Sidebar Column */}
+                    <div className="lg:col-span-4 space-y-8">
+                        {/* Table of Contents (Sticky) */}
+                        <div className="sticky top-32 space-y-8">
+                            {headings.length > 0 && (
+                                <div className="bg-gray-50 dark:bg-dark-surface rounded-2xl p-6 border border-gray-100 dark:border-dark-border">
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-dark-text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+                                        <div className="w-1 h-4 bg-brand-500 rounded-full"></div>
+                                        On this page
+                                    </h3>
+                                    <nav className="space-y-1">
+                                        {headings.map((heading, index) => (
+                                            <a
+                                                key={index}
+                                                href={`#${heading.id}`}
+                                                className={`block text-sm py-1.5 transition-colors hover:text-brand-600 dark:hover:text-brand-400 ${heading.level === 1
+                                                    ? 'font-bold text-gray-700 dark:text-dark-text-secondary'
+                                                    : 'pl-4 text-gray-500 dark:text-dark-text-secondary'
+                                                    }`}
+                                            >
+                                                {heading.text}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                </div>
+                            )}
 
-                {/* Content */}
-                <div className="prose prose-lg md:prose-xl dark:prose-invert max-w-none animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600 dark:prose-a:text-brand-400 prose-img:rounded-3xl prose-img:shadow-xl">
-                    {renderMarkdown(post.content)}
-                </div>
-
-                {/* Footer / Tags */}
-                <div className="mt-24 pt-12 border-t border-gray-200 dark:border-dark-border">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                        <div className="flex items-center gap-2 text-gray-400 font-bold uppercase tracking-widest text-sm">
-                            <Tag size={18} />
-                            <span>Related Tags</span>
-                        </div>
-                        <div className="flex flex-wrap gap-3">
-                            {post.tags.map(tag => (
-                                <span key={tag} className="px-5 py-2 bg-gray-50 dark:bg-dark-surface text-gray-700 dark:text-dark-text-secondary rounded-xl text-sm font-bold hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400 transition-all cursor-pointer border border-gray-100 dark:border-dark-border hover:border-brand-200 dark:hover:border-brand-800">
-                                    #{tag}
-                                </span>
-                            ))}
+                            {/* Share Widget */}
+                            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 border border-gray-100 dark:border-dark-border shadow-sm">
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-dark-text-primary uppercase tracking-wider mb-4">Share this article</h3>
+                                <div className="flex gap-2">
+                                    <button className="flex-1 h-10 flex items-center justify-center rounded-lg bg-[#1877F2] text-white hover:opacity-90 transition-opacity">
+                                        <Facebook size={18} />
+                                    </button>
+                                    <button className="flex-1 h-10 flex items-center justify-center rounded-lg bg-[#1DA1F2] text-white hover:opacity-90 transition-opacity">
+                                        <Twitter size={18} />
+                                    </button>
+                                    <button className="flex-1 h-10 flex items-center justify-center rounded-lg bg-[#0A66C2] text-white hover:opacity-90 transition-opacity">
+                                        <Linkedin size={18} />
+                                    </button>
+                                    <button className="flex-1 h-10 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
+                                        <LinkIcon size={18} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Related Posts Section */}
                 {relatedPosts.length > 0 && (
-                    <div className="mt-32 pt-16 border-t border-gray-200 dark:border-dark-border">
-                        <div className="flex items-center justify-between mb-12">
-                            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-dark-text-primary">Read Next</h3>
-                            <Link href="/blog" className="hidden sm:flex items-center gap-2 text-brand-600 font-bold hover:text-brand-700 transition-colors">
-                                View all posts <ArrowRight size={20} />
+                    <div className="mt-24 pt-16 border-t border-gray-200 dark:border-dark-border">
+                        <div className="flex items-center justify-between mb-10">
+                            <div>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-dark-text-primary mb-2">Read Next</h3>
+                                <p className="text-gray-500 dark:text-dark-text-secondary text-sm">More articles you might like</p>
+                            </div>
+                            <Link href="/blog" className="hidden sm:flex items-center gap-2 text-brand-600 font-bold hover:text-brand-700 transition-colors text-sm bg-brand-50 dark:bg-brand-900/20 px-4 py-2 rounded-full">
+                                View all posts <ArrowRight size={16} />
                             </Link>
                         </div>
 
-                        <div className="grid gap-10 md:grid-cols-3">
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                             {relatedPosts.map((relatedPost) => (
                                 <Link key={relatedPost.id} href={`/blog/${relatedPost.slug}`} className="group block h-full">
-                                    <article className="bg-white dark:bg-dark-surface rounded-3xl overflow-hidden border border-gray-100 dark:border-dark-border hover:border-brand-200 dark:hover:border-brand-800 hover:shadow-2xl hover:shadow-brand-500/10 transition-all duration-500 h-full flex flex-col">
-                                        <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-dark-bg relative">
+                                    <article className="bg-white dark:bg-dark-surface rounded-xl overflow-hidden border border-gray-100 dark:border-dark-border hover:border-brand-200 dark:hover:border-brand-800 hover:shadow-lg hover:shadow-brand-500/10 transition-all duration-300 h-full flex flex-row sm:flex-col hover:-translate-y-1">
+                                        <div className="w-1/3 sm:w-full aspect-[4/3] relative overflow-hidden bg-gray-100 dark:bg-dark-bg shrink-0">
                                             {relatedPost.coverImage ? (
                                                 <Image
                                                     src={relatedPost.coverImage}
                                                     alt={relatedPost.title}
                                                     fill
-                                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                                    sizes="(max-width: 768px) 33vw, (max-width: 1200px) 50vw, 25vw"
                                                     className="object-cover transform group-hover:scale-110 transition-transform duration-700"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-dark-text-secondary">
-                                                    <Tag size={48} className="opacity-20" />
+                                                    <Tag size={24} className="opacity-20" />
                                                 </div>
                                             )}
-                                            <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-dark-bg/80 backdrop-blur-md rounded-full text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wide shadow-sm">
-                                                {relatedPost.category || 'Article'}
-                                            </div>
+                                            {relatedPost.category && (
+                                                <div className="absolute top-2 left-2 px-2 py-0.5 bg-white/95 dark:bg-dark-bg/95 backdrop-blur-md rounded text-[9px] sm:text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wide shadow-sm">
+                                                    {relatedPost.category}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="p-8 flex-1 flex flex-col">
-                                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                                                {relatedPost.createdAt?.toDate
-                                                    ? new Date(relatedPost.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                                    : 'Recent'}
+                                        <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 flex items-center gap-1">
+                                                    <Calendar size={10} />
+                                                    {relatedPost.createdAt?.toDate
+                                                        ? new Date(relatedPost.createdAt.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                                                        : 'Recent'}
+                                                </div>
+                                                <h4 className="text-sm font-bold text-gray-900 dark:text-dark-text-primary mb-1 sm:mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-snug">
+                                                    {relatedPost.title}
+                                                </h4>
                                             </div>
-                                            <h4 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-4 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 leading-tight">
-                                                {relatedPost.title}
-                                            </h4>
-                                            <p className="text-gray-500 dark:text-dark-text-secondary text-sm line-clamp-3 mb-6 leading-relaxed">
-                                                {relatedPost.excerpt}
-                                            </p>
-                                            <div className="mt-auto flex items-center text-sm font-bold text-brand-600 dark:text-brand-400 group-hover:underline decoration-2 underline-offset-4">
-                                                Read Article <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                            <div className="mt-auto pt-1 sm:pt-2 flex items-center text-[10px] sm:text-[11px] font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
+                                                <span className="hidden sm:inline">Read Now</span>
+                                                <span className="sm:hidden">Read</span>
+                                                <ArrowRight size={12} className="ml-1" />
                                             </div>
                                         </div>
                                     </article>

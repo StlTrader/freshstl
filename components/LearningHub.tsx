@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { BlogPost } from '../types';
-import { ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowRight, GraduationCap, Calendar, User, Tag } from 'lucide-react';
 
 interface LearningHubProps {
     posts: BlogPost[];
@@ -16,7 +16,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
                     <div>
-                        <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-bold mb-2">
+                        <div className="flex items-center gap-2 text-social-black dark:text-white font-bold mb-2">
                             <GraduationCap size={24} />
                             <span className="uppercase tracking-wider text-sm">Learning Hub</span>
                         </div>
@@ -29,44 +29,68 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
                     </div>
                     <Link
                         href="/blog"
-                        className="flex items-center font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                        className="flex items-center font-bold text-social-black dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                     >
                         View All Articles <ArrowRight size={20} className="ml-2" />
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {posts.map((post) => (
-                        <Link key={post.id} href={`/blog/${post.slug}`} className="group block h-full">
-                            <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-gray-100 dark:border-dark-border hover:-translate-y-1">
-                                <div className="relative h-48 w-full overflow-hidden">
-                                    {post.coverImage ? (
-                                        <Image
-                                            src={post.coverImage}
-                                            alt={post.title}
-                                            fill
-                                            className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gray-200 dark:bg-dark-bg" />
-                                    )}
-                                    <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-900 dark:text-white">
-                                        {post.category}
+                <div className="flex gap-4 overflow-x-auto pb-8 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+                    {posts.map((post, index) => (
+                        <Link
+                            key={post.id}
+                            href={`/blog/${post.slug}`}
+                            className="relative min-w-[260px] sm:min-w-[300px] aspect-[3/4] rounded-2xl overflow-hidden snap-center group cursor-pointer border border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                        >
+                            {/* Background Image */}
+                            <div className="absolute inset-0 bg-gray-200 dark:bg-dark-bg">
+                                {post.coverImage ? (
+                                    <Image
+                                        src={post.coverImage}
+                                        alt={post.title}
+                                        fill
+                                        sizes="(max-width: 768px) 300px, 320px"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        <Tag size={48} className="opacity-20" />
                                     </div>
+                                )}
+                                {/* Gradient Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                            </div>
+
+                            {/* Category Badge */}
+                            {post.category && (
+                                <div className="absolute top-4 left-4 px-2.5 py-1 bg-white/20 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
+                                    {post.category}
                                 </div>
-                                <div className="p-6 flex-1 flex flex-col">
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                        {new Date(post.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
-                                        {post.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 mb-4 flex-1">
-                                        {post.excerpt}
-                                    </p>
-                                    <div className="flex items-center text-brand-600 dark:text-brand-400 font-bold text-sm mt-auto">
-                                        Read More <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                                    </div>
+                            )}
+
+                            {/* Content */}
+                            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-white/80 mb-2 uppercase tracking-wider">
+                                    <Calendar size={12} />
+                                    <span>
+                                        {(() => {
+                                            if (!post.createdAt) return 'Recently';
+                                            const date = typeof post.createdAt === 'string'
+                                                ? new Date(post.createdAt)
+                                                : post.createdAt.toDate
+                                                    ? post.createdAt.toDate()
+                                                    : new Date(post.createdAt);
+                                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        })()}
+                                    </span>
+                                </div>
+
+                                <h3 className="text-lg sm:text-xl font-bold leading-tight mb-3 line-clamp-2 group-hover:text-white transition-colors drop-shadow-sm">
+                                    {post.title}
+                                </h3>
+
+                                <div className="flex items-center gap-2 text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                                    Read Story <ArrowRight size={14} />
                                 </div>
                             </div>
                         </Link>

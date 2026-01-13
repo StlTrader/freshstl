@@ -22,9 +22,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const allImages = [product.imageUrl, ...(product.images || [])].filter((v, i, a) => a.indexOf(v) === i && v);
 
     return (
-        <div className="break-inside-avoid relative group rounded-2xl overflow-hidden cursor-pointer bg-white dark:bg-dark-surface shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+        <div className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer bg-transparent border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-all duration-200">
             {/* Image Container */}
-            <div className="relative overflow-hidden aspect-square">
+            <div className="relative overflow-hidden rounded-xl aspect-square mb-2">
                 <Link href={`/3d-print/${product.slug}`} className="block w-full h-full">
                     {activeImage ? (
                         <Image
@@ -32,10 +32,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             alt={product.name}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                            className="object-cover transform transition-transform duration-700 group-hover:scale-110"
+                            className="object-cover transform transition-transform duration-500 group-hover:scale-105"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gray-200 dark:bg-dark-surface flex items-center justify-center">
+                        <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center">
                             <span className="text-gray-400 text-xs">No Image</span>
                         </div>
                     )}
@@ -43,7 +43,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
                 {/* Draft Badge */}
                 {product.status === 'draft' && (
-                    <div className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-md z-20 shadow-md border border-yellow-500">
+                    <div className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full z-20">
                         DRAFT
                     </div>
                 )}
@@ -54,87 +54,59 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         e.stopPropagation();
                         toggleWishlist(product.id);
                     }}
-                    className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-md transition-all z-20 ${wishlist.includes(product.id)
-                        ? 'bg-red-500 text-white shadow-lg scale-110'
-                        : 'bg-black/20 text-white hover:bg-black/40'
+                    className={`absolute top-2 right-2 p-2 rounded-full transition-all z-20 ${wishlist.includes(product.id)
+                        ? 'bg-red-500 text-white shadow-sm'
+                        : 'bg-black/40 text-white hover:bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100'
                         }`}
                     aria-label={wishlist.includes(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
                 >
                     <Heart size={16} fill={wishlist.includes(product.id) ? "currentColor" : "none"} />
                 </button>
 
-                {/* Floating Action Bar (Center - Visible on Hover) */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                    <div className="flex gap-2 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md p-2 rounded-full shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 pointer-events-auto">
-                        <Link
-                            href={`/3d-print/${product.slug}`}
-                            className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-dark-text-primary transition-colors"
-                            title="Quick View"
-                        >
-                            <Eye size={20} />
-                        </Link>
-                        <div className="w-px bg-gray-200 dark:bg-white/10 my-1"></div>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                const isPurchased = purchases.some(p => p.productId === product.id);
-                                const isInCart = cart.some(item => item.id === product.id);
+                {/* Floating Action Bar (Bottom Right - Visible on Hover) */}
+                <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const isPurchased = purchases.some(p => p.productId === product.id);
+                            const isInCart = cart.some(item => item.id === product.id);
 
-                                if (isPurchased) {
-                                    router.push('/purchases');
-                                    return;
-                                }
-                                if (isInCart) {
-                                    setIsCartOpen(true);
-                                    return;
-                                }
-                                addToCart(product);
-                            }}
-                            className={`p-2.5 rounded-full transition-colors ${purchases.some(p => p.productId === product.id)
-                                ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                : 'text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20'
-                                }`}
-                            title={purchases.some(p => p.productId === product.id) ? "Download" : "Add to Cart"}
-                        >
-                            {purchases.some(p => p.productId === product.id) ? (
-                                <Download size={20} />
-                            ) : (
-                                <ShoppingCart size={20} />
-                            )}
-                        </button>
-                    </div>
+                            if (isPurchased) {
+                                router.push('/purchases');
+                                return;
+                            }
+                            if (isInCart) {
+                                setIsCartOpen(true);
+                                return;
+                            }
+                            addToCart(product);
+                        }}
+                        className={`p-2.5 rounded-full shadow-lg backdrop-blur-md transition-colors ${purchases.some(p => p.productId === product.id)
+                            ? 'bg-green-500 text-white hover:bg-green-600'
+                            : 'bg-white text-black hover:bg-gray-100'
+                            }`}
+                        title={purchases.some(p => p.productId === product.id) ? "Download" : "Add to Cart"}
+                    >
+                        {purchases.some(p => p.productId === product.id) ? (
+                            <Download size={18} />
+                        ) : (
+                            <ShoppingCart size={18} />
+                        )}
+                    </button>
                 </div>
-
-                {/* Mini Carousel (Bottom - Always Visible) */}
-                {allImages.length > 1 && (
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
-                        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                            {allImages.map((img, idx) => (
-                                <button
-                                    key={idx}
-                                    onMouseEnter={() => setActiveImage(img)}
-                                    onClick={(e) => { e.stopPropagation(); setActiveImage(img); }}
-                                    className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 shadow-sm ${activeImage === img ? 'border-brand-500 scale-105' : 'border-white/30 hover:border-white/80'}`}
-                                >
-                                    <Image src={img} alt={`View ${idx}`} fill sizes="40px" className="object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Product Info */}
-            <Link href={`/3d-print/${product.slug}`} className="block p-3 md:p-4">
-                <h3 className="text-sm font-bold text-gray-800 dark:text-dark-text-primary truncate pr-4 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+            <Link href={`/3d-print/${product.slug}`} className="block px-1 pb-2">
+                <h3 className="text-sm font-bold text-social-black dark:text-white truncate pr-2">
                     {product.name}
                 </h3>
-                <div className="flex justify-between items-center mt-2">
-                    <p className="text-xs text-gray-500 dark:text-dark-text-secondary font-medium px-2 py-1 bg-gray-100 dark:bg-dark-bg rounded-md">
-                        {product.category}
-                    </p>
-                    <span className="text-sm font-bold text-gray-900 dark:text-dark-text-primary">
+                <div className="flex items-center mt-1 gap-2">
+                    <span className="text-sm font-medium text-social-black dark:text-gray-300">
                         ${(product.price / 100).toFixed(2)}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {product.category}
                     </span>
                 </div>
             </Link>

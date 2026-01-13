@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Trash2, CreditCard, Loader2, AlertCircle, Ticket, Check, ArrowLeft, Lock } from 'lucide-react';
+import { X, Trash2, CreditCard, Loader2, AlertCircle, Ticket, Check, ArrowLeft, Lock, ArrowRight } from 'lucide-react';
 import * as firebaseService from '../services/firebaseService';
 import { useStore } from '../contexts/StoreContext';
 import { useRouter } from 'next/navigation';
@@ -57,7 +57,7 @@ export const CartDrawer: React.FC = () => {
       />
 
       <div
-        className={`fixed inset-y-0 right-0 w-full sm:w-[450px] bg-white dark:bg-dark-surface border-l border-gray-200 dark:border-dark-border shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 right-0 h-[100dvh] w-full sm:w-[450px] bg-white dark:bg-dark-surface border-l border-gray-200 dark:border-dark-border shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -68,12 +68,23 @@ export const CartDrawer: React.FC = () => {
                 {cart.length}
               </span>
             </h2>
-            <button
-              onClick={() => setIsCartOpen(false)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-full transition-colors text-gray-500"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {cart.length > 0 && (
+                <button
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className="px-4 py-2 bg-social-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
+                  Checkout <ArrowRight size={14} />
+                </button>
+              )}
+              <button
+                onClick={() => setIsCartOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-full transition-colors text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Cart Items */}
@@ -91,7 +102,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20"
+                  className="px-6 py-3 bg-social-black dark:bg-white text-white dark:text-black rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-lg"
                 >
                   Start Browsing
                 </button>
@@ -99,7 +110,7 @@ export const CartDrawer: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {cart.map((item) => (
-                  <div key={item.cartItemId} className="group relative flex gap-4 bg-white dark:bg-dark-bg p-3 rounded-2xl border border-gray-100 dark:border-dark-border hover:border-brand-200 dark:hover:border-brand-900/50 transition-all shadow-sm hover:shadow-md">
+                  <div key={item.cartItemId} className="group relative flex gap-4 bg-white dark:bg-dark-bg p-3 rounded-2xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm hover:shadow-md">
                     <Link href={`/3d-print/${item.slug}`} onClick={() => setIsCartOpen(false)} className="shrink-0">
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-dark-surface">
                         {item.imageUrl ? (
@@ -174,7 +185,7 @@ export const CartDrawer: React.FC = () => {
               <button
                 onClick={handleCheckout}
                 disabled={isProcessing}
-                className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-social-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl hover:shadow-2xl disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <>

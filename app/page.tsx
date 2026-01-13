@@ -19,12 +19,65 @@ export const metadata: Metadata = {
         type: 'website',
         locale: 'en_US',
         siteName: 'FreshSTL',
+        images: [
+            {
+                url: '/og-image.jpg', // Ensure this image exists in public folder or use a dynamic one
+                width: 1200,
+                height: 630,
+                alt: 'FreshSTL - Premium 3D Models',
+            },
+        ],
     },
     twitter: {
         card: 'summary_large_image',
         title: 'FreshSTL | Premium 3D Print Files & Models',
         description: 'Discover high-quality 3D print files, STL models, and creative designs for your 3D printer.',
+        images: ['/og-image.jpg'],
     },
+    alternates: {
+        canonical: '/',
+    },
+};
+
+const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+        {
+            '@type': 'WebSite',
+            '@id': 'https://freshstl.com/#website',
+            'url': 'https://freshstl.com',
+            'name': 'FreshSTL',
+            'description': 'Premium 3D Print Files & Models',
+            'potentialAction': [
+                {
+                    '@type': 'SearchAction',
+                    'target': {
+                        '@type': 'EntryPoint',
+                        'urlTemplate': 'https://freshstl.com/search?q={search_term_string}'
+                    },
+                    'query-input': 'required name=search_term_string'
+                }
+            ],
+            'inLanguage': 'en-US'
+        },
+        {
+            '@type': 'Organization',
+            '@id': 'https://freshstl.com/#organization',
+            'name': 'FreshSTL',
+            'url': 'https://freshstl.com',
+            'logo': {
+                '@type': 'ImageObject',
+                'url': 'https://freshstl.com/logo.png',
+                'width': 112,
+                'height': 112
+            },
+            'sameAs': [
+                'https://twitter.com/freshstl',
+                'https://facebook.com/freshstl',
+                'https://instagram.com/freshstl'
+            ]
+        }
+    ]
 };
 
 // Server Component
@@ -186,6 +239,10 @@ export default async function Home() {
 
     return (
         <div className="min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <Hero products={heroProducts} config={heroConfig} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="flex items-center justify-between mb-6 md:mb-8">

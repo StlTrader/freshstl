@@ -21,14 +21,21 @@ module.exports = {
                     800: '#075985',
                     900: '#0c4a6e',
                 },
-                // Luxury Black Dark Mode Palette (Zinc-based)
+                social: {
+                    'light-hover': '#f2f2f2',
+                    'dark-hover': '#272727',
+                    'black': '#0f0f0f', // Soft black for text
+                    'surface': '#ffffff',
+                    'dark-surface': '#1f1f1f', // YouTube style dark surface
+                },
+                // Luxury Black Dark Mode Palette (Refined for Social Look)
                 dark: {
-                    bg: '#09090b',      // Zinc 950 - Rich, deep black
-                    surface: '#18181b', // Zinc 900 - Subtle contrast for cards
-                    border: '#27272a',  // Zinc 800 - Refined borders
+                    bg: '#0f0f0f',      // Deep black/gray
+                    surface: '#1f1f1f', // Slightly lighter for cards
+                    border: '#3f3f3f',  // Subtle border
                     text: {
-                        primary: '#fafafa',   // Zinc 50 - Crisp white
-                        secondary: '#a1a1aa', // Zinc 400 - Muted gray
+                        primary: '#f1f1f1',   // Soft white
+                        secondary: '#aaaaaa', // Muted gray
                     }
                 }
             }

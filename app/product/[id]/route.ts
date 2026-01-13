@@ -19,7 +19,7 @@ export async function GET(
             const data = docSnap.data();
             if (data && data.slug) {
                 const url = new URL(`/3d-print/${data.slug}`, request.url);
-                return NextResponse.redirect(url);
+                return NextResponse.redirect(url, 301);
             }
         }
 

@@ -136,7 +136,6 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
     }, [config?.mode, config?.collectionId]);
 
     // --- Layout Renders ---
-
     // Use the new Carousel layout by default or if specified
     // For now, we are overriding to use the carousel as the primary view
     return (

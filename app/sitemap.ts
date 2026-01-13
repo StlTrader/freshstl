@@ -73,8 +73,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     priority: 0.8,
                 };
             });
+
+            // Collections
+            const collectionsSnapshot = await adminDb.collection('collections').where('status', '==', 'published').get();
+            const collectionRoutes = collectionsSnapshot.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                    url: `${baseUrl}/collection/${data.slug || doc.id}`,
+                    lastModified: new Date(),
+                    changeFrequency: 'weekly' as const,
+                    priority: 0.8,
+                };
+            });
+
+            return [...routes, ...productRoutes, ...blogRoutes, ...collectionRoutes];
         } catch (error) {
-            console.error('Error fetching products for sitemap:', error);
+            console.error('Error fetching data for sitemap:', error);
         }
     }
 

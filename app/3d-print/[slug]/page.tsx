@@ -38,6 +38,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${product.name} | FreshSTL`,
         description: product.description,
         robots: isDraft ? { index: false, follow: false } : { index: true, follow: true },
+        alternates: {
+            canonical: `/3d-print/${product.slug}`,
+        },
         openGraph: {
             title: product.name,
             description: product.description,
@@ -85,26 +88,53 @@ export default async function ProductPage({ params }: Props) {
 
     const jsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: product.name,
-        image: product.images || [product.imageUrl],
-        description: product.description,
-        brand: {
-            '@type': 'Brand',
-            name: 'FreshSTL'
-        },
-        offers: {
-            '@type': 'Offer',
-            url: `https://freshstl.com/3d-print/${product.slug}`,
-            priceCurrency: 'USD',
-            price: (product.price / 100).toFixed(2),
-            availability: 'https://schema.org/InStock'
-        },
-        aggregateRating: product.rating ? {
-            '@type': 'AggregateRating',
-            ratingValue: product.rating,
-            reviewCount: product.reviewCount || 1
-        } : undefined
+        '@graph': [
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    {
+                        '@type': 'ListItem',
+                        position: 1,
+                        name: 'Home',
+                        item: 'https://freshstl.com'
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 2,
+                        name: '3D Models',
+                        item: 'https://freshstl.com/#products'
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 3,
+                        name: product.name,
+                        item: `https://freshstl.com/3d-print/${product.slug}`
+                    }
+                ]
+            },
+            {
+                '@type': 'Product',
+                name: product.name,
+                image: product.images || [product.imageUrl],
+                description: product.description,
+                brand: {
+                    '@type': 'Brand',
+                    name: 'FreshSTL'
+                },
+                offers: {
+                    '@type': 'Offer',
+                    url: `https://freshstl.com/3d-print/${product.slug}`,
+                    priceCurrency: 'USD',
+                    price: (product.price / 100).toFixed(2),
+                    availability: 'https://schema.org/InStock'
+                },
+                aggregateRating: product.rating ? {
+                    '@type': 'AggregateRating',
+                    ratingValue: product.rating,
+                    reviewCount: product.reviewCount || 1
+                } : undefined
+            }
+        ]
     };
 
     return (

@@ -7,6 +7,9 @@ import BlogList from '../../components/BlogList';
 export const metadata: Metadata = {
     title: 'Blog | FreshSTL',
     description: 'Latest news, updates, and tutorials from FreshSTL.',
+    alternates: {
+        canonical: '/blog',
+    },
 };
 
 export default async function BlogPage() {
@@ -52,23 +55,43 @@ export default async function BlogPage() {
         console.error("[BlogPage] Error fetching posts:", error);
     }
 
+    // Fetch latest products for sidebar
+    let products: any[] = [];
+    try {
+        if (adminDb) {
+            const productsRef = adminDb.collection('products');
+            const snapshot = await productsRef
+                .orderBy('createdAt', 'desc')
+                .limit(5)
+                .get();
+
+            products = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } else {
+            // Fallback
+            const { getProducts } = await import('../../services/firebaseService');
+            products = await getProducts();
+            products = products.slice(0, 5);
+        }
+    } catch (error) {
+        console.error("[BlogPage] Error fetching products:", error);
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg pt-24 pb-12">
-            {/* Hero Section */}
-            <div className="relative bg-brand-900 text-white py-24 mb-16 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1615818499660-30356690c534?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900/90"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        The <span className="text-brand-400">Fresh</span> Blog
-                    </h1>
-                    <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                        Discover the latest in 3D printing, design tips, and community showcases.
-                    </p>
-                </div>
+            {/* Minimal Header */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">
+                    The <span className="text-brand-600 dark:text-brand-400">Fresh</span> Blog
+                </h1>
+                <p className="text-lg text-gray-500 dark:text-dark-text-secondary max-w-2xl">
+                    Insights, tutorials, and news from the world of 3D printing.
+                </p>
             </div>
 
-            <BlogList initialPosts={posts} />
+            <BlogList initialPosts={posts} products={products} />
         </div>
     );
 }

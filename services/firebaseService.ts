@@ -1068,6 +1068,31 @@ export const subscribeToProducts = (callback: (products: Product[]) => void, inc
   });
 };
 
+export const getProducts = async (includeDrafts: boolean = false): Promise<Product[]> => {
+  if (isMockFallback || !db) {
+    const stored = localStorage.getItem(LS_KEYS.PRODUCTS);
+    let products = stored ? JSON.parse(stored) : DEFAULT_MOCK_PRODUCTS;
+    if (!includeDrafts) {
+      products = products.filter((p: Product) => p.status !== 'draft');
+    }
+    return products;
+  }
+
+  try {
+    const productsRef = collection(db, 'products');
+    const snapshot = await getDocs(productsRef);
+    let products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+    if (!includeDrafts) {
+      products = products.filter(p => p.status !== 'draft');
+    }
+    return products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return [];
+  }
+};
+
 export const getProduct = async (productId: string): Promise<Product | null> => {
   if (isMockFallback || !db) {
     const stored = localStorage.getItem(LS_KEYS.PRODUCTS);

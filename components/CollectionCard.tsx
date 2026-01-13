@@ -11,7 +11,7 @@ interface CollectionCardProps {
 export const CollectionCard: React.FC<CollectionCardProps> = ({ collection }) => {
     return (
         <Link href={`/collections/${collection.id}`} className="group block h-full">
-            <div className="relative h-full bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div className="relative h-full bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
 
                 {/* Image Container */}
                 <div className="relative h-64 w-full overflow-hidden">
@@ -42,7 +42,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ collection }) =>
                             </span>
                         </div>
 
-                        <h3 className="text-2xl font-bold mb-2 leading-tight group-hover:text-brand-300 transition-colors">
+                        <h3 className="text-2xl font-bold mb-2 leading-tight group-hover:text-white transition-colors">
                             {collection.title}
                         </h3>
 
@@ -50,7 +50,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ collection }) =>
                             {collection.description}
                         </p>
 
-                        <div className="flex items-center gap-2 text-sm font-bold text-brand-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
+                        <div className="flex items-center gap-2 text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
                             View Collection <ArrowRight size={16} />
                         </div>
                     </div>

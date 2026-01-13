@@ -3,11 +3,12 @@ import { Inter } from 'next/font/google';
 import { Metadata } from 'next';
 import Script from 'next/script';
 import ClientLayout from '../components/ClientLayout';
+import BreadcrumbJsonLd from '../components/BreadcrumbJsonLd';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://freshstl.com'),
+    metadataBase: new URL('https://freshstl.store'),
     title: {
         default: 'FreshSTL - Premium 3D Models',
         template: '%s | FreshSTL'
@@ -21,9 +22,6 @@ export const metadata: Metadata = {
         email: false,
         address: false,
         telephone: false,
-    },
-    alternates: {
-        canonical: '/',
     },
     openGraph: {
         title: 'FreshSTL - Premium 3D Models',
@@ -76,6 +74,7 @@ export default function RootLayout({
                       gtag('config', 'G-BLQ4SENSQ2');
                     `}
                 </Script>
+                <BreadcrumbJsonLd />
                 <ClientLayout>
                     {children}
                 </ClientLayout>

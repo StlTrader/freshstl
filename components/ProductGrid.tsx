@@ -151,7 +151,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
           <span className="font-bold text-gray-900 dark:text-dark-text-primary">Filters & Search</span>
           <button
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`p-2 rounded-lg transition-colors ${isFiltersOpen ? 'bg-brand-100 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'bg-gray-100 dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary'}`}
+            className={`p-2 rounded-lg transition-colors ${isFiltersOpen ? 'bg-gray-100 dark:bg-dark-bg text-social-black dark:text-white' : 'bg-gray-100 dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary'}`}
             aria-label="Toggle Filters"
           >
             <Filter size={20} />
@@ -166,7 +166,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm ${selectedCategory === cat
-                  ? 'bg-gray-900 dark:bg-brand-600 text-white dark:text-white shadow-lg'
+                  ? 'bg-social-black dark:bg-white text-white dark:text-black shadow-lg'
                   : 'bg-white dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-surface/80'
                   }`}
               >
@@ -184,14 +184,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
                 placeholder="Search models..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-900 dark:text-dark-text-primary text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+                className="w-full pl-10 pr-4 py-2 rounded-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-900 dark:text-dark-text-primary text-sm focus:ring-2 focus:ring-social-black dark:focus:ring-white outline-none"
               />
             </div>
             <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="appearance-none pl-4 pr-10 py-2 rounded-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-900 dark:text-dark-text-primary text-sm focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer"
+                className="appearance-none pl-4 pr-10 py-2 rounded-full bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border text-gray-900 dark:text-dark-text-primary text-sm focus:ring-2 focus:ring-social-black dark:focus:ring-white outline-none cursor-pointer"
               >
                 <option value="relevance">Relevance</option>
                 <option value="price-asc">Price: Low to High</option>

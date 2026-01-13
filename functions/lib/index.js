@@ -116,18 +116,22 @@ exports.requestIndexing = functions.https.onCall(async (data, context) => {
     if (!url || !type) {
         throw new functions.https.HttpsError("invalid-argument", "The function must be called with 'url' and 'type' arguments.");
     }
+    console.log(`Requesting indexing for ${url} (${type})`);
     try {
         // Fetch Service Account Key from Firestore
         // We assume the admin has saved the service account JSON in 'settings/indexing'
         const settingsDoc = await admin.firestore().collection("settings").doc("indexing").get();
         if (!settingsDoc.exists || !((_a = settingsDoc.data()) === null || _a === void 0 ? void 0 : _a.serviceAccount)) {
+            console.error("Service account not configured in Firestore.");
             throw new functions.https.HttpsError("failed-precondition", "Service account not configured. Please configure it in the Admin Panel.");
         }
         let serviceAccount;
         try {
             serviceAccount = JSON.parse((_b = settingsDoc.data()) === null || _b === void 0 ? void 0 : _b.serviceAccount);
+            console.log("Service account JSON parsed successfully.");
         }
         catch (e) {
+            console.error("Failed to parse Service Account JSON.");
             throw new functions.https.HttpsError("failed-precondition", "Invalid Service Account JSON format.");
         }
         // Handle private key newlines if they are escaped
@@ -156,6 +160,7 @@ exports.requestIndexing = functions.https.onCall(async (data, context) => {
                 type: type,
             },
         });
+        console.log(`Indexing API response: ${result.status}`, result.data);
         return {
             status: result.status,
             data: result.data,

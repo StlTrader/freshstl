@@ -105,7 +105,7 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
                     id="save-card"
                     checked={saveCard}
                     onChange={(e) => setSaveCard(e.target.checked)}
-                    className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                    className="w-4 h-4 text-social-black dark:text-white rounded border-gray-300 focus:ring-social-black dark:focus:ring-white"
                 />
                 <label htmlFor="save-card" className="text-sm text-gray-600 dark:text-dark-text-secondary cursor-pointer select-none">
                     Save this card for future purchases
@@ -122,7 +122,7 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
             <button
                 type="submit"
                 disabled={!stripe || isProcessing}
-                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-brand-400 dark:disabled:bg-brand-800 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white dark:text-black py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             >
                 {isProcessing ? (
                     <>
@@ -198,7 +198,7 @@ const SavedCardPaymentForm = ({
             <button
                 onClick={handlePay}
                 disabled={!stripe || isProcessing}
-                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-brand-400 dark:disabled:bg-brand-800 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white dark:text-black py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             >
                 {isProcessing ? (
                     <>
@@ -297,7 +297,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
     if (loadingMethods) {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-social-black dark:text-white" />
                 <p className="text-gray-500">Loading payment options...</p>
             </div>
         );
@@ -309,7 +309,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                 <div className="text-red-500 mb-2"><AlertCircle className="mx-auto w-8 h-8" /></div>
                 <p className="text-gray-900 dark:text-dark-text-primary font-medium">Payment Initialization Failed</p>
                 <p className="text-gray-500 text-sm mt-1">{error}</p>
-                <button onClick={onCancel} className="mt-4 text-brand-600 hover:underline">Go Back</button>
+                <button onClick={onCancel} className="mt-4 text-social-black dark:text-white hover:underline">Go Back</button>
             </div>
         );
     }
@@ -368,7 +368,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                                     setUseNewCard(false);
                                 }}
                                 className={`p-3 rounded-lg border cursor-pointer flex items-center justify-between transition-all ${!useNewCard && selectedMethodId === method.id
-                                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500'
+                                    ? 'border-social-black dark:border-white bg-gray-50 dark:bg-dark-bg ring-1 ring-social-black dark:ring-white'
                                     : 'border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-dark-border'
                                     }`}
                             >
@@ -381,8 +381,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                                         </div>
                                     </div>
                                     {(!useNewCard && selectedMethodId === method.id) && (
-                                        <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center">
-                                            <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                                        <div className="w-4 h-4 rounded-full bg-social-black dark:bg-white flex items-center justify-center">
+                                            <div className="w-1.5 h-1.5 bg-white dark:bg-black rounded-full" />
                                         </div>
                                     )}
                                 </div>
@@ -392,7 +392,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                         <div
                             onClick={() => setUseNewCard(true)}
                             className={`p-3 rounded-lg border cursor-pointer flex items-center justify-between transition-all ${useNewCard
-                                ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500'
+                                ? 'border-social-black dark:border-white bg-gray-50 dark:bg-dark-bg ring-1 ring-social-black dark:ring-white'
                                 : 'border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-dark-border'
                                 }`}
                         >
@@ -403,8 +403,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                                 <span className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">Use a new card</span>
                             </div>
                             {useNewCard && (
-                                <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center">
-                                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                                <div className="w-4 h-4 rounded-full bg-social-black dark:bg-white flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 bg-white dark:bg-black rounded-full" />
                                 </div>
                             )}
                         </div>
@@ -414,7 +414,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
 
             {!clientSecret ? (
                 <div className="flex flex-col items-center justify-center p-12 space-y-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+                    <Loader2 className="w-8 h-8 animate-spin text-social-black dark:text-white" />
                     <p className="text-gray-500">Preparing secure checkout...</p>
                 </div>
             ) : (
@@ -425,7 +425,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                         appearance: {
                             theme: isDarkMode ? 'night' : 'stripe',
                             variables: {
-                                colorPrimary: '#0ea5e9',
+                                colorPrimary: isDarkMode ? '#ffffff' : '#0f0f0f',
                                 borderRadius: '12px',
                                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                                 colorBackground: isDarkMode ? '#1f2937' : '#ffffff',
@@ -437,8 +437,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                                     padding: '12px',
                                 },
                                 '.Input:focus': {
-                                    border: '1px solid #0ea5e9',
-                                    boxShadow: '0 0 0 2px rgba(14, 165, 233, 0.2)',
+                                    border: isDarkMode ? '1px solid #ffffff' : '1px solid #0f0f0f',
+                                    boxShadow: isDarkMode ? '0 0 0 2px rgba(255, 255, 255, 0.2)' : '0 0 0 2px rgba(15, 15, 15, 0.2)',
                                 }
                             }
                         }

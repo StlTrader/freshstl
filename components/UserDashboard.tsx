@@ -308,8 +308,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
               key={tab.id}
               onClick={() => setActiveTab(tab.id as Tab)}
               className={`flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 p-1.5 md:px-6 md:py-3 rounded-lg md:rounded-full font-bold text-[10px] md:text-sm transition-all shadow-sm ${activeTab === tab.id
-                ? 'bg-brand-600 text-white shadow-brand-500/25 ring-1 md:ring-2 ring-brand-500 ring-offset-1 md:ring-offset-2 ring-offset-gray-50 dark:ring-offset-dark-bg transform scale-[1.02]'
-                : 'bg-white dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary border border-gray-200 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-surface/80 hover:border-gray-300 dark:hover:border-dark-border'
+                ? 'bg-social-black dark:bg-white text-white dark:text-black shadow-lg ring-1 md:ring-2 ring-social-black dark:ring-white ring-offset-1 md:ring-offset-2 ring-offset-gray-50 dark:ring-offset-dark-bg transform scale-[1.02]'
+                : 'bg-white dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary border border-gray-200 dark:border-dark-border hover:bg-social-light-hover dark:hover:bg-social-dark-hover hover:border-social-black dark:hover:border-white'
                 }`}
             >
               <tab.icon className="w-4 h-4 md:w-[18px] md:h-[18px]" />
@@ -354,7 +354,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     <div className="flex-1 w-full text-left">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-dark-text-primary line-clamp-2">{purchase.productName}</h3>
-                        <span className="font-mono text-sm font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/30 px-2 py-1 rounded hidden md:inline-block">
+                        <span className="font-mono text-sm font-bold text-social-black dark:text-white bg-gray-100 dark:bg-dark-bg px-2 py-1 rounded hidden md:inline-block">
                           ${((product?.price || 0) / 100).toFixed(2)}
                         </span>
                       </div>
@@ -362,7 +362,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-gray-500 dark:text-dark-text-secondary mb-6">
                         <span className="flex items-center gap-1.5"><Calendar size={16} className="text-gray-400" /> {formatDate(purchase.purchaseDate)}</span>
                         <span className="flex items-center gap-1.5"><FileBox size={16} className="text-gray-400" /> STL Format</span>
-                        <span className="font-mono text-brand-600 dark:text-brand-400 md:hidden font-bold bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded">${((product?.price || 0) / 100).toFixed(2)}</span>
+                        <span className="font-mono text-social-black dark:text-white md:hidden font-bold bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded">${((product?.price || 0) / 100).toFixed(2)}</span>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -370,7 +370,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                           href={purchase.downloadLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-95"
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-6 py-3 rounded-xl transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-95"
                         >
                           <Download size={18} /> Download Files
                         </a>
@@ -401,7 +401,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
             {orders.length > 0 ? (
               <div className="space-y-4">
                 {orders.map(order => (
-                  <div key={order.id} className="bg-white dark:bg-dark-surface rounded-xl p-5 border border-gray-200 dark:border-dark-border shadow-sm hover:border-brand-300 dark:hover:border-brand-700 transition-colors">
+                  <div key={order.id} className="bg-white dark:bg-dark-surface rounded-xl p-5 border border-gray-200 dark:border-dark-border shadow-sm hover:border-social-black dark:hover:border-white transition-colors">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                       <div className="flex-1 w-full">
                         <div className="flex items-center justify-between sm:justify-start gap-3 mb-2 flex-wrap">
@@ -483,10 +483,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     </div>
                     <div className="p-5 flex flex-col flex-1">
                       <h3 className="font-bold text-gray-900 dark:text-dark-text-primary mb-1 text-lg line-clamp-1">{product.name}</h3>
-                      <p className="text-brand-600 dark:text-brand-400 font-black text-xl mb-4">${(product.price / 100).toFixed(2)}</p>
+                      <p className="text-social-black dark:text-white font-black text-xl mb-4">${(product.price / 100).toFixed(2)}</p>
                       <Link
                         href={`/3d-print/${product.slug}`}
-                        className="mt-auto block w-full text-center py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95"
+                        className="mt-auto block w-full text-center py-3 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95"
                       >
                         View Details
                       </Link>
@@ -560,7 +560,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                 <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">Saved Cards</h3>
                 <button
                   onClick={handleAddPaymentMethod}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm bg-brand-600 hover:bg-brand-500 text-white px-4 py-3 rounded-xl transition-all font-bold shadow-md active:scale-95"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-4 py-3 rounded-xl transition-all font-bold shadow-md active:scale-95"
                 >
                   <Plus size={18} /> Add New Card
                 </button>
@@ -585,7 +585,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       </div>
                       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-dark-border">
                         {method.isDefault && (
-                          <span className="text-xs bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 px-2.5 py-1 rounded-full font-bold">Default</span>
+                          <span className="text-xs bg-gray-100 dark:bg-dark-bg text-social-black dark:text-white px-2.5 py-1 rounded-full font-bold">Default</span>
                         )}
                         <button
                           onClick={() => handleDeletePaymentMethod(method.id)}

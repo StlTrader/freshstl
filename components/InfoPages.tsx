@@ -8,7 +8,7 @@ interface PageProps {
 const PageLayout: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; onBack: () => void }> = ({ title, icon, children, onBack }) => (
   <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="mb-8 flex items-center gap-4">
-      <div className="p-3 bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 rounded-xl">
+      <div className="p-3 bg-social-black dark:bg-white text-white dark:text-black rounded-xl">
         {icon}
       </div>
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-dark-text-primary">{title}</h1>
@@ -21,7 +21,7 @@ const PageLayout: React.FC<{ title: string; icon: React.ReactNode; children: Rea
     <div className="mt-8 text-center">
       <button
         onClick={onBack}
-        className="text-brand-600 dark:text-brand-400 font-medium hover:underline"
+        className="text-social-black dark:text-white font-medium hover:underline"
       >
         &larr; Return to Store
       </button>
@@ -119,17 +119,17 @@ export const LicensePage: React.FC<PageProps> = ({ onBack }) => (
 export const SupportPage: React.FC<PageProps> = ({ onBack }) => (
   <PageLayout title="Support Center" icon={<HelpCircle size={32} />} onBack={onBack}>
     <div className="grid md:grid-cols-2 gap-8 mb-12 not-prose">
-      <div className="bg-brand-50 dark:bg-brand-900/10 p-6 rounded-xl border border-brand-100 dark:border-brand-900/30">
-        <Mail className="w-8 h-8 text-brand-500 mb-4" />
+      <div className="bg-gray-100 dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-dark-border">
+        <Mail className="w-8 h-8 text-social-black dark:text-white mb-4" />
         <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-2">Email Support</h3>
         <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-4">Need help with an order or file? Our team usually responds within 24 hours.</p>
-        <a href="mailto:support@freshstl.com" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">support@freshstl.com</a>
+        <a href="mailto:support@freshstl.com" className="text-social-black dark:text-white font-bold hover:underline">support@freshstl.com</a>
       </div>
       <div className="bg-gray-50 dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-dark-border">
         <FileText className="w-8 h-8 text-gray-500 mb-4" />
         <h3 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary mb-2">Documentation</h3>
         <p className="text-gray-600 dark:text-dark-text-secondary text-sm mb-4">Check our printing guides for recommended settings for FDM and SLA printers.</p>
-        <button className="text-brand-600 dark:text-brand-400 font-bold hover:underline">View Guides</button>
+        <button className="text-social-black dark:text-white font-bold hover:underline">View Guides</button>
       </div>
     </div>
 
