@@ -40,7 +40,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
                         <Link
                             key={post.id}
                             href={`/blog/${post.slug}`}
-                            className="relative min-w-[260px] sm:min-w-[300px] aspect-[3/4] rounded-2xl overflow-hidden snap-center group cursor-pointer border border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                            className="relative min-w-[220px] sm:min-w-[260px] aspect-square rounded-2xl overflow-hidden snap-center group cursor-pointer border border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                         >
                             {/* Background Image */}
                             <div className="absolute inset-0 bg-gray-200 dark:bg-dark-bg">
@@ -69,7 +69,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
                             )}
 
                             {/* Content */}
-                            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-white/80 mb-2 uppercase tracking-wider">
                                     <Calendar size={12} />
                                     <span>
@@ -85,7 +85,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
                                     </span>
                                 </div>
 
-                                <h3 className="text-lg sm:text-xl font-bold leading-tight mb-3 line-clamp-2 group-hover:text-white transition-colors drop-shadow-sm">
+                                <h3 className="text-base sm:text-lg font-bold leading-tight mb-3 line-clamp-2 group-hover:text-white transition-colors drop-shadow-sm">
                                     {post.title}
                                 </h3>
 

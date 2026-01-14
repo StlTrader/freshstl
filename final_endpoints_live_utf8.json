@@ -1,0 +1,22 @@
+﻿{
+  "object": "list",
+  "data": [
+    {
+      "id": "we_1SpWUeAqtbEf8BVABafYQ5sn",
+      "object": "webhook_endpoint",
+      "api_version": "2020-08-27",
+      "application": null,
+      "created": 1768406424,
+      "description": null,
+      "enabled_events": [
+        "payment_intent.succeeded"
+      ],
+      "livemode": true,
+      "metadata": {},
+      "status": "enabled",
+      "url": "https://freshstl.com/api/webhook/stripe"
+    }
+  ],
+  "has_more": false,
+  "url": "/v1/webhook_endpoints"
+}

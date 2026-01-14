@@ -44,6 +44,7 @@ interface StripeCheckoutProps {
         zipCode?: string;
         country?: string;
     };
+    items: any[]; // Added items prop
 }
 
 const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess: (id: string) => void, amount: number, saveCard: boolean, setSaveCard: (val: boolean) => void }) => {
@@ -214,7 +215,7 @@ const SavedCardPaymentForm = ({
     );
 };
 
-export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onCancel, customerInfo }) => {
+export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onCancel, customerInfo, items }) => {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [savedMethods, setSavedMethods] = useState<PaymentMethod[]>([]);
@@ -274,7 +275,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                     'usd',
                     customerInfo,
                     useNewCard ? saveCard : false, // Only save if using new card
-                    isUsingSaved ? selectedMethodId! : undefined
+                    isUsingSaved ? selectedMethodId! : undefined,
+                    items // Pass items
                 );
 
                 if (result) {
@@ -315,7 +317,20 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
     }
 
     const stripePromise = paymentService.getStripe();
-    if (!stripePromise) return null;
+
+    if (!stripePromise) {
+        return (
+            <div className="p-6 text-center bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <div className="text-red-500 mb-2"><AlertCircle className="mx-auto w-8 h-8" /></div>
+                <p className="text-gray-900 dark:text-dark-text-primary font-bold">Payment Configuration Missing</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    The Stripe Publishable Key is missing. <br />
+                    Admins: Please go to Admin Panel &gt; Payment Settings and click "Save" to update the configuration.
+                </p>
+                <button onClick={onCancel} className="mt-4 text-social-black dark:text-white hover:underline font-medium">Go Back</button>
+            </div>
+        );
+    }
 
     const mode = paymentService.getStripeMode();
 

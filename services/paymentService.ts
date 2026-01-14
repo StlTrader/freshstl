@@ -142,7 +142,8 @@ export const createPaymentIntent = async (
     country?: string;
   },
   saveCard: boolean = false,
-  paymentMethodId?: string
+  paymentMethodId?: string,
+  items?: any[] // Added items argument
 ): Promise<{ clientSecret: string } | null> => {
   const user = auth?.currentUser;
   if (!user) {
@@ -151,131 +152,33 @@ export const createPaymentIntent = async (
   }
 
   try {
-    if (!db) {
-      throw new Error("Firestore is not initialized. Cannot create payment session.");
-    }
+    const mode = getStripeMode();
+    console.log(`[Payment] Initializing payment in ${mode} mode via API`);
 
-    // Check for Test Mode
-    if (getStripeMode() === 'test') {
-      console.log("[Payment] Using Test Mode API Route");
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount,
-          currency,
-          customerInfo,
-          saveCard,
-          paymentMethodId
-        })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Payment failed');
-      }
-      return { clientSecret: data.clientSecret };
-    }
-
-    // 1. Create a document in the customers/{uid}/checkout_sessions collection
-    const collectionPath = `customers/${user.uid}/checkout_sessions`;
-    const collectionRef = collection(db, 'customers', user.uid, 'checkout_sessions');
-    console.log(`[Payment] Creating session doc for user: ${user.uid}`);
-    console.log(`[Payment] Writing to path: ${collectionPath}`);
-
-    const docData: any = {
-      client: 'mobile',
-      mode: 'payment',
-      amount: Math.round(amount), // Add amount at top level as well
-      currency: currency,         // Add currency at top level as well
-      line_items: [{
-        price_data: {
-          currency: currency,
-          product_data: {
-            name: 'Total Purchase',
-          },
-          unit_amount: Math.round(amount),
-        },
-        quantity: 1,
-      }],
-      // Pass customer details for Stripe Metadata / Receipt
-      metadata: {
-        customer_email: customerInfo?.email || user.email || 'guest@example.com',
-        customer_name: customerInfo?.fullName || user.displayName || 'Guest',
-        shipping_address: customerInfo ? `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.zipCode}, ${customerInfo.country}` : ''
-      },
-      receipt_email: customerInfo?.email || user.email,
-      // Billing details for the PaymentIntent
-      billing_details: customerInfo ? {
-        name: customerInfo.fullName,
-        email: customerInfo.email,
-        address: {
-          line1: customerInfo.address,
-          city: customerInfo.city,
-          postal_code: customerInfo.zipCode,
-          country: customerInfo.country,
-        }
-      } : undefined,
-    };
-
-    // If saving card, set setup_future_usage
-    if (saveCard) {
-      docData.payment_intent_data = {
-        setup_future_usage: 'off_session',
-      };
-    }
-
-    // If using a saved payment method
-    if (paymentMethodId) {
-      docData.payment_method = paymentMethodId;
-    }
-
-    console.log('[Payment] Document Data:', docData);
-
-    const docRef = await addDoc(collectionRef, docData);
-
-    console.log(`[Payment] Document created with ID: ${docRef.id}. Waiting for Extension...`);
-
-    // 2. Listen for the 'client_secret' to be written by the extension
-    return new Promise((resolve, reject) => {
-      let unsubscribe: () => void;
-
-      const timeoutId = setTimeout(() => {
-        if (unsubscribe) unsubscribe();
-        console.error(`[Payment] Timeout waiting for doc: ${docRef.path}`);
-        reject(new Error(`Payment initialization timed out. Document created at: ${docRef.path}. Check Firebase Console if this document exists and if Extension processed it.`));
-      }, 30000); // Increased to 30 second timeout
-
-      unsubscribe = onSnapshot(docRef, (snapshot) => {
-        const data = snapshot.data();
-        console.log(`[Payment] Snapshot update for ${docRef.id}:`, data);
-
-        if (data) {
-          // The extension returns 'paymentIntentClientSecret' or 'client_secret'
-          const secret = data.paymentIntentClientSecret || data.client_secret;
-
-          if (secret) {
-            console.log(`[Payment] Received client_secret!`);
-            clearTimeout(timeoutId);
-            unsubscribe();
-            resolve({ clientSecret: secret });
-          }
-          if (data.error) {
-            console.error(`[Payment] Extension returned error:`, data.error);
-            clearTimeout(timeoutId);
-            unsubscribe();
-            reject(new Error(data.error.message));
-          }
-        }
-      }, (error) => {
-        console.error(`[Payment] Snapshot error:`, error);
-        clearTimeout(timeoutId);
-        unsubscribe();
-        reject(error);
-      });
+    const response = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount,
+        currency,
+        customerInfo,
+        saveCard,
+        paymentMethodId,
+        mode, // Pass the mode to the API
+        items: items || [],
+        userId: user.uid
+      })
     });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Payment failed');
+    }
+    return { clientSecret: data.clientSecret };
+
   } catch (error: any) {
     console.error("Payment Intent Creation Error:", error);
-    throw new Error(error.message || 'Failed to create PaymentIntent via Extension');
+    throw new Error(error.message || 'Failed to create PaymentIntent');
   }
 };
 
@@ -293,71 +196,7 @@ import * as firebaseService from './firebaseService';
 
 
 
-export const createSetupIntent = async (
-  customerInfo?: {
-    fullName: string;
-    email: string;
-  }
-): Promise<{ clientSecret: string } | null> => {
-  const user = auth?.currentUser;
-  if (!user) {
-    throw new Error("User must be logged in to setup a card.");
-  }
 
-  try {
-    if (!db) {
-      throw new Error("Firestore is not initialized.");
-    }
-    const collectionRef = collection(db, 'customers', user.uid, 'checkout_sessions');
-    console.log(`[Payment] Creating setup session doc for user: ${user.uid}`);
-
-    const docData: any = {
-      client: 'mobile',
-      mode: 'setup',
-      currency: 'usd',
-      metadata: {
-        customer_email: customerInfo?.email || user.email,
-        customer_name: customerInfo?.fullName || user.displayName,
-      }
-    };
-
-    const docRef = await addDoc(collectionRef, docData);
-    console.log(`[Payment] Setup doc created with ID: ${docRef.id}`);
-
-    return new Promise((resolve, reject) => {
-      let unsubscribe: () => void;
-      const timeoutId = setTimeout(() => {
-        if (unsubscribe) unsubscribe();
-        reject(new Error("Setup initialization timed out."));
-      }, 15000);
-
-      unsubscribe = onSnapshot(docRef, (snapshot) => {
-        const data = snapshot.data();
-        if (data) {
-          // Extension returns 'client_secret' or 'setupIntentClientSecret'
-          const secret = data.client_secret || data.setupIntentClientSecret;
-          if (secret) {
-            clearTimeout(timeoutId);
-            unsubscribe();
-            resolve({ clientSecret: secret });
-          }
-          if (data.error) {
-            clearTimeout(timeoutId);
-            unsubscribe();
-            reject(new Error(data.error.message));
-          }
-        }
-      }, (error) => {
-        clearTimeout(timeoutId);
-        unsubscribe();
-        reject(error);
-      });
-    });
-  } catch (error: any) {
-    console.error("Setup Intent Creation Error:", error);
-    throw new Error(error.message || 'Failed to create SetupIntent');
-  }
-};
 
 export const getSavedPaymentMethods = async (userId: string): Promise<PaymentMethod[]> => {
   // Use Firebase persistence

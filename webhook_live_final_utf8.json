@@ -1,0 +1,8 @@
+﻿{
+  "error": {
+    "message": "The provided key 'rk_live_*********************************************************************************************aOFsi2' does not have the required permissions for this endpoint on account 'acct_1KsfWjAqtbEf8BVA'.  Please use a different key to perform this action.",
+    "request_log_url": "https://dashboard.stripe.com/acct_1KsfWjAqtbEf8BVA/workbench/logs?object=req_CcRPgM9gEGNhtx",
+    "type": "invalid_request_error"
+  }
+}
+

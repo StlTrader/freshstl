@@ -251,22 +251,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             isTest
         };
 
-        await firebaseService.processSuccessfulCheckout(uid, orderData, purchaseRecords);
-
-        const paymentData = {
-            orderId: transactionId,
-            userId: uid,
-            amount: totalAmount,
-            currency: 'usd' as const,
-            status: 'succeeded' as const,
-            paymentMethod: 'card',
-            stripePaymentIntentId: transactionId,
-            cardBrand: paymentMethod?.cardBrand || 'visa',
-            cardLast4: paymentMethod?.cardLast4 || '4242',
-            isTest
-        };
-
-        await firebaseService.savePayment(paymentData);
+        // REMOVED: Client-side DB writes. Fulfillment is now handled by the Webhook.
+        // await firebaseService.processSuccessfulCheckout(uid, orderData, purchaseRecords);
+        // await firebaseService.savePayment(paymentData);
 
         if (customerInfo) {
             await firebaseService.updateUser(uid, {
@@ -278,8 +265,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             });
         }
 
+        // Optional: Send email from client or move to webhook too? 
+        // For now, keeping it here is okay, but webhook is better. 
+        // Let's comment it out if we want pure server-side, but I'll leave it for now as a backup notification 
+        // or remove it if the webhook handles emails (not yet implemented there).
+        // Actually, let's keep it but maybe wrap in try/catch so it doesn't block UI.
         if (customerInfo?.email) {
-            await firebaseService.sendOrderConfirmationEmail(uid, customerInfo.email, orderData);
+            try {
+                await firebaseService.sendOrderConfirmationEmail(uid, customerInfo.email, orderData);
+            } catch (e) { console.error("Failed to send email", e); }
         }
     };
 

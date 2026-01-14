@@ -168,7 +168,7 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "freshstlstore-99511217-ca510",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "freshstlstore-99511217-ca510.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1086916049812",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1086916049812:web:bc21619cfd885cfecead81",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1086916049812:web:ad588e00ab40b69ecead81",
   // measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-78H2XBXJV9"
 };
 
@@ -1422,71 +1422,9 @@ export const subscribeToOrders = (userId: string, callback: (orders: Order[]) =>
   });
 };
 
-export const processSuccessfulCheckout = async (userId: string, orderData: Omit<Order, 'id' | 'date' | 'status'>, purchases: Omit<Purchase, 'id'>[]) => {
-  if (isMockFallback || !db || userId.startsWith('mock_')) {
-    // 1. Save Purchases
-    const allPurchases = JSON.parse(localStorage.getItem(LS_KEYS.PURCHASES) || '[]');
-    const newPurchases = purchases.map(p => ({
-      ...p,
-      id: 'local_p_' + Math.random(),
-      purchaseDate: new Date().toISOString(),
-      _userId: userId
-    }));
-    localStorage.setItem(LS_KEYS.PURCHASES, JSON.stringify([...allPurchases, ...newPurchases]));
-    emitChange(LS_KEYS.PURCHASES);
-
-    // 2. Save Order (Admin)
-    const allOrders = JSON.parse(localStorage.getItem(LS_KEYS.ORDERS) || '[]');
-    const newOrder = {
-      ...orderData,
-      id: 'local_order_' + Date.now(),
-      date: new Date().toISOString(),
-      status: 'completed'
-    };
-    localStorage.setItem(LS_KEYS.ORDERS, JSON.stringify([...allOrders, newOrder]));
-    emitChange(LS_KEYS.ORDERS);
-
-    // 3. Update Sales Counts (Products)
-    const storedProducts = JSON.parse(localStorage.getItem(LS_KEYS.PRODUCTS) || JSON.stringify(DEFAULT_MOCK_PRODUCTS));
-    const updatedProducts = storedProducts.map((p: Product) => {
-      const bought = orderData.items.find(i => i.id === p.id);
-      return bought ? { ...p, sales: (p.sales || 0) + 1 } : p;
-    });
-    localStorage.setItem(LS_KEYS.PRODUCTS, JSON.stringify(updatedProducts));
-    emitChange(LS_KEYS.PRODUCTS);
-    return;
-  }
-
-  // Real Firestore Transaction
-  try {
-    const batch = writeBatch(db);
-
-    purchases.forEach(p => {
-      const ref = doc(collection(db!, 'users', userId, 'purchases'));
-      batch.set(ref, { ...p, purchaseDate: serverTimestamp() });
-    });
-
-    const orderRef = doc(collection(db!, 'orders'));
-    batch.set(orderRef, {
-      ...orderData,
-      shippingAddress: orderData.customerInfo ? {
-        address: orderData.customerInfo.address,
-        city: orderData.customerInfo.city,
-        zipCode: orderData.customerInfo.zipCode,
-        country: orderData.customerInfo.country
-      } : null,
-      date: serverTimestamp(),
-      status: 'completed'
-    });
-
-    orderData.items.forEach(item => {
-      batch.update(doc(db!, 'products', item.id), { sales: increment(1) });
-    });
-
-    await batch.commit();
-  } catch (e) {
-    console.error("Transaction failed", e);
-  }
+// processSuccessfulCheckout REMOVED - Logic moved to Webhook for security and robustness.
+export const processSuccessfulCheckout = async () => {
+  console.warn("processSuccessfulCheckout is deprecated. Fulfillment is handled by Webhook.");
 };
 
 export const subscribeToGlobalOrders = (callback: (orders: Order[]) => void) => {
@@ -2643,12 +2581,29 @@ export const updateBuilderAsset = async (id: string, data: Partial<BuilderAsset>
 };
 
 // --- Global Stripe Configuration ---
-export const subscribeToStripeConfig = (callback: (config: any) => void) => {
+
+// For Admin Panel (Reads Secrets)
+export const subscribeToAdminStripeConfig = (callback: (config: any) => void) => {
   if (db) {
     return onSnapshot(doc(db, 'settings', 'stripe'), (docSnap) => {
       if (docSnap.exists()) {
         callback(docSnap.data());
       } else {
+        callback({ mode: 'test' });
+      }
+    });
+  }
+  return () => { };
+};
+
+// For Client App (Reads Public Only)
+export const subscribeToStripeConfig = (callback: (config: any) => void) => {
+  if (db) {
+    return onSnapshot(doc(db, 'settings', 'stripe_public'), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        // Fallback or wait for init
         callback({ mode: 'test' });
       }
     });
@@ -2660,10 +2615,31 @@ export const subscribeToStripeConfig = (callback: (config: any) => void) => {
 };
 
 export const updateStripeConfig = async (config: any) => {
-  if (db) {
-    await setDoc(doc(db, 'settings', 'stripe'), config, { merge: true });
-  }
-  localStorage.setItem('freshstl_stripe_config', JSON.stringify(config));
+  if (!db) return;
+
+  // 1. Save Full Config (Secrets included) to 'settings/stripe' (Admin Only)
+  await setDoc(doc(db, 'settings', 'stripe'), config, { merge: true });
+
+  // 2. Save Public Config (Safe for Client) to 'settings/stripe_public' (Public Read)
+  const publicConfig = {
+    mode: config.mode,
+    isConnected: config.isConnected,
+    testPublicKey: config.testPublicKey,
+    livePublicKey: config.livePublicKey,
+    testerEmails: config.testerEmails
+    // EXCLUDE: secret keys, webhook secrets
+  };
+  await setDoc(doc(db, 'settings', 'stripe_public'), publicConfig, { merge: true });
+
+  // 3. Update Local Storage (Safe version only)
+  // Security: Do NOT save secret keys to local storage
+  const safeConfig = { ...config };
+  delete safeConfig.testSecretKey;
+  delete safeConfig.liveSecretKey;
+  delete safeConfig.testWebhookSecret;
+  delete safeConfig.liveWebhookSecret;
+
+  localStorage.setItem('freshstl_stripe_config', JSON.stringify(safeConfig));
 };
 
 export const makeMeAdmin = async () => {
@@ -2745,8 +2721,7 @@ export const deleteDataForTestUsers = async (testerEmails: string[]) => {
       // Delete Payments
       await deleteQueryBatch(query(collection(db, 'payments'), where('userId', '==', uid)));
 
-      // Delete Checkout Sessions
-      await deleteQueryBatch(collection(db, 'customers', uid, 'checkout_sessions'));
+
 
       // Delete Purchases (User Subcollection)
       await deleteQueryBatch(collection(db, 'users', uid, 'purchases'));

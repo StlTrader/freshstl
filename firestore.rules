@@ -92,25 +92,18 @@ service cloud.firestore {
     }
 
     // Settings: Public read (except sensitive), Admin write
-    match /settings/{settingId} {
-      allow read: if settingId != 'indexing' || isAdmin();
+    // Stripe Public Config: Public Read
+    match /settings/stripe_public {
+      allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Stripe Extension: Customers
-    match /customers/{uid} {
-      allow read, write: if request.auth.uid == uid;
-
-      match /checkout_sessions/{id} {
-        allow read, write: if request.auth.uid == uid;
-      }
-      match /subscriptions/{id} {
-        allow read: if request.auth.uid == uid;
-      }
-      match /payments/{id} {
-        allow read: if request.auth.uid == uid;
-      }
+    // Stripe Secrets: Admin Only
+    match /settings/stripe {
+      allow read, write: if isAdmin();
     }
+
+
 
     // Default deny
     match /{document=**} {

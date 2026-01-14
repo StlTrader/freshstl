@@ -1,0 +1,16 @@
+﻿{
+  "id": "we_1SpW8hPNFh2jzAxwuIEPUMng",
+  "object": "webhook_endpoint",
+  "api_version": null,
+  "application": null,
+  "created": 1768405063,
+  "description": null,
+  "enabled_events": [
+    "payment_intent.succeeded"
+  ],
+  "livemode": false,
+  "metadata": {},
+  "secret": "whsec_YKYSYdRC7RVQJenXzUtoLOm28EnBBTGr",
+  "status": "enabled",
+  "url": "https://freshstl.com/api/webhook/stripe"
+}

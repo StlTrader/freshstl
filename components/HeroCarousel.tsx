@@ -74,22 +74,35 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
                     {slides.map((slide, index) => (
                         <div key={slide.id} className="w-full h-full flex-shrink-0 relative bg-gray-50 dark:bg-dark-surface">
                             {/* Background Image with Overlay */}
-                            <div className="absolute inset-0 z-0">
+                            {/* Background Image with Overlay */}
+                            <div className="absolute inset-0 z-0 overflow-hidden">
                                 {slide.image ? (
-                                    <Image
-                                        src={slide.image}
-                                        alt={slide.title}
-                                        fill
-                                        quality={95}
-                                        priority={index === 0}
-                                        className="object-cover transition-transform duration-[20s] ease-linear scale-100 group-hover:scale-105"
-                                        sizes="(max-width: 768px) 100vw, 1280px"
-                                    />
+                                    <>
+                                        {/* Blurred Background for Atmosphere */}
+                                        <Image
+                                            src={slide.image}
+                                            alt=""
+                                            fill
+                                            quality={50}
+                                            priority={index === 0}
+                                            className="object-cover blur-xl scale-110 opacity-50 dark:opacity-40"
+                                        />
+                                        {/* Main Sharp Image */}
+                                        <Image
+                                            src={slide.image}
+                                            alt={slide.title}
+                                            fill
+                                            quality={95}
+                                            priority={index === 0}
+                                            className="object-contain transition-transform duration-[20s] ease-linear scale-100 group-hover:scale-105 z-10"
+                                            sizes="(max-width: 768px) 100vw, 1280px"
+                                        />
+                                    </>
                                 ) : (
                                     <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover" />
                                 )}
-                                {/* Gradient Overlay - Adjusted for better text contrast and cleaner look */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/50 to-transparent dark:from-black/90 dark:via-black/50 dark:to-transparent" />
+                                {/* Gradient Overlay Removed as per user request */}
+                                {/* <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/50 to-transparent dark:from-black/90 dark:via-black/50 dark:to-transparent" /> */}
                             </div>
 
                             {/* Content Container - Flex layout for consistent alignment */}

@@ -1,0 +1,22 @@
+﻿{
+  "object": "list",
+  "data": [
+    {
+      "id": "we_1SpWZyAqtbEf8BVAe3g3Fwho",
+      "object": "webhook_endpoint",
+      "api_version": "2025-12-15.clover",
+      "application": null,
+      "created": 1768406754,
+      "description": null,
+      "enabled_events": [
+        "payment_intent.succeeded"
+      ],
+      "livemode": false,
+      "metadata": {},
+      "status": "enabled",
+      "url": "https://freshstl.com/api/webhook/stripe"
+    }
+  ],
+  "has_more": false,
+  "url": "/v1/webhook_endpoints"
+}

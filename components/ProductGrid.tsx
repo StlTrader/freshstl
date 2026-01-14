@@ -144,21 +144,11 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
   return (
     <div className="space-y-8" id="products">
       {/* Search & Filter Bar */}
-      <div className="sticky top-16 z-20 py-4 bg-gray-50/95 dark:bg-dark-surface/95 backdrop-blur rounded-2xl transition-colors space-y-4 shadow-sm border border-gray-100 dark:border-dark-border px-4">
+      <div className="sticky top-16 z-30 py-4 bg-gray-50/95 dark:bg-dark-surface/95 backdrop-blur rounded-2xl transition-colors space-y-4 shadow-sm border border-gray-100 dark:border-dark-border px-4">
 
-        {/* Mobile Toggle */}
-        <div className="md:hidden flex justify-between items-center">
-          <span className="font-bold text-gray-900 dark:text-dark-text-primary">Filters & Search</span>
-          <button
-            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-            className={`p-2 rounded-lg transition-colors ${isFiltersOpen ? 'bg-gray-100 dark:bg-dark-bg text-social-black dark:text-white' : 'bg-gray-100 dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary'}`}
-            aria-label="Toggle Filters"
-          >
-            <Filter size={20} />
-          </button>
-        </div>
 
-        <div className={`flex flex-col md:flex-row gap-4 justify-between ${isFiltersOpen ? 'flex' : 'hidden md:flex'}`}>
+
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
           {/* Categories */}
           <div className="flex flex-wrap gap-2">
             {categories.map(cat => (

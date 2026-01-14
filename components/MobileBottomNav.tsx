@@ -30,7 +30,7 @@ export const MobileBottomNav: React.FC = () => {
     return (
         <>
             {/* Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-bg border-t border-gray-100 dark:border-dark-border z-[100] pb-safe transition-all duration-300">
+            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-lg border border-gray-200/50 dark:border-dark-border/50 z-[100] rounded-2xl shadow-lg shadow-black/5 transition-all duration-300">
                 <div className="flex justify-around items-center h-16">
                     {/* Store (Home) */}
                     <Link
@@ -84,7 +84,7 @@ export const MobileBottomNav: React.FC = () => {
 
             {/* Bottom Sheet Overlay */}
             {isMenuOpen && (
-                <div className="fixed inset-0 z-50 md:hidden" style={{ bottom: '64px' }}>
+                <div className="fixed inset-0 z-50 md:hidden" style={{ bottom: '90px' }}>
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -137,49 +137,7 @@ export const MobileBottomNav: React.FC = () => {
                                 </Link>
                             )}
 
-                            {/* Links Grid */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <Link
-                                    href="/blog"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-social-dark-hover rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition-colors gap-2"
-                                >
-                                    <BookOpen className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-sm font-medium text-social-black dark:text-white">Blog</span>
-                                </Link>
-                                <Link
-                                    href="/support"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-social-dark-hover rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition-colors gap-2"
-                                >
-                                    <HelpCircle className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-sm font-medium text-social-black dark:text-white">Support</span>
-                                </Link>
-                                <Link
-                                    href="/license"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-social-dark-hover rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition-colors gap-2"
-                                >
-                                    <FileText className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-sm font-medium text-social-black dark:text-white">License</span>
-                                </Link>
-                                <Link
-                                    href="/terms"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-social-dark-hover rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition-colors gap-2"
-                                >
-                                    <Shield className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-sm font-medium text-social-black dark:text-white">Terms</span>
-                                </Link>
-                                <Link
-                                    href="/privacy"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-social-dark-hover rounded-xl hover:bg-gray-100 dark:hover:bg-dark-bg transition-colors gap-2"
-                                >
-                                    <ShieldCheck className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-sm font-medium text-social-black dark:text-white">Privacy</span>
-                                </Link>
-                            </div>
+
 
                             {/* Theme Toggle */}
                             <button

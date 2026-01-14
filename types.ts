@@ -33,6 +33,8 @@ export interface Product {
   createdAt?: any;
   updatedAt?: any;
   lastIndexedAt?: any; // Timestamp of last Google Indexing request
+  show3DModel?: boolean; // Toggle for 3D model visibility
+  showVideo?: boolean; // Toggle for video visibility
 }
 
 export interface Category {
@@ -114,6 +116,10 @@ export interface StripeConfig {
   publicKey?: string;
   testPublicKey?: string;
   livePublicKey?: string;
+  testSecretKey?: string; // Admin Only
+  liveSecretKey?: string; // Admin Only
+  testWebhookSecret?: string; // Admin Only
+  liveWebhookSecret?: string; // Admin Only
   mode: 'test' | 'live';
   isConnected: boolean;
   testerEmails?: string[];

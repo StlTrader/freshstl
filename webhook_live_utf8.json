@@ -1,0 +1,4 @@
+﻿You have not configured API keys yet. Running `stripe login`...
+Your pairing code is: adored-work-lucky-enrapt
+This pairing code verifies your authentication with Stripe.
+Press Enter to open the browser or visit https://dashboard.stripe.com/stripecli/confirm_auth?t=ejkqNotxddaAkEW1JnMx7xhR33PqhOH3 (^C to quit)exceeded max attempts

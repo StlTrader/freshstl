@@ -41,7 +41,9 @@ import {
   CreditCard,
   Menu,
   ArrowRight,
-  Globe
+  Globe,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import CollectionManager from './admin/CollectionManager';
@@ -735,6 +737,8 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
         videoUrl: videoUrl || '',
         tags: currentProduct.tags || [],
         aiModel: currentProduct.aiModel || '',
+        show3DModel: currentProduct.show3DModel !== undefined ? currentProduct.show3DModel : true,
+        showVideo: currentProduct.showVideo !== undefined ? currentProduct.showVideo : true,
         status
       };
 
@@ -1467,17 +1471,45 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
 
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isBuilderEnabled"
-              checked={currentProduct.isBuilderEnabled || false}
-              onChange={e => setCurrentProduct({ ...currentProduct, isBuilderEnabled: e.target.checked })}
-              className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <label htmlFor="isBuilderEnabled" className="text-sm font-medium text-gray-900 dark:text-gray-300">
-              Enable Builder System for this Product
-            </label>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isBuilderEnabled"
+                checked={currentProduct.isBuilderEnabled || false}
+                onChange={e => setCurrentProduct({ ...currentProduct, isBuilderEnabled: e.target.checked })}
+                className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <label htmlFor="isBuilderEnabled" className="text-sm font-medium text-gray-900 dark:text-gray-300">
+                Enable Builder System
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="show3DModel"
+                checked={currentProduct.show3DModel !== undefined ? currentProduct.show3DModel : true}
+                onChange={e => setCurrentProduct({ ...currentProduct, show3DModel: e.target.checked })}
+                className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <label htmlFor="show3DModel" className="text-sm font-medium text-gray-900 dark:text-gray-300">
+                Show 3D Model
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showVideo"
+                checked={currentProduct.showVideo !== undefined ? currentProduct.showVideo : true}
+                onChange={e => setCurrentProduct({ ...currentProduct, showVideo: e.target.checked })}
+                className="w-4 h-4 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <label htmlFor="showVideo" className="text-sm font-medium text-gray-900 dark:text-gray-300">
+                Show Video
+              </label>
+            </div>
           </div>
 
           {/* Builder Management UI */}
@@ -2676,8 +2708,14 @@ const PaymentSetting = () => {
   const [deleting, setDeleting] = useState(false);
   const status = firebaseService.getSystemStatus();
 
+  // Visibility States
+  const [showTestSecret, setShowTestSecret] = useState(false);
+  const [showTestWebhook, setShowTestWebhook] = useState(false);
+  const [showLiveSecret, setShowLiveSecret] = useState(false);
+  const [showLiveWebhook, setShowLiveWebhook] = useState(false);
+
   useEffect(() => {
-    const unsubscribe = firebaseService.subscribeToStripeConfig((newConfig) => {
+    const unsubscribe = firebaseService.subscribeToAdminStripeConfig((newConfig) => {
       if (newConfig) setConfig(prev => ({ ...prev, ...newConfig }));
     });
     return () => unsubscribe();
@@ -2848,10 +2886,43 @@ const PaymentSetting = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Test Secret Key</label>
-                  <div className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-dark-border rounded-lg p-3 text-gray-500 dark:text-gray-500 font-mono text-sm flex items-center gap-2">
-                    <CheckCircle size={14} className="text-green-500" />
-                    Configured via Environment Variables
+                  <div className="relative">
+                    <input
+                      type={showTestSecret ? "text" : "password"}
+                      value={config.testSecretKey || ''}
+                      onChange={(e) => setConfig({ ...config, testSecretKey: e.target.value })}
+                      placeholder={config.testSecretKey ? "••••••••••••••••" : "sk_test_..."}
+                      className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 pr-10 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTestSecret(!showTestSecret)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showTestSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Required for backend operations (refunds, etc).</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Test Webhook Secret</label>
+                  <div className="relative">
+                    <input
+                      type={showTestWebhook ? "text" : "password"}
+                      value={config.testWebhookSecret || ''}
+                      onChange={(e) => setConfig({ ...config, testWebhookSecret: e.target.value })}
+                      placeholder={config.testWebhookSecret ? "••••••••••••••••" : "whsec_..."}
+                      className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 pr-10 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTestWebhook(!showTestWebhook)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showTestWebhook ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Required for order fulfillment (webhooks).</p>
                 </div>
               </div>
             </div>
@@ -2878,10 +2949,43 @@ const PaymentSetting = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Live Secret Key</label>
-                  <div className="w-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-dark-border rounded-lg p-3 text-gray-500 dark:text-gray-500 font-mono text-sm flex items-center gap-2">
-                    <CheckCircle size={14} className="text-green-500" />
-                    Configured via Environment Variables
+                  <div className="relative">
+                    <input
+                      type={showLiveSecret ? "text" : "password"}
+                      value={config.liveSecretKey || ''}
+                      onChange={(e) => setConfig({ ...config, liveSecretKey: e.target.value })}
+                      placeholder={config.liveSecretKey ? "••••••••••••••••" : "sk_live_..."}
+                      className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 pr-10 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-green-500 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLiveSecret(!showLiveSecret)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showLiveSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Required for real payments.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Live Webhook Secret</label>
+                  <div className="relative">
+                    <input
+                      type={showLiveWebhook ? "text" : "password"}
+                      value={config.liveWebhookSecret || ''}
+                      onChange={(e) => setConfig({ ...config, liveWebhookSecret: e.target.value })}
+                      placeholder={config.liveWebhookSecret ? "••••••••••••••••" : "whsec_..."}
+                      className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 pr-10 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-green-500 outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLiveWebhook(!showLiveWebhook)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showLiveWebhook ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Required for order fulfillment (webhooks).</p>
                 </div>
               </div>
               <p className="text-xs text-red-600 dark:text-red-400 mt-3 flex items-center gap-1">
@@ -2890,6 +2994,28 @@ const PaymentSetting = () => {
             </div>
           </div>
         )}
+
+        {/* Save Button */}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saved}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${saved
+              ? 'bg-green-500 text-white cursor-default'
+              : 'bg-social-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+              }`}
+          >
+            {saved ? (
+              <>
+                <CheckCircle size={18} /> Saved!
+              </>
+            ) : (
+              <>
+                <Save size={18} /> Save API Keys
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
 

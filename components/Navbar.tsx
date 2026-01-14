@@ -13,16 +13,9 @@ export const Navbar: React.FC = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   React.useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Close mobile menu when route changes
-  React.useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
 
   const cartCount = cart.length;
 
@@ -179,6 +172,15 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 md:hidden">
+            {/* Theme Toggle (Mobile) */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-colors"
+              aria-label={mounted ? (isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode") : "Switch Theme"}
+            >
+              {mounted ? (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />) : <div className="w-5 h-5" />}
+            </button>
+
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-colors rounded-full"
@@ -191,99 +193,11 @@ export const Navbar: React.FC = () => {
                 </span>
               )}
             </button>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-full text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-colors"
-              aria-label="Menu"
-            >
-              <div className="w-6 h-5 flex flex-col justify-between">
-                <span className={`w-full h-0.5 bg-current transform transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-                <span className={`w-full h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-                <span className={`w-full h-0.5 bg-current transform transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2.5' : ''}`} />
-              </div>
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <div className={`md:hidden absolute top-16 left-0 w-full bg-white dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-4 py-6 space-y-2">
-          <Link
-            href="/"
-            className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive('/')
-              ? 'bg-social-black text-white dark:bg-white dark:text-social-black'
-              : 'text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover'
-              }`}
-          >
-            <span className="text-lg">Store</span>
-          </Link>
 
-          <Link
-            href="/blog"
-            className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive('/blog')
-              ? 'bg-social-black text-white dark:bg-white dark:text-social-black'
-              : 'text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover'
-              }`}
-          >
-            <span className="text-lg">Blog</span>
-          </Link>
-
-          {!isAnonymous && (
-            <Link
-              href="/purchases"
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive('/purchases')
-                ? 'bg-social-black text-white dark:bg-white dark:text-social-black'
-                : 'text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover'
-                }`}
-            >
-              <span className="text-lg">Dashboard</span>
-            </Link>
-          )}
-
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive('/admin')
-                ? 'bg-social-black text-white dark:bg-white dark:text-social-black'
-                : 'text-social-black dark:text-dark-text-primary hover:bg-social-light-hover dark:hover:bg-social-dark-hover'
-                }`}
-            >
-              <span className="text-lg">Admin</span>
-            </Link>
-          )}
-
-          <div className="border-t border-gray-100 dark:border-dark-border my-4 pt-4">
-            <div className="flex items-center justify-between px-4">
-              <span className="text-base font-bold text-social-black dark:text-dark-text-primary">Theme</span>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full bg-social-light-hover dark:bg-social-dark-hover text-social-black dark:text-dark-text-primary"
-              >
-                {mounted ? (isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />) : <div className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="px-4 pb-2">
-            {isAnonymous ? (
-              <Link
-                href="/login"
-                className="flex items-center justify-center w-full space-x-2 px-4 py-3 rounded-full bg-brand-600 text-white font-bold shadow-lg"
-              >
-                <span>Log in</span>
-              </Link>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center w-full space-x-2 px-4 py-3 rounded-full bg-gray-100 dark:bg-social-dark-hover text-social-black dark:text-white font-bold"
-              >
-                <span>Sign Out</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
     </nav>
   );
 };

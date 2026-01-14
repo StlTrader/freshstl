@@ -18,7 +18,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="min-h-screen transition-colors duration-300">
                 {!isAdmin && <Navbar />}
                 <CartDrawer />
-                <main className={`${isAdmin ? '' : 'pt-4 pb-12'}`}>
+                <main className={`${isAdmin ? '' : 'pt-4 pb-24'}`}>
                     {children}
                 </main>
                 {!isAdmin && <Footer />}

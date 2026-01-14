@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Product, Review } from '../types';
 import { useStore } from '../contexts/StoreContext';
 import { SketchfabViewer } from './SketchfabViewer';
-import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box, Heart, Loader2, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box, Heart, Loader2, ChevronLeft, ChevronRight, Check, X, PlayCircle } from 'lucide-react';
 import * as firebaseService from '../services/firebaseService';
 import { getStripeConfig } from '../services/paymentService';
 import { ProductCardSkeleton, Skeleton } from './LoadingSkeleton';
@@ -24,7 +24,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
     const [isDownloading, setIsDownloading] = useState(false);
-    const [activeMedia, setActiveMedia] = useState<string>('model'); // 'model' or image URL
+    // Default to first image (or model if no images, though unlikely)
+    const [activeMedia, setActiveMedia] = useState<string>(
+        (product.images && product.images.length > 0) ? product.images[0] :
+            (product.imageUrl ? product.imageUrl : 'model')
+    );
     const [isAuthorized, setIsAuthorized] = useState(product.status !== 'draft');
 
     const [thumbPage, setThumbPage] = useState(0);
@@ -71,7 +75,19 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     const isWishlisted = wishlist.includes(product.id);
     const viewerUrl = product.modelUrl;
 
-    const mediaList = ['model', ...(product.images || []), ...(product.imageUrl && !product.images?.includes(product.imageUrl) ? [product.imageUrl] : [])];
+    const mediaList = [
+        ...(product.images || []),
+        ...(product.imageUrl && !product.images?.includes(product.imageUrl) ? [product.imageUrl] : []),
+        ...(product.show3DModel !== false && product.modelUrl ? ['model'] : []),
+        ...(product.showVideo !== false && product.videoUrl ? ['video'] : [])
+    ];
+
+    // Ensure activeMedia is valid
+    useEffect(() => {
+        if (!mediaList.includes(activeMedia)) {
+            if (mediaList.length > 0) setActiveMedia(mediaList[0]);
+        }
+    }, [mediaList, activeMedia]);
 
     const handleNext = () => {
         const currentIndex = mediaList.indexOf(activeMedia);
@@ -209,6 +225,15 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         <div className="bg-black rounded-2xl overflow-hidden shadow-sm aspect-[4/3] lg:aspect-[16/9] relative group">
                             {activeMedia === 'model' ? (
                                 <SketchfabViewer modelUrl={viewerUrl} />
+                            ) : activeMedia === 'video' && product.videoUrl ? (
+                                <div className="relative w-full h-full bg-black flex items-center justify-center">
+                                    <video
+                                        src={product.videoUrl}
+                                        controls
+                                        className="w-full h-full object-contain"
+                                        poster={product.imageUrl} // Use main image as poster
+                                    />
+                                </div>
                             ) : (
                                 <div className="relative w-full h-full bg-black">
                                     <Image
@@ -219,6 +244,22 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                         className="object-contain"
                                         priority
                                     />
+
+                                    {/* 3D View Overlay Button */}
+                                    {product.show3DModel !== false && product.modelUrl && (
+                                        <div className="absolute bottom-4 right-4 z-10">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveMedia('model');
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-105 transition-transform group/btn"
+                                            >
+                                                <Box className="w-5 h-5 text-brand-600 dark:text-brand-400 group-hover/btn:rotate-12 transition-transform" />
+                                                <span className="text-sm font-bold text-gray-900 dark:text-white">View in 3D</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -245,16 +286,32 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         <div className="w-full overflow-hidden">
                             <div className="flex gap-3 pb-2 items-center justify-start overflow-x-auto scrollbar-hide px-1">
                                 {/* Fixed Model Button */}
-                                <div className="flex-shrink-0 w-20 h-20">
-                                    <button
-                                        onClick={() => setActiveMedia('model')}
-                                        className={`w-full h-full rounded-xl overflow-hidden border-2 transition-all ${activeMedia === 'model' ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                                    >
-                                        <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center text-social-black dark:text-white">
-                                            <Box size={28} />
-                                        </div>
-                                    </button>
-                                </div>
+                                {product.show3DModel !== false && product.modelUrl && (
+                                    <div className="flex-shrink-0 w-20 h-20">
+                                        <button
+                                            onClick={() => setActiveMedia('model')}
+                                            className={`w-full h-full rounded-xl overflow-hidden border-2 transition-all ${activeMedia === 'model' ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        >
+                                            <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center text-social-black dark:text-white">
+                                                <Box size={28} />
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Video Button */}
+                                {product.showVideo !== false && product.videoUrl && (
+                                    <div className="flex-shrink-0 w-20 h-20">
+                                        <button
+                                            onClick={() => setActiveMedia('video')}
+                                            className={`w-full h-full rounded-xl overflow-hidden border-2 transition-all ${activeMedia === 'video' ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        >
+                                            <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center text-social-black dark:text-white">
+                                                <PlayCircle size={28} />
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Thumbnails */}
                                 {product.images?.map((img, idx) => (

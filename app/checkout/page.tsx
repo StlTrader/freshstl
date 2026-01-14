@@ -297,6 +297,7 @@ export default function CheckoutPage() {
                                 onSuccess={handleStripeSuccess}
                                 onCancel={() => { }}
                                 customerInfo={customerInfo}
+                                items={cart}
                             />
 
                             <div className="mt-6 flex items-center justify-center gap-4 opacity-50 grayscale">
