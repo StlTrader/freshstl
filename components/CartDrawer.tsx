@@ -69,15 +69,7 @@ export const CartDrawer: React.FC = () => {
               </span>
             </h2>
             <div className="flex items-center gap-2">
-              {cart.length > 0 && (
-                <button
-                  onClick={handleCheckout}
-                  disabled={isProcessing}
-                  className="px-4 py-2 bg-social-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-full hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2"
-                >
-                  Checkout <ArrowRight size={14} />
-                </button>
-              )}
+
               <button
                 onClick={() => setIsCartOpen(false)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-dark-bg rounded-full transition-colors text-gray-500"

@@ -23,7 +23,8 @@ import {
   Camera,
   Lock,
   AlertTriangle,
-  Upload
+  Upload,
+  TestTube2
 } from 'lucide-react';
 import AddCardModal from './AddCardModal';
 import { Elements } from '@stripe/react-stripe-js';
@@ -405,16 +406,23 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                       <div className="flex-1 w-full">
                         <div className="flex items-center justify-between sm:justify-start gap-3 mb-2 flex-wrap">
-                          <h3 className="font-bold text-gray-900 dark:text-dark-text-primary text-lg">#{order.transactionId.slice(-8).toUpperCase()}</h3>
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${order.status === 'completed' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                            order.status === 'refunded' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' :
-                              'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+                          <h3 className="font-bold text-gray-900 dark:text-dark-text-primary text-lg">
+                            #{(order.transactionId || order.paymentId || order.id).slice(-8).toUpperCase()}
+                          </h3>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${(order.status === 'completed' || order.status === 'paid' || order.status === 'succeeded') ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                              order.status === 'refunded' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' :
+                                'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
                             }`}>
                             {order.status}
                           </span>
+                          {(order.mode === 'test' || order.isTest) && (
+                            <span className="px-2.5 py-1 bg-orange-100 text-orange-700 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800 rounded-full text-xs font-bold uppercase flex items-center gap-1">
+                              <TestTube2 size={12} /> Test Mode
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-dark-text-secondary flex items-center gap-2">
-                          <Calendar size={14} /> {formatDate(order.date)}
+                          <Calendar size={14} /> {formatDate(order.date || order.createdAt)}
                         </p>
                       </div>
                       <div className="text-left sm:text-right w-full sm:w-auto bg-gray-50 dark:bg-dark-bg/50 p-4 rounded-xl sm:bg-transparent sm:p-0 flex flex-row sm:flex-col justify-between items-center sm:items-end">

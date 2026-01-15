@@ -30,7 +30,7 @@ export const MobileBottomNav: React.FC = () => {
     return (
         <>
             {/* Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-lg border border-gray-200/50 dark:border-dark-border/50 z-[100] rounded-2xl shadow-lg shadow-black/5 transition-all duration-300">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-dark-surface/90 backdrop-blur-lg border-t border-gray-200/50 dark:border-dark-border/50 z-[100] shadow-lg shadow-black/5 transition-all duration-300">
                 <div className="flex justify-around items-center h-16">
                     {/* Store (Home) */}
                     <Link

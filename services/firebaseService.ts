@@ -2242,9 +2242,21 @@ export const subscribeToUserOrders = (userId: string, callback: (orders: Order[]
     return subscribeMock(LS_KEYS.ORDERS, loadLocal);
   }
 
-  const q = query(collection(db, 'orders'), where('userId', '==', userId), orderBy('date', 'desc'));
+  const q = query(collection(db, 'orders'), where('userId', '==', userId));
   return onSnapshot(q, (snapshot) => {
     const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+    // Client-side sorting because some orders use 'date' and others use 'createdAt'
+    // Firestore orderBy requires the field to exist in all documents
+    orders.sort((a, b) => {
+      const getVal = (obj: any) => {
+        const d = obj.date || obj.createdAt;
+        if (!d) return 0;
+        if (d.toDate) return d.toDate().getTime();
+        if (d instanceof Date) return d.getTime();
+        return new Date(d).getTime() || 0;
+      };
+      return getVal(b) - getVal(a);
+    });
     callback(orders);
   }, (err) => {
     console.warn("Failed to subscribe to user orders:", err);
@@ -2867,4 +2879,54 @@ export const getFileDownloadUrl = async (path: string): Promise<string> => {
     console.error("Error getting download URL:", error);
     throw error;
   }
+};
+
+// --- Free Order Fulfillment (Client-Side) ---
+export const processFreeOrder = async (
+  userId: string,
+  orderData: any,
+  purchaseRecords: any[]
+) => {
+  if (!db) throw new Error("Firestore not initialized");
+
+  const batch = writeBatch(db);
+
+  // 1. Create Order
+  const orderRef = doc(collection(db, 'orders')); // Auto-ID
+  batch.set(orderRef, {
+    ...orderData,
+    id: orderRef.id,
+    status: 'paid', // Instant paid
+    createdAt: serverTimestamp(),
+    paidAt: serverTimestamp(),
+    paymentMethod: 'free',
+    metadata: {
+      source: 'web_free',
+      platform: 'freshstl'
+    }
+  });
+
+  // 2. Create Purchases
+  purchaseRecords.forEach(record => {
+    const purchaseRef = doc(collection(db!, 'purchases'));
+    batch.set(purchaseRef, {
+      ...record,
+      id: purchaseRef.id,
+      userId: userId,
+      orderId: orderRef.id,
+      purchaseDate: serverTimestamp()
+    });
+  });
+
+  // 3. Update Product Sales
+  purchaseRecords.forEach(record => {
+    const productRef = doc(db!, 'products', record.productId);
+    batch.update(productRef, {
+      sales: increment(1)
+    });
+  });
+
+  await batch.commit();
+  console.log("Free order processed successfully:", orderRef.id);
+  return orderRef.id;
 };

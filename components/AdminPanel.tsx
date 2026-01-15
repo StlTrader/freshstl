@@ -635,7 +635,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentProduct.name || !currentProduct.price) return;
+    if (!currentProduct.name || currentProduct.price === undefined) return;
 
     // 1. Auth Check
     const user = firebaseService.auth?.currentUser;
@@ -1305,8 +1305,11 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
                 type="number"
                 step="0.01"
                 required
-                value={currentProduct.price ? currentProduct.price / 100 : ''}
-                onChange={e => setCurrentProduct({ ...currentProduct, price: Math.round(parseFloat(e.target.value) * 100) })}
+                value={currentProduct.price !== undefined ? currentProduct.price / 100 : ''}
+                onChange={e => {
+                  const val = parseFloat(e.target.value);
+                  setCurrentProduct({ ...currentProduct, price: isNaN(val) ? undefined : Math.round(val * 100) });
+                }}
                 className="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
               />
             </div>
@@ -1891,10 +1894,10 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredOrders = orders.filter(o =>
-    o.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.customerInfo?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.customerInfo?.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (o.transactionId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o.userId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o.customerInfo?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (o.customerInfo?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {

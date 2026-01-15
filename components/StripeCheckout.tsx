@@ -3,7 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import * as paymentService from '../services/paymentService';
 import { Loader2, AlertCircle, Lock, TestTube2, Zap, CreditCard, ShieldCheck } from 'lucide-react';
-import { auth } from '../services/firebaseService';
+import { auth, getUserProfile } from '../services/firebaseService';
 import { PaymentMethod } from '../types';
 import { useStore } from '../contexts/StoreContext';
 
@@ -47,7 +47,20 @@ interface StripeCheckoutProps {
     items: any[]; // Added items prop
 }
 
-const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess: (id: string) => void, amount: number, saveCard: boolean, setSaveCard: (val: boolean) => void }) => {
+const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard, customerInfo }: {
+    onSuccess: (id: string) => void,
+    amount: number,
+    saveCard: boolean,
+    setSaveCard: (val: boolean) => void,
+    customerInfo?: {
+        fullName: string;
+        email: string;
+        address?: string;
+        city?: string;
+        zipCode?: string;
+        country?: string;
+    }
+}) => {
     const stripe = useStripe();
     const elements = useElements();
     const [error, setError] = useState<string | null>(null);
@@ -75,6 +88,18 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
             elements,
             confirmParams: {
                 return_url: window.location.href,
+                payment_method_data: {
+                    billing_details: {
+                        name: customerInfo?.fullName,
+                        email: customerInfo?.email,
+                        address: {
+                            line1: customerInfo?.address,
+                            city: customerInfo?.city,
+                            postal_code: customerInfo?.zipCode,
+                            country: customerInfo?.country,
+                        }
+                    }
+                }
             },
             redirect: "if_required",
         });
@@ -96,9 +121,26 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard }: { onSuccess:
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white p-4 rounded-xl border border-gray-200">
-                <PaymentElement />
-            </div>
+            <PaymentElement options={{
+                defaultValues: {
+                    billingDetails: {
+                        email: customerInfo?.email || '',
+                        name: customerInfo?.fullName || '',
+                        address: {
+                            line1: customerInfo?.address || '',
+                            city: customerInfo?.city || '',
+                            postal_code: customerInfo?.zipCode || '',
+                            country: customerInfo?.country || '',
+                        }
+                    }
+                },
+                fields: {
+                    billingDetails: {
+                        email: 'never',
+                    }
+                }
+            }} />
+
 
             <div className="flex items-center gap-3 px-1">
                 <input
@@ -223,13 +265,18 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
     const [useNewCard, setUseNewCard] = useState(false);
     const [loadingMethods, setLoadingMethods] = useState(true);
     const [saveCard, setSaveCard] = useState(false);
-    const { isDarkMode } = useStore();
+    const [isAdmin, setIsAdmin] = useState(false);
+    const { isDarkMode, user } = useStore();
 
-    // Fetch saved methods on mount
+    // Fetch saved methods and check admin status on mount
     useEffect(() => {
         const fetchMethods = async () => {
             if (auth && auth.currentUser) {
                 try {
+                    // Check admin status
+                    const profile = await getUserProfile(auth.currentUser.uid);
+                    setIsAdmin(profile?.role === 'admin');
+
                     const methods = await paymentService.getSavedPaymentMethods(auth.currentUser.uid);
                     setSavedMethods(methods);
                     if (methods.length > 0) {
@@ -252,6 +299,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
         fetchMethods();
     }, []);
 
+    const [stripeInstance, setStripeInstance] = useState<Promise<any> | null>(null);
+
     // Initialize Payment Intent whenever selection changes (New vs Saved, or different Saved card)
     useEffect(() => {
         const initPayment = async () => {
@@ -259,6 +308,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
             if (loadingMethods) return;
 
             setClientSecret(null); // Reset while loading new intent
+            setStripeInstance(null); // Reset Stripe instance
             setError(null);
 
             const config = paymentService.getStripeConfig();
@@ -280,6 +330,12 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                 );
 
                 if (result) {
+                    // Explicitly get the Stripe instance for the mode returned by the server
+                    console.log(`[StripeCheckout] Server returned mode: ${result.mode}`);
+                    console.log(`[StripeCheckout] Client Secret prefix: ${result.clientSecret.substring(0, 10)}...`);
+
+                    const stripe = paymentService.getStripe(result.mode);
+                    setStripeInstance(stripe);
                     setClientSecret(result.clientSecret);
                 }
             } catch (e: any) {
@@ -294,7 +350,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [amount, useNewCard, selectedMethodId, saveCard, loadingMethods]);
+    }, [amount, useNewCard, selectedMethodId, saveCard, loadingMethods, user]);
 
     if (loadingMethods) {
         return (
@@ -316,18 +372,12 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
         );
     }
 
-    const stripePromise = paymentService.getStripe();
-
-    if (!stripePromise) {
+    // Wait for both clientSecret and stripeInstance
+    if (!clientSecret || !stripeInstance) {
         return (
-            <div className="p-6 text-center bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-                <div className="text-red-500 mb-2"><AlertCircle className="mx-auto w-8 h-8" /></div>
-                <p className="text-gray-900 dark:text-dark-text-primary font-bold">Payment Configuration Missing</p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                    The Stripe Publishable Key is missing. <br />
-                    Admins: Please go to Admin Panel &gt; Payment Settings and click "Save" to update the configuration.
-                </p>
-                <button onClick={onCancel} className="mt-4 text-social-black dark:text-white hover:underline font-medium">Go Back</button>
+            <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-social-black dark:text-white" />
+                <p className="text-gray-500">Preparing secure checkout...</p>
             </div>
         );
     }
@@ -352,23 +402,25 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
 
     return (
         <div className="p-1">
-            {/* Mode Indicator */}
-            <div className={`mb-4 px-3 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium ${mode === 'test'
-                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800'
-                : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
-                }`}>
-                {mode === 'test' ? (
-                    <>
-                        <TestTube2 size={16} />
-                        <span>Test Mode - No real charges</span>
-                    </>
-                ) : (
-                    <>
-                        <Zap size={16} />
-                        <span>Live Mode - Real payment</span>
-                    </>
-                )}
-            </div>
+            {/* Mode Indicator - Only visible to admins */}
+            {isAdmin && (
+                <div className={`mb-4 px-3 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium ${mode === 'test'
+                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800'
+                    : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                    }`}>
+                    {mode === 'test' ? (
+                        <>
+                            <TestTube2 size={16} />
+                            <span>Test Mode (Tester Access)</span>
+                        </>
+                    ) : (
+                        <>
+                            <Zap size={16} />
+                            <span>Live Mode - Real payment</span>
+                        </>
+                    )}
+                </div>
+            )}
 
             {/* Saved Cards Selection */}
             {savedMethods.length > 0 && (
@@ -427,36 +479,100 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                 </div>
             )}
 
-            {!clientSecret ? (
+            {!clientSecret || !stripeInstance ? (
                 <div className="flex flex-col items-center justify-center p-12 space-y-4">
                     <Loader2 className="w-8 h-8 animate-spin text-social-black dark:text-white" />
                     <p className="text-gray-500">Preparing secure checkout...</p>
                 </div>
             ) : (
                 <Elements
-                    stripe={stripePromise}
+                    key={clientSecret}
+                    stripe={stripeInstance}
                     options={{
                         clientSecret,
                         appearance: {
                             theme: isDarkMode ? 'night' : 'stripe',
                             variables: {
-                                colorPrimary: isDarkMode ? '#ffffff' : '#0f0f0f',
+                                colorPrimary: isDarkMode ? '#ffffff' : '#111111',
+                                colorBackground: isDarkMode ? '#212121' : '#ffffff',
+                                colorText: isDarkMode ? '#ffffff' : '#111111',
+                                colorDanger: '#ef4444',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+                                fontSizeBase: '15px',
+                                spacingUnit: '4px',
                                 borderRadius: '12px',
-                                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-                                colorBackground: isDarkMode ? '#1f2937' : '#ffffff',
-                                colorText: isDarkMode ? '#f3f4f6' : '#111827',
+                                fontWeightNormal: '400',
+                                fontWeightMedium: '500',
                             },
                             rules: {
+                                '.Tab': {
+                                    border: isDarkMode ? '1px solid #3f3f3f' : '1px solid #e5e7eb',
+                                    backgroundColor: isDarkMode ? '#111111' : '#ffffff',
+                                    boxShadow: 'none',
+                                    padding: '14px 16px',
+                                },
+                                '.Tab:hover': {
+                                    backgroundColor: isDarkMode ? '#1a1a1a' : '#f9fafb',
+                                    border: isDarkMode ? '1px solid #4a4a4a' : '1px solid #d1d5db',
+                                },
+                                '.Tab--selected': {
+                                    border: isDarkMode ? '1px solid #ffffff' : '1px solid #111111',
+                                    backgroundColor: isDarkMode ? '#212121' : '#ffffff',
+                                    boxShadow: isDarkMode ? '0 0 0 1px #ffffff' : '0 0 0 1px #111111',
+                                },
+                                '.Tab--selected:hover': {
+                                    border: isDarkMode ? '1px solid #ffffff' : '1px solid #111111',
+                                    backgroundColor: isDarkMode ? '#212121' : '#ffffff',
+                                },
                                 '.Input': {
-                                    border: isDarkMode ? '1px solid #374151' : '1px solid #e5e7eb',
-                                    padding: '12px',
+                                    border: isDarkMode ? '1px solid #3f3f3f' : '1px solid #e5e7eb',
+                                    backgroundColor: isDarkMode ? '#111111' : '#ffffff',
+                                    boxShadow: 'none',
+                                    padding: '14px 16px',
+                                    fontSize: '15px',
+                                },
+                                '.Input:hover': {
+                                    border: isDarkMode ? '1px solid #4a4a4a' : '1px solid #d1d5db',
                                 },
                                 '.Input:focus': {
-                                    border: isDarkMode ? '1px solid #ffffff' : '1px solid #0f0f0f',
-                                    boxShadow: isDarkMode ? '0 0 0 2px rgba(255, 255, 255, 0.2)' : '0 0 0 2px rgba(15, 15, 15, 0.2)',
-                                }
+                                    border: isDarkMode ? '1px solid #ffffff' : '1px solid #111111',
+                                    boxShadow: isDarkMode ? '0 0 0 2px rgba(255, 255, 255, 0.15)' : '0 0 0 2px rgba(17, 17, 17, 0.15)',
+                                    outline: 'none',
+                                },
+                                '.Label': {
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: isDarkMode ? '#e9e9e9' : '#111111',
+                                    marginBottom: '6px',
+                                },
+                                '.Error': {
+                                    color: '#ef4444',
+                                    fontSize: '13px',
+                                },
+                                '.Block': {
+                                    backgroundColor: isDarkMode ? '#111111' : '#ffffff',
+                                    border: isDarkMode ? '1px solid #3f3f3f' : '1px solid #e5e7eb',
+                                    borderRadius: '12px',
+                                    boxShadow: 'none',
+                                    padding: '16px',
+                                },
+                                '.BlockDivider': {
+                                    backgroundColor: isDarkMode ? '#3f3f3f' : '#e5e7eb',
+                                },
+                                '.TabLabel': {
+                                    fontSize: '15px',
+                                    fontWeight: '500',
+                                },
+                                '.TabIcon': {
+                                    fill: isDarkMode ? '#ffffff' : '#111111',
+                                },
+                                '.TabIcon--selected': {
+                                    fill: isDarkMode ? '#ffffff' : '#111111',
+                                },
                             }
-                        }
+                        },
+
+
                     }}
                 >
                     {useNewCard ? (
@@ -465,6 +581,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                             amount={amount}
                             saveCard={saveCard}
                             setSaveCard={setSaveCard}
+                            customerInfo={customerInfo}
                         />
                     ) : (
                         <SavedCardPaymentForm

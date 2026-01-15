@@ -17,16 +17,14 @@ export async function POST(request: Request) {
         }
 
         // 2. Determine Mode & Key
-        // Logic: 
-        // - If user is in whitelist -> Allow requested mode (Test or Live)
-        // - If user NOT in whitelist -> FORCE Live Mode
-
-        const whitelist = stripeSettings.testerEmails || ['yassinebouomrine@gmail.com'];
+        const whitelist = stripeSettings.testerEmails || [];
         const userEmail = customerInfo?.email;
         const isTester = userEmail && whitelist.includes(userEmail);
 
-        // Force Live if not a tester
-        const mode = isTester ? requestedMode : 'live';
+        // STRICT ENFORCEMENT:
+        // - If user is a tester -> Use requested mode (allows testing both test/live if they want, but usually defaults to test)
+        // - If user NOT in whitelist -> FORCE Live Mode
+        const mode = isTester ? (requestedMode || 'test') : 'live';
         const isLive = mode === 'live';
 
         // 3. Get Secret Key (Firestore > Env Var)
@@ -50,33 +48,53 @@ export async function POST(request: Request) {
         // 4. Customer Management (Get or Create Stripe Customer)
         let stripeCustomerId = customerInfo?.email ? await getOrCreateStripeCustomer(stripe, adminDb, customerInfo.email, customerInfo.fullName) : undefined;
 
+        // 5. Create Pending Order in Firestore
+        // This ensures we have the full item list even if Stripe metadata truncates it.
+        let orderId = '';
+        if (adminDb) {
+            const pendingOrderRef = adminDb.collection('orders').doc();
+            orderId = pendingOrderRef.id;
+
+            await pendingOrderRef.set({
+                amount,
+                currency,
+                status: 'pending', // Initial status
+                email: customerInfo?.email || '',
+                userId: body.userId || 'guest',
+                createdAt: new Date(), // Use server timestamp in webhook, but this is fine for now
+                mode: mode,
+                items: body.items || [], // Store FULL items here
+                customerInfo: customerInfo || {},
+                metadata: {
+                    source: 'web_checkout',
+                    platform: 'freshstl'
+                }
+            });
+            console.log(`[Checkout] Created pending order ${orderId}`);
+        }
+
         // Prepare Metadata
-        // We need to pass items to the webhook. Stripe metadata has a 500 char limit per key.
-        // If items are too long, we might need a different strategy (e.g. storing a temp cart in Firestore).
-        // For now, let's try to serialize a simplified version of items.
+        // We pass the orderId so the webhook can look it up.
+        // We still pass simplified items as a backup/reference, but rely on Firestore for the source of truth.
         const simplifiedItems = (body.items || []).map((item: any) => ({
             id: item.id,
-            name: item.name,
-            price: item.price,
-            sourceStoragePath: item.sourceStoragePath || '',
-            modelUrl: item.modelUrl || ''
+            name: item.name
         }));
 
         const metadata = {
+            orderId: orderId, // CRITICAL: Link to Firestore Order
             customer_email: customerInfo?.email || 'guest@example.com',
             customer_name: customerInfo?.fullName || 'Guest',
-            shipping_address: customerInfo ? `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.zipCode}, ${customerInfo.country}` : '',
-            firebaseUID: body.userId || '', // Passed from client
-            items: JSON.stringify(simplifiedItems).substring(0, 500) // Truncate if too long (TODO: Handle large carts better)
+            firebaseUID: body.userId || '',
+            // Keep items for quick reference in Stripe Dashboard, but don't rely on them for fulfillment
+            items_summary: JSON.stringify(simplifiedItems).substring(0, 400)
         };
 
         // Prepare PaymentIntent parameters
         const params: Stripe.PaymentIntentCreateParams = {
             amount: Math.round(amount),
             currency: currency || 'usd',
-            automatic_payment_methods: {
-                enabled: true,
-            },
+            payment_method_types: ['card'], // Card includes Google Pay and Apple Pay
             metadata: metadata,
             receipt_email: customerInfo?.email,
         };
@@ -99,6 +117,14 @@ export async function POST(request: Request) {
         let paymentIntent;
         try {
             paymentIntent = await stripe.paymentIntents.create(params);
+
+            // Update the pending order with the payment ID
+            if (adminDb && orderId) {
+                await adminDb.collection('orders').doc(orderId).update({
+                    paymentId: paymentIntent.id
+                });
+            }
+
         } catch (error: any) {
             // Handle "No such customer" error (switching between Test/Live modes)
             if (error.code === 'resource_missing' && error.param === 'customer') {
@@ -110,6 +136,12 @@ export async function POST(request: Request) {
                     params.customer = newCustomerId;
                     // Retry payment creation
                     paymentIntent = await stripe.paymentIntents.create(params);
+
+                    if (adminDb && orderId) {
+                        await adminDb.collection('orders').doc(orderId).update({
+                            paymentId: paymentIntent.id
+                        });
+                    }
                 } else {
                     throw error;
                 }
@@ -120,7 +152,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             clientSecret: paymentIntent.client_secret,
-            id: paymentIntent.id
+            id: paymentIntent.id,
+            orderId: orderId // Return orderId to client if needed
         });
 
     } catch (error: any) {
@@ -140,37 +173,60 @@ async function getOrCreateStripeCustomer(stripe: Stripe, db: any, email: string,
         // 1. Check if user exists in Firestore by email
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('email', '==', email).limit(1).get();
+        let userDoc = !snapshot.empty ? snapshot.docs[0] : null;
 
-        if (snapshot.empty) {
-            // Guest checkout (no user account) -> Create a new Customer but don't save to DB (or maybe we should?)
-            // For now, let's just create one for this session.
-            const customer = await stripe.customers.create({ email, name });
-            return customer.id;
+        // 2. If user has a Stripe ID in Firestore, verify it exists in Stripe
+        if (userDoc) {
+            const userData = userDoc.data();
+            if (userData.stripeCustomerId) {
+                try {
+                    const customer = await stripe.customers.retrieve(userData.stripeCustomerId);
+                    if (customer && !customer.deleted) {
+                        return customer.id;
+                    }
+                } catch (e) {
+                    console.warn("Stored Stripe Customer ID invalid or deleted. Searching by email...");
+                }
+            }
         }
 
-        const userDoc = snapshot.docs[0];
-        const userData = userDoc.data();
-
-        // 2. Check if user already has a Stripe Customer ID
-        if (userData.stripeCustomerId) {
-            return userData.stripeCustomerId;
+        // 3. Search Stripe by email (to avoid duplicates)
+        const existingCustomers = await stripe.customers.list({ email: email, limit: 1 });
+        if (existingCustomers.data.length > 0) {
+            const customerId = existingCustomers.data[0].id;
+            // Update Firestore if we have a user doc
+            if (userDoc) {
+                await userDoc.ref.update({ stripeCustomerId: customerId });
+            }
+            return customerId;
         }
 
-        // 3. If not, create one and save it
+        // 4. Create new Customer
         const customer = await stripe.customers.create({
             email,
             name,
             metadata: {
-                firebaseUID: userDoc.id
+                firebaseUID: userDoc ? userDoc.id : 'guest'
             }
         });
 
-        await userDoc.ref.update({ stripeCustomerId: customer.id });
+        // Update Firestore if we have a user doc
+        if (userDoc) {
+            await userDoc.ref.update({ stripeCustomerId: customer.id });
+        }
+
         return customer.id;
 
     } catch (e) {
         console.error("Error managing Stripe Customer:", e);
-        return undefined;
+        // Fallback: Create a guest customer just for this transaction if everything else fails
+        try {
+            const guestCustomer = await stripe.customers.create({ email, name });
+            return guestCustomer.id;
+        } catch (innerE) {
+            console.error("Critical: Failed to create even a guest customer", innerE);
+            return undefined;
+        }
     }
 }
 

@@ -144,18 +144,15 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ initialProducts, blogP
   return (
     <div className="space-y-8" id="products">
       {/* Search & Filter Bar */}
-      <div className="sticky top-16 z-30 py-4 bg-gray-50/95 dark:bg-dark-surface/95 backdrop-blur rounded-2xl transition-colors space-y-4 shadow-sm border border-gray-100 dark:border-dark-border px-4">
-
-
-
-        <div className="flex flex-col md:flex-row gap-4 justify-between">
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2">
+      <div className="sticky top-16 z-30 py-2 md:py-4 bg-gray-50/95 dark:bg-dark-surface/95 backdrop-blur transition-colors shadow-sm border-gray-100 dark:border-dark-border border-b md:border md:rounded-2xl -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-4">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 justify-between">
+          {/* Categories - Horizontal Scroll on Mobile */}
+          <div className="flex overflow-x-auto md:flex-wrap gap-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide pb-1 md:pb-0">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm ${selectedCategory === cat
+                className={`whitespace-nowrap px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all shadow-sm flex-shrink-0 ${selectedCategory === cat
                   ? 'bg-social-black dark:bg-white text-white dark:text-black shadow-lg'
                   : 'bg-white dark:bg-dark-surface text-gray-600 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-surface/80'
                   }`}

@@ -190,8 +190,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-dark-bg pt-4 pb-32 lg:pb-20 animate-in fade-in duration-500">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-white dark:bg-dark-bg pt-4 pb-32 lg:pb-20 animate-in fade-in duration-500 overflow-x-hidden">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
 
                 {/* Draft Banner */}
                 {product.status === 'draft' && (
@@ -218,11 +218,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     <span className="font-medium text-social-black dark:text-white">{product.name}</span>
                 </nav>
 
-                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+                <div className="grid lg:grid-cols-12 gap-0 lg:gap-8 xl:gap-12">
 
-                    <div className="lg:col-span-8 space-y-6">
+                    <div className="lg:col-span-8 space-y-4 lg:space-y-6">
                         {/* Main Media Viewer */}
-                        <div className="bg-black rounded-2xl overflow-hidden shadow-sm aspect-[4/3] lg:aspect-[16/9] relative group">
+                        <div className="bg-black rounded-xl lg:rounded-2xl overflow-hidden shadow-sm aspect-video lg:aspect-[16/9] relative group">
                             {activeMedia === 'model' ? (
                                 <SketchfabViewer modelUrl={viewerUrl} />
                             ) : activeMedia === 'video' && product.videoUrl ? (
@@ -268,32 +268,32 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 <>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-md z-10 border border-white/10"
+                                        className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 p-2 lg:p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-md z-10 border border-white/10"
                                     >
-                                        <ChevronLeft size={24} />
+                                        <ChevronLeft className="w-5 h-5 lg:w-6 lg:h-6" />
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleNext(); }}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-md z-10 border border-white/10"
+                                        className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 p-2 lg:p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-all backdrop-blur-md z-10 border border-white/10"
                                     >
-                                        <ChevronRight size={24} />
+                                        <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6" />
                                     </button>
                                 </>
                             )}
                         </div>
 
                         {/* Media Gallery Thumbnails */}
-                        <div className="w-full overflow-hidden">
-                            <div className="flex gap-3 pb-2 items-center justify-start overflow-x-auto scrollbar-hide px-1">
+                        <div className="w-full max-w-full overflow-hidden mt-4 lg:mt-0 min-w-0">
+                            <div className="flex gap-2 lg:gap-3 pb-2 items-center justify-start overflow-x-auto scrollbar-hide max-w-full">
                                 {/* Fixed Model Button */}
                                 {product.show3DModel !== false && product.modelUrl && (
-                                    <div className="flex-shrink-0 w-20 h-20">
+                                    <div className="flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20">
                                         <button
                                             onClick={() => setActiveMedia('model')}
                                             className={`w-full h-full rounded-xl overflow-hidden border-2 transition-all ${activeMedia === 'model' ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                         >
                                             <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center text-social-black dark:text-white">
-                                                <Box size={28} />
+                                                <Box className="w-6 h-6 lg:w-7 lg:h-7" />
                                             </div>
                                         </button>
                                     </div>
@@ -301,13 +301,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
                                 {/* Video Button */}
                                 {product.showVideo !== false && product.videoUrl && (
-                                    <div className="flex-shrink-0 w-20 h-20">
+                                    <div className="flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20">
                                         <button
                                             onClick={() => setActiveMedia('video')}
                                             className={`w-full h-full rounded-xl overflow-hidden border-2 transition-all ${activeMedia === 'video' ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                         >
                                             <div className="w-full h-full bg-gray-100 dark:bg-social-dark-hover flex items-center justify-center text-social-black dark:text-white">
-                                                <PlayCircle size={28} />
+                                                <PlayCircle className="w-6 h-6 lg:w-7 lg:h-7" />
                                             </div>
                                         </button>
                                     </div>
@@ -318,10 +318,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                     <button
                                         key={idx}
                                         onClick={() => setActiveMedia(img)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === img ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === img ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <div className="relative w-full h-full bg-gray-100 dark:bg-social-dark-hover">
-                                            <Image src={img} alt={`View ${idx + 1}`} fill sizes="80px" className="object-cover" />
+                                            <Image src={img} alt={`View ${idx + 1}`} fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
                                         </div>
                                     </button>
                                 ))}
@@ -330,10 +330,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 {!product.images?.length && product.imageUrl && (
                                     <button
                                         onClick={() => setActiveMedia(product.imageUrl!)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === product.imageUrl ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === product.imageUrl ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <div className="relative w-full h-full bg-gray-100 dark:bg-social-dark-hover">
-                                            <Image src={product.imageUrl} alt="Main View" fill sizes="80px" className="object-cover" />
+                                            <Image src={product.imageUrl} alt="Main View" fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
                                         </div>
                                     </button>
                                 )}
@@ -341,7 +341,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         </div>
 
                         {/* Mobile-only Title & Info */}
-                        <div className="lg:hidden px-1 space-y-4">
+                        <div className="lg:hidden space-y-4 mt-6">
                             <div>
                                 <h1 className="text-2xl font-black text-social-black dark:text-white mb-2 leading-tight">{product.name}</h1>
                                 <div className="flex items-center flex-wrap gap-3 text-sm text-gray-500">
@@ -367,7 +367,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
                                 <div className="space-y-3">
                                     <button
-                                        onClick={() => isPurchased ? handleSecureDownload() : handleAddToCart()}
+                                        onClick={() => {
+                                            console.log("Add to Cart clicked", product.id);
+                                            isPurchased ? handleSecureDownload() : handleAddToCart();
+                                        }}
                                         disabled={isDownloading}
                                         className={`w-full font-bold py-3.5 px-6 rounded-full transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95 ${isPurchased
                                             ? 'bg-green-600 text-white shadow-green-500/20'
@@ -698,7 +701,10 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                 </div>
 
                                 <button
-                                    onClick={() => isPurchased ? handleSecureDownload() : handleAddToCart()}
+                                    onClick={() => {
+                                        console.log("Add to Cart clicked (Desktop)", product.id);
+                                        isPurchased ? handleSecureDownload() : handleAddToCart();
+                                    }}
                                     disabled={isDownloading}
                                     className={`w-full font-bold py-4 px-8 rounded-full transition-all shadow-lg flex items-center justify-center gap-3 group ${isPurchased
                                         ? 'bg-green-600 hover:bg-green-500 text-white shadow-green-500/30'

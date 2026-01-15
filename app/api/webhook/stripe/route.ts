@@ -35,28 +35,37 @@ export async function POST(request: Request) {
 
     // Try Live Secret
     try {
-        const liveSecret = stripeSettings.liveWebhookSecret || process.env.STRIPE_WEBHOOK_SECRET_LIVE;
+        const liveSecret = process.env.STRIPE_WEBHOOK_SECRET_LIVE || stripeSettings.liveWebhookSecret;
         if (liveSecret) {
+            console.log(`[Webhook] Attempting verification with Live Secret (ending in ...${liveSecret.slice(-4)})`);
             const stripe = new Stripe(stripeSettings.liveSecretKey || process.env.STRIPE_SECRET_KEY_LIVE || '', { apiVersion: '2023-10-16' as any });
             event = stripe.webhooks.constructEvent(body, signature, liveSecret);
             isLive = true;
+            console.log('[Webhook] Live verification successful');
         } else {
+            console.log('[Webhook] No Live Secret found to attempt verification');
             throw new Error('No Live Secret');
         }
-    } catch (err) {
+    } catch (err: any) {
+        console.log(`[Webhook] Live verification failed: ${err.message}`);
+
         // If Live fails, try Test Secret
         try {
-            const testSecret = stripeSettings.testWebhookSecret || process.env.STRIPE_WEBHOOK_SECRET_TEST;
+            const testSecret = process.env.STRIPE_WEBHOOK_SECRET_TEST || stripeSettings.testWebhookSecret;
             if (testSecret) {
+                console.log(`[Webhook] Attempting verification with Test Secret (ending in ...${testSecret.slice(-4)})`);
                 const stripe = new Stripe(stripeSettings.testSecretKey || process.env.STRIPE_SECRET_KEY_TEST || '', { apiVersion: '2023-10-16' as any });
                 event = stripe.webhooks.constructEvent(body, signature, testSecret);
                 isLive = false;
+                console.log('[Webhook] Test verification successful');
             } else {
+                console.log('[Webhook] No Test Secret found to attempt verification');
                 throw new Error('Invalid signature or missing secrets');
             }
         } catch (err2: any) {
-            console.error(`Webhook signature verification failed: ${err2.message}`);
-            return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
+            console.error(`[Webhook] Signature verification failed for both Live and Test secrets.`);
+            console.error(`[Webhook] Test Error: ${err2.message}`);
+            return NextResponse.json({ error: 'Webhook Error: Signature Verification Failed' }, { status: 400 });
         }
     }
 
@@ -102,15 +111,21 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent, isLiv
     if (!adminDb) return;
 
     const { metadata, amount, currency, id: paymentId } = paymentIntent;
-    const { customer_email, customer_name, firebaseUID, items: itemsJson } = metadata;
+    const { customer_email, customer_name, firebaseUID, items: itemsJson, orderId } = metadata;
 
     console.log(`[Webhook] Processing fulfillment for ${paymentId}`);
 
-    // 1. Idempotency Check: Check if order already exists
+    // 1. Idempotency Check: Check if order already exists (by paymentId)
+    // Note: If we created a pending order, it might not have the paymentId yet if the update failed, 
+    // OR it might have it. We need to be careful not to double-fulfill.
+    // If we find an order with this paymentId that is ALREADY PAID, we skip.
     const existingOrderSnap = await adminDb.collection('orders').where('paymentId', '==', paymentId).limit(1).get();
     if (!existingOrderSnap.empty) {
-        console.log(`[Webhook] Order ${paymentId} already exists. Skipping.`);
-        return;
+        const existingOrder = existingOrderSnap.docs[0].data();
+        if (existingOrder.status === 'paid') {
+            console.log(`[Webhook] Order ${paymentId} already paid. Skipping.`);
+            return;
+        }
     }
 
     let userId = firebaseUID;
@@ -124,36 +139,69 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent, isLiv
         }
     }
 
-    // Parse Items
     let items: any[] = [];
-    try {
-        items = itemsJson ? JSON.parse(itemsJson) : [];
-    } catch (e) {
-        console.error("Failed to parse items from metadata", e);
+    let orderRef: any;
+
+    // 2. Strategy A: Pending Order (Preferred)
+    if (orderId) {
+        console.log(`[Webhook] Found orderId ${orderId} in metadata. Fetching pending order...`);
+        const pendingOrderDoc = await adminDb.collection('orders').doc(orderId).get();
+
+        if (pendingOrderDoc.exists) {
+            const orderData = pendingOrderDoc.data();
+            items = orderData?.items || [];
+            orderRef = pendingOrderDoc.ref;
+            console.log(`[Webhook] Retrieved ${items.length} items from pending order.`);
+        } else {
+            console.warn(`[Webhook] Pending order ${orderId} not found! Falling back to metadata.`);
+        }
     }
 
-    // 2. Create Order Record
-    const orderData = {
-        paymentId,
-        amount,
-        currency,
-        status: 'paid',
-        email: userEmail,
-        userId: userId || 'guest',
-        createdAt: FieldValue.serverTimestamp(),
-        mode: isLive ? 'live' : 'test',
-        items: items, // Save the items we parsed
-        metadata: metadata
-    };
+    // 3. Strategy B: Metadata Fallback (Legacy/Fallback)
+    if (items.length === 0) {
+        try {
+            items = itemsJson ? JSON.parse(itemsJson) : [];
+            console.log(`[Webhook] Parsed ${items.length} items from metadata.`);
+        } catch (e) {
+            console.error("Failed to parse items from metadata", e);
+        }
+    }
 
-    // Batch Write for Atomicity
+    if (items.length === 0) {
+        console.error("[Webhook] CRITICAL: No items found for order. Fulfillment cannot proceed.");
+        return;
+    }
+
+    // 4. Update or Create Order Record
     const batch = adminDb.batch();
 
-    // A. Order Document
-    const orderRef = adminDb.collection('orders').doc(); // Auto-ID
-    batch.set(orderRef, orderData);
+    if (orderRef) {
+        // Update existing pending order
+        batch.update(orderRef, {
+            status: 'paid',
+            paymentId: paymentId, // Ensure paymentId is set
+            paidAt: FieldValue.serverTimestamp(),
+            metadata: metadata // Update metadata just in case
+        });
+    } else {
+        // Create new order (Fallback)
+        orderRef = adminDb.collection('orders').doc();
+        const orderData = {
+            paymentId,
+            amount,
+            currency,
+            status: 'paid',
+            email: userEmail,
+            userId: userId || 'guest',
+            createdAt: FieldValue.serverTimestamp(),
+            mode: isLive ? 'live' : 'test',
+            items: items,
+            metadata: metadata
+        };
+        batch.set(orderRef, orderData);
+    }
 
-    // B. User Purchases & Product Sales
+    // 5. User Purchases & Product Sales
     if (userId && userId !== 'guest') {
         const purchaseDate = FieldValue.serverTimestamp();
 

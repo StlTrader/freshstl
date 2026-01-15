@@ -60,12 +60,14 @@ export interface Purchase {
 export interface Order {
   id: string;
   userId: string;
-  transactionId: string;
+  transactionId?: string;
+  paymentId?: string;
   amount: number;
   discountApplied?: number;
   items: { id: string; name: string; price: number; imageUrl?: string; slug?: string }[];
-  date: Timestamp;
-  status: 'pending' | 'completed' | 'refunded' | 'failed';
+  date?: Timestamp;
+  createdAt?: Timestamp;
+  status: 'pending' | 'completed' | 'refunded' | 'failed' | 'paid' | 'succeeded';
   customerInfo?: {
     fullName: string;
     email: string;
@@ -75,7 +77,7 @@ export interface Order {
     zipCode?: string;
     country?: string;
   };
-  paymentId?: string;
+  mode?: 'test' | 'live';
   isTest?: boolean;
 }
 

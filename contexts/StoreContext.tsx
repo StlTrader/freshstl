@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { Product, CartItem, Purchase, Order } from '../types';
 import * as firebaseService from '../services/firebaseService';
@@ -73,9 +73,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('freshstl_theme');
-            return saved ? saved === 'dark' : true;
+            return saved ? saved === 'dark' : false;
         }
-        return true;
+        return false;
     });
 
     // --- Effects ---
@@ -182,19 +182,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // --- Handlers ---
 
     const addToCart = (product: Product) => {
-        const newItem: CartItem = {
-            ...product,
-            cartItemId: Math.random().toString(36).substr(2, 9)
-        };
-        setCart(prev => [...prev, newItem]);
-        setIsCartOpen(true);
+        try {
+            // Sanitize product object to remove undefined values (Firestore doesn't like them)
+            const sanitizedProduct = JSON.parse(JSON.stringify(product));
+
+            const newItem: CartItem = {
+                ...sanitizedProduct,
+                price: sanitizedProduct.price || 0, // Ensure price exists
+                cartItemId: Math.random().toString(36).substr(2, 9)
+            };
+            setCart(prev => [...prev, newItem]);
+            setIsCartOpen(true);
+        } catch (error) {
+            console.error("Add to Cart Error:", error);
+            alert("Failed to add to cart. Please try again.");
+        }
     };
 
     const removeFromCart = (cartItemId: string) => {
         setCart(prev => prev.filter(item => item.cartItemId !== cartItemId));
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = useCallback(() => setCart([]), []);
 
     const toggleWishlist = (productId: string) => {
         if (!user) return;
@@ -251,6 +260,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             isTest
         };
 
+        // Handle Free Orders (Client-Side Fulfillment)
+        if (totalAmount <= 0) {
+            console.log("Processing free order...");
+            await firebaseService.processFreeOrder(uid, orderData, purchaseRecords);
+            return;
+        }
+
         // REMOVED: Client-side DB writes. Fulfillment is now handled by the Webhook.
         // await firebaseService.processSuccessfulCheckout(uid, orderData, purchaseRecords);
         // await firebaseService.savePayment(paymentData);
@@ -270,11 +286,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // Let's comment it out if we want pure server-side, but I'll leave it for now as a backup notification 
         // or remove it if the webhook handles emails (not yet implemented there).
         // Actually, let's keep it but maybe wrap in try/catch so it doesn't block UI.
-        if (customerInfo?.email) {
-            try {
-                await firebaseService.sendOrderConfirmationEmail(uid, customerInfo.email, orderData);
-            } catch (e) { console.error("Failed to send email", e); }
-        }
+        // if (customerInfo?.email) {
+        //     try {
+        //         await firebaseService.sendOrderConfirmationEmail(uid, customerInfo.email, orderData);
+        //     } catch (e) { console.error("Failed to send email", e); }
+        // }
     };
 
     return (
@@ -307,7 +323,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 export function useStore() {
     const context = useContext(StoreContext);
     if (context === undefined) {
-        throw new Error('useStore must be used within a StoreProvider');
+        // Fallback to prevent crashes if used outside provider (e.g. during specific SSR phases or errors)
+        console.warn('useStore was used without a StoreProvider. Returning default/empty state.');
+        return {
+            user: null,
+            products: [],
+            cart: [],
+            purchases: [],
+            orders: [],
+            wishlist: [],
+            isDarkMode: false,
+            isCartOpen: false,
+            systemStatus: { isOnline: false, storageMode: 'unknown' },
+            isLoadingPurchases: false,
+            isAuthReady: false,
+            toggleTheme: () => { },
+            addToCart: () => { },
+            removeFromCart: () => { },
+            clearCart: () => { },
+            setIsCartOpen: () => { },
+            toggleWishlist: () => { },
+            refreshPurchases: () => { },
+            processCheckout: async () => { }
+        };
     }
     return context;
 }

@@ -21,7 +21,7 @@ const DEFAULT_CONFIG: StripeConfig = {
   livePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE || '',
   mode: (process.env.NEXT_PUBLIC_STRIPE_MODE as 'test' | 'live') || 'test',
   isConnected: !!(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE),
-  testerEmails: ['yassinebouomrine@gmail.com']
+  testerEmails: [] // Removed hardcoded email
 };
 
 // Load config from localStorage if available
@@ -45,6 +45,11 @@ const loadConfig = (): StripeConfig => {
   } catch (e) {
     console.warn("Failed to load Stripe config", e);
   }
+  // Validation: Check for Test Key in Live Slot
+  if (DEFAULT_CONFIG.livePublicKey && DEFAULT_CONFIG.livePublicKey.startsWith('pk_test_')) {
+    console.error("CRITICAL CONFIG ERROR: The 'Live Public Key' appears to be a Test Key (starts with pk_test_). Please check your environment variables or Firestore settings.");
+  }
+
   return DEFAULT_CONFIG;
 };
 
@@ -96,11 +101,24 @@ export const setStripeConfig = (newConfig: Partial<StripeConfig>) => {
 
 export const getStripeConfig = () => ({ ...config });
 
-export const getStripe = () => {
+export const getStripe = (forceMode?: 'test' | 'live') => {
   const activeKeys = getActiveKeys();
-  if (!stripePromise && activeKeys.publicKey) {
-    stripePromise = loadStripe(activeKeys.publicKey);
-    lastPublicKey = activeKeys.publicKey;
+
+  // If a specific mode is forced, use that key
+  let targetKey = activeKeys.publicKey;
+  if (forceMode === 'test') targetKey = config.testPublicKey || '';
+  if (forceMode === 'live') targetKey = config.livePublicKey || '';
+
+  // Check if we need to reset the promise (key changed or forced mode differs from current promise's key)
+  if (stripePromise && targetKey !== lastPublicKey) {
+    console.log(`[Stripe] Key changed (Force: ${forceMode}). Resetting Stripe promise.`);
+    stripePromise = null;
+  }
+
+  if (!stripePromise && targetKey) {
+    console.log(`[PaymentService] Initializing Stripe with key prefix: ${targetKey.substring(0, 8)}...`);
+    stripePromise = loadStripe(targetKey);
+    lastPublicKey = targetKey;
   }
   return stripePromise;
 };
@@ -108,15 +126,15 @@ export const getStripe = () => {
 export const getStripeMode = () => {
   // STRICT ENFORCEMENT: Only whitelisted users can use Test Mode
   const user = auth?.currentUser;
-  const whitelist = config.testerEmails || DEFAULT_CONFIG.testerEmails || [];
+  const whitelist = config.testerEmails || [];
 
-  // If user is NOT in whitelist, FORCE Live Mode
-  if (!user || !user.email || !whitelist.includes(user.email)) {
-    return 'live';
+  // If user IS in whitelist, FORCE Test Mode
+  if (user && user.email && whitelist.includes(user.email)) {
+    return 'test';
   }
 
-  // If user IS in whitelist, respect the configured mode (which might be test or live)
-  return config.mode;
+  // Everyone else gets Live Mode
+  return 'live';
 };
 
 // --- Real Stripe Integration (Client-Side for Demo) ---
@@ -144,7 +162,7 @@ export const createPaymentIntent = async (
   saveCard: boolean = false,
   paymentMethodId?: string,
   items?: any[] // Added items argument
-): Promise<{ clientSecret: string } | null> => {
+): Promise<{ clientSecret: string, mode: 'test' | 'live' } | null> => {
   const user = auth?.currentUser;
   if (!user) {
     console.warn("User not logged in. Attempting anonymous login...");
@@ -174,7 +192,12 @@ export const createPaymentIntent = async (
     if (!response.ok) {
       throw new Error(data.error || 'Payment failed');
     }
-    return { clientSecret: data.clientSecret };
+
+    // The server should ideally return the mode it used, but for now we trust our local calculation
+    // or we could update the API to return it. 
+    // Let's assume the API respects our requested mode if we are whitelisted.
+    // To be safe, let's return the mode we *requested* which is what the server *should* have used.
+    return { clientSecret: data.clientSecret, mode };
 
   } catch (error: any) {
     console.error("Payment Intent Creation Error:", error);

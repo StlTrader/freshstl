@@ -23,19 +23,19 @@ module.exports = {
                 },
                 social: {
                     'light-hover': '#f2f2f2',
-                    'dark-hover': '#272727',
-                    'black': '#0f0f0f', // Soft black for text
+                    'dark-hover': '#333333',
+                    'black': '#111111', // Pinterest Black
                     'surface': '#ffffff',
-                    'dark-surface': '#1f1f1f', // YouTube style dark surface
+                    'dark-surface': '#212121', // Pinterest Surface
                 },
                 // Luxury Black Dark Mode Palette (Refined for Social Look)
                 dark: {
-                    bg: '#0f0f0f',      // Deep black/gray
-                    surface: '#1f1f1f', // Slightly lighter for cards
+                    bg: '#111111',      // Pinterest Dark BG
+                    surface: '#212121', // Pinterest Card Surface
                     border: '#3f3f3f',  // Subtle border
                     text: {
-                        primary: '#f1f1f1',   // Soft white
-                        secondary: '#aaaaaa', // Muted gray
+                        primary: '#ffffff',   // Pure white
+                        secondary: '#e9e9e9', // Soft gray
                     }
                 }
             }

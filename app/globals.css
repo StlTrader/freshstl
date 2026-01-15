@@ -9,10 +9,10 @@
   }
 
   .dark {
-    --background: 15 15 15;
-    /* #0f0f0f */
-    --foreground: 241 241 241;
-    /* #f1f1f1 */
+    --background: 17 17 17;
+    /* #111111 */
+    --foreground: 255 255 255;
+    /* #ffffff */
   }
 }
 
@@ -94,6 +94,7 @@ body {
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.8);
 }
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -101,6 +102,8 @@ body {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

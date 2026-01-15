@@ -36,9 +36,11 @@ export default function CheckoutPage() {
         country: 'US'
     });
 
+    const [isSuccess, setIsSuccess] = useState(false);
+
     useEffect(() => {
-        // Redirect if cart is empty
-        if (cart.length === 0) {
+        // Redirect if cart is empty, but NOT if we just completed a purchase
+        if (cart.length === 0 && !isSuccess) {
             router.push('/cart'); // Or back to store
             return;
         }
@@ -98,8 +100,9 @@ export default function CheckoutPage() {
                     cardLast4
                 }
             );
+            setIsSuccess(true);
             clearCart();
-            router.push('/purchases');
+            router.push(`/checkout/success?paymentId=${paymentIntentId}`);
         } catch (e) {
             console.error("Checkout processing failed", e);
             setError("Payment succeeded but order processing failed. Please contact support.");
@@ -292,20 +295,37 @@ export default function CheckoutPage() {
                                 </div>
                             )}
 
-                            <StripeCheckout
-                                amount={total}
-                                onSuccess={handleStripeSuccess}
-                                onCancel={() => { }}
-                                customerInfo={customerInfo}
-                                items={cart}
-                            />
-
-                            <div className="mt-6 flex items-center justify-center gap-4 opacity-50 grayscale">
-                                {/* Icons for payment methods */}
-                                <div className="h-8 w-12 bg-gray-200 rounded"></div>
-                                <div className="h-8 w-12 bg-gray-200 rounded"></div>
-                                <div className="h-8 w-12 bg-gray-200 rounded"></div>
-                            </div>
+                            {total === 0 ? (
+                                <div className="text-center">
+                                    <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm">
+                                        <ShieldCheck className="w-5 h-5 mx-auto mb-2" />
+                                        <p className="font-medium">Free Order</p>
+                                        <p>No payment required.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleStripeSuccess(`free_${Date.now()}`, { card: { brand: 'n/a', last4: '0000' } })}
+                                        className="w-full bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        Complete Free Order
+                                    </button>
+                                </div>
+                            ) : total < 50 ? (
+                                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl text-yellow-700 dark:text-yellow-400 text-sm flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-bold">Minimum Order Amount</p>
+                                        <p>Stripe requires a minimum of $0.50 to process a payment. Please add more items to your cart.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <StripeCheckout
+                                    amount={total}
+                                    onSuccess={handleStripeSuccess}
+                                    onCancel={() => { }}
+                                    customerInfo={customerInfo}
+                                    items={cart}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
