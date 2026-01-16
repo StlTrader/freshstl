@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
+import { getProductUrl } from '../../../../utils/urlHelpers';
+
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
 });
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
             Category: ${p.category}
             Tags: ${p.tags?.join(', ')}
             Image URL: ${p.imageUrl}
-            Product Link: /3d-print/${p.slug}
+            Product Link: ${getProductUrl({ category: p.category || 'misc', slug: p.slug })}
         `).join('\n\n');
 
         const prompt = `

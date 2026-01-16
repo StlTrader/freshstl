@@ -53,6 +53,7 @@ import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
 import Image from 'next/image';
+import { getStoragePathForUpload } from '../utils/urlHelpers';
 
 interface AdminPanelProps {
   products: Product[];
@@ -657,12 +658,14 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       let sourceStoragePath = currentProduct.sourceStoragePath;
       let videoUrl = currentProduct.videoUrl;
 
-      // Generate a folder name from product name (slug format)
       const productSlug = (currentProduct.name || 'product')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
-      const productFolder = `products/${productSlug}_${Date.now()}`;
+
+      // OLD: const productFolder = `products/${productSlug}_${Date.now()}`;
+      // NEW: Use category path, but we still need a unique name or folder.
+      // We will construct paths individually.
 
       // Upload Images
       const uploadedImageUrls: string[] = [];
@@ -674,7 +677,9 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
         } else {
           const file = item.value as File;
           const ext = file.name.split('.').pop() || 'jpg';
-          const path = `${productFolder}/image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
+          // const path = `${productFolder}/image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
+          const filename = `${productSlug}-image-${Date.now()}.${ext}`;
+          const path = getStoragePathForUpload(currentProduct.category || 'misc', productSlug, 'image', filename);
           const url = await firebaseService.uploadFile(file, path);
           uploadedImageUrls.push(url);
         }
@@ -692,9 +697,10 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       // Upload Preview (GLB) -> Public (now in products folder)
       if (previewFile) {
         const ext = previewFile.name.split('.').pop() || 'glb';
-        // Use productFolder instead of public/models to match storage rules
-        const path = `${productFolder}/model_${Date.now()}.${ext}`;
-        // uploadFile returns URL for public paths (and products/ is public read)
+        // Use category folder for public models
+        const filename = `${productSlug}-model-${Date.now()}.${ext}`;
+        const path = getStoragePathForUpload(currentProduct.category || 'misc', productSlug, 'preview', filename);
+        // uploadFile returns URL for public paths
         const url = await firebaseService.uploadFile(previewFile, path);
         modelUrl = url; // Keep modelUrl for backward compatibility or easy access
         previewStoragePath = path;
@@ -703,7 +709,8 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       // Upload Source (STL) -> Protected
       if (sourceFile) {
         const ext = sourceFile.name.split('.').pop() || 'stl';
-        const path = `protected/stls/${productSlug}_${Date.now()}.${ext}`;
+        const filename = `${productSlug}-source-${Date.now()}.${ext}`;
+        const path = getStoragePathForUpload(currentProduct.category || 'misc', productSlug, 'source', filename);
         // uploadFile returns PATH for protected paths
         sourceStoragePath = await firebaseService.uploadFile(sourceFile, path);
       }
@@ -711,8 +718,9 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       // Upload Video -> Public (now in products folder)
       if (videoFile) {
         const ext = videoFile.name.split('.').pop() || 'mp4';
-        // Use productFolder instead of public/videos to match storage rules
-        const path = `${productFolder}/video_${Date.now()}.${ext}`;
+        // Use category folder for videos
+        const filename = `${productSlug}-video-${Date.now()}.${ext}`;
+        const path = getStoragePathForUpload(currentProduct.category || 'misc', productSlug, 'preview', filename);
         const url = await firebaseService.uploadFile(videoFile, path);
         videoUrl = url;
       }
@@ -894,13 +902,15 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       if (!cat) throw new Error("Invalid asset type selected");
 
       const modelExt = builderModelFile.name.split('.').pop() || 'glb';
-      const modelPath = `public/builder/${currentProduct.slug}/${cat.slug}/${Date.now()}_${builderAssetName.replace(/\s+/g, '_')}.${modelExt}`;
+      const modelFilename = `${cat.slug}-${Date.now()}_${builderAssetName.replace(/\s+/g, '_')}.${modelExt}`;
+      const modelPath = getStoragePathForUpload(currentProduct.category || 'misc', currentProduct.slug || 'product', 'builder', modelFilename);
       const modelUrl = await firebaseService.uploadFile(builderModelFile, modelPath);
 
       let thumbnailUrl = '';
       if (builderThumbFile) {
         const thumbExt = builderThumbFile.name.split('.').pop() || 'png';
-        const thumbPath = `public/builder/${currentProduct.slug}/${cat.slug}/thumbs/${Date.now()}_${builderAssetName.replace(/\s+/g, '_')}.${thumbExt}`;
+        const thumbFilename = `${cat.slug}-thumb-${Date.now()}_${builderAssetName.replace(/\s+/g, '_')}.${thumbExt}`;
+        const thumbPath = getStoragePathForUpload(currentProduct.category || 'misc', currentProduct.slug || 'product', 'builder', thumbFilename);
         thumbnailUrl = await firebaseService.uploadFile(builderThumbFile, thumbPath);
       }
 
@@ -942,14 +952,16 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
       let modelUrl = '';
       if (variationModelFile) {
         const ext = variationModelFile.name.split('.').pop() || 'glb';
-        const path = `public/builder/variations/${Date.now()}_${variationName.replace(/\s+/g, '_')}.${ext}`;
+        const filename = `variation-${Date.now()}_${variationName.replace(/\s+/g, '_')}.${ext}`;
+        const path = getStoragePathForUpload(currentProduct.category || 'misc', currentProduct.slug || 'product', 'builder', filename);
         modelUrl = await firebaseService.uploadFile(variationModelFile, path);
       }
 
       let thumbnailUrl = '';
       if (variationThumbFile) {
         const ext = variationThumbFile.name.split('.').pop() || 'png';
-        const path = `public/builder/variations/thumbs/${Date.now()}_${variationName.replace(/\s+/g, '_')}.${ext}`;
+        const filename = `variation-thumb-${Date.now()}_${variationName.replace(/\s+/g, '_')}.${ext}`;
+        const path = getStoragePathForUpload(currentProduct.category || 'misc', currentProduct.slug || 'product', 'builder', filename);
         thumbnailUrl = await firebaseService.uploadFile(variationThumbFile, path);
       }
 

@@ -8,10 +8,12 @@ service firebase.storage {
     }
     
     // Product images/models
-    match /products/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
+    // Product images/models (Legacy - kept for backward compatibility if needed, but risky)
+    // Better to rely on specific rules below.
+    // match /products/{allPaths=**} {
+    //   allow read: if true;
+    //   allow write: if request.auth != null;
+    // }
 
     // Collection images
     match /collections/{allPaths=**} {
@@ -34,6 +36,25 @@ service firebase.storage {
     // Default deny
     match /{allPaths=**} {
       allow read, write: if false;
+    }
+    
+    // Category-based public assets (New Hierarchy)
+    // products/[category]/[slug]/public/[type]/[filename]
+    match /products/{category}/{slug}/public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Private assets
+    match /products/{category}/{slug}/private/{allPaths=**} {
+      allow read: if false;
+      allow write: if request.auth != null;
+    }
+
+    // Legacy/Direct category support (Optional, keep if needed for old files)
+    match /{folder}/{allPaths=**} {
+      allow read: if folder != 'protected' && folder != 'products'; 
+      allow write: if request.auth != null;
     }
   }
 }

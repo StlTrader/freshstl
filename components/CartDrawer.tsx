@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AuthBarrier } from './AuthBarrier';
+import { getProductUrl } from '../utils/urlHelpers';
 
 export const CartDrawer: React.FC = () => {
   const { isCartOpen, setIsCartOpen, cart, removeFromCart, user } = useStore();
@@ -103,7 +104,7 @@ export const CartDrawer: React.FC = () => {
               <div className="space-y-4">
                 {cart.map((item) => (
                   <div key={item.cartItemId} className="group relative flex gap-4 bg-white dark:bg-dark-bg p-3 rounded-2xl border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm hover:shadow-md">
-                    <Link href={`/3d-print/${item.slug}`} onClick={() => setIsCartOpen(false)} className="shrink-0">
+                    <Link href={getProductUrl({ category: item.category, slug: item.slug })} onClick={() => setIsCartOpen(false)} className="shrink-0">
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-dark-surface">
                         {item.imageUrl ? (
                           <Image

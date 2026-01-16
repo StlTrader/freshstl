@@ -5,6 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { Package, Download, Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getProductUrl } from '../utils/urlHelpers';
 
 export const PurchasesList = () => {
     const { orders, purchases, user, isLoadingPurchases } = useStore();
@@ -35,26 +36,32 @@ export const PurchasesList = () => {
         );
     }
 
-    const handleDownload = async (downloadLink?: string) => {
-        if (!downloadLink) {
-            alert("Download link not available.");
-            return;
-        }
+    const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
 
+    const handleDownload = async (productId: string, downloadLink?: string) => {
         try {
-            let url = downloadLink;
-            // If it looks like a storage path (not a full URL), fetch the download URL
-            if (!downloadLink.startsWith('http')) {
-                // Import dynamically to avoid circular deps if any, or just use the service
-                const { getFileDownloadUrl } = await import('../services/firebaseService');
-                url = await getFileDownloadUrl(downloadLink);
+            // If it's a direct public URL, just open it
+            if (downloadLink && downloadLink.startsWith('http')) {
+                window.open(downloadLink, '_blank');
+                return;
             }
 
-            // Open in new tab
+            setDownloadingId(productId);
+
+            // Otherwise, use the secure download function
+            const { getSecureDownloadUrl } = await import('../services/firebaseService');
+            const url = await getSecureDownloadUrl(productId);
+
             window.open(url, '_blank');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to get download URL", error);
-            alert("Failed to download file. Please contact support.");
+            let msg = "Failed to download file.";
+            if (error.message?.includes('permission') || error.code === 'storage/unauthorized') {
+                msg = "Permission denied. Please refresh and try again.";
+            }
+            alert(msg);
+        } finally {
+            setDownloadingId(null);
         }
     };
 
@@ -94,7 +101,7 @@ export const PurchasesList = () => {
                                         <div key={index} className="flex items-center justify-between group">
                                             <div className="flex items-center gap-4">
                                                 {item.imageUrl && (
-                                                    <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>
+                                                    <Link href={getProductUrl({ category: item.category || 'misc', slug: item.slug || item.id })}>
                                                         <Image
                                                             src={item.imageUrl}
                                                             alt={item.name}
@@ -106,7 +113,7 @@ export const PurchasesList = () => {
                                                 )}
                                                 <div>
                                                     <h3 className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 transition-colors">
-                                                        <Link href={item.slug ? `/3d-print/${item.slug}` : `/product/${item.id}`}>{item.name}</Link>
+                                                        <Link href={getProductUrl({ category: item.category || 'misc', slug: item.slug || item.id })}>{item.name}</Link>
                                                     </h3>
                                                     <p className="text-sm text-gray-500 dark:text-dark-text-secondary">${(item.price / 100).toFixed(2)}</p>
                                                 </div>
@@ -114,12 +121,19 @@ export const PurchasesList = () => {
                                             <div className="flex gap-2">
                                                 {/* Download Button */}
                                                 <button
-                                                    onClick={() => handleDownload(purchase?.downloadLink)}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-surface rounded-lg text-sm font-medium transition-colors"
+                                                    onClick={() => handleDownload(item.id, purchase?.downloadLink)}
+                                                    disabled={downloadingId === item.id}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-surface rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title={purchase?.downloadLink ? "Download File" : "Download not available"}
                                                 >
-                                                    <Download size={16} />
-                                                    <span className="hidden sm:inline">Download</span>
+                                                    {downloadingId === item.id ? (
+                                                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                                    ) : (
+                                                        <Download size={16} />
+                                                    )}
+                                                    <span className="hidden sm:inline">
+                                                        {downloadingId === item.id ? 'Preparing...' : 'Download'}
+                                                    </span>
                                                 </button>
                                             </div>
                                         </div>

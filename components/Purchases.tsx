@@ -31,6 +31,31 @@ export const Purchases: React.FC<PurchasesProps> = ({ purchases, loading }) => {
     );
   }
 
+  const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+
+  const handleDownload = async (productId: string, downloadLink?: string) => {
+    try {
+      if (downloadLink && downloadLink.startsWith('http')) {
+        window.open(downloadLink, '_blank');
+        return;
+      }
+
+      setDownloadingId(productId);
+      const { getSecureDownloadUrl } = await import('../services/firebaseService');
+      const url = await getSecureDownloadUrl(productId);
+      window.open(url, '_blank');
+    } catch (error: any) {
+      console.error("Failed to download", error);
+      let msg = "Failed to download file.";
+      if (error.message?.includes('permission') || error.code === 'storage/unauthorized') {
+        msg = "Permission denied. Please refresh and try again.";
+      }
+      alert(msg);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -59,18 +84,18 @@ export const Purchases: React.FC<PurchasesProps> = ({ purchases, loading }) => {
               </div>
             </div>
 
-            <a
-              href={purchase.downloadLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-700 hover:bg-brand-600 text-white px-5 py-3 rounded-lg transition-all font-medium"
-              onClick={(e) => {
-                // Allow default behavior (navigation to link)
-              }}
+            <button
+              onClick={() => handleDownload(purchase.productId, purchase.downloadLink)}
+              disabled={downloadingId === purchase.productId}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-700 hover:bg-brand-600 text-white px-5 py-3 rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4" />
-              Download STL
-            </a>
+              {downloadingId === purchase.productId ? (
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              {downloadingId === purchase.productId ? 'Preparing...' : 'Download STL'}
+            </button>
           </div>
         ))}
       </div>

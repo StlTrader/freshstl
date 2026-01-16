@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { adminDb } from '../services/firebaseAdmin';
+import { getProductUrl } from '../utils/urlHelpers';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://freshstl.com';
@@ -45,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     }
 
                     return {
-                        url: `${baseUrl}/3d-print/${data.slug || doc.id}`,
+                        url: `${baseUrl}${getProductUrl({ category: data.category, slug: data.slug || doc.id })}`,
                         lastModified: lastModified,
                         changeFrequency: 'weekly' as const,
                         priority: 0.9,

@@ -3,6 +3,8 @@ import { Search, Save, AlertCircle, CheckCircle, Settings, Globe, Trash2, Extern
 import * as firebaseService from '../../services/firebaseService';
 import { Product, BlogPost } from '../../types';
 
+import { getProductUrl } from '../../utils/urlHelpers';
+
 interface IndexingManagerProps {
     products: Product[];
 }
@@ -51,7 +53,7 @@ const IndexingManager: React.FC<IndexingManagerProps> = ({ products }) => {
                     slug: p.slug,
                     type: 'product',
                     lastIndexedAt: p.lastIndexedAt,
-                    url: `${baseUrl.replace(/\/$/, '')}/3d-print/${p.slug}`
+                    url: `${baseUrl.replace(/\/$/, '')}${getProductUrl({ category: p.category, slug: p.slug })}`
                 }));
 
             const postItems: IndexableItem[] = posts.map(p => ({

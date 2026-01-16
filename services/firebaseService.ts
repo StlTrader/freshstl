@@ -2011,7 +2011,7 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
     const snapshot = await uploadBytes(storageRef, file);
 
     // For protected files, we return the path, not the URL
-    if (path.startsWith('protected/')) {
+    if (path.startsWith('protected/') || path.includes('/private/')) {
       return path;
     }
 

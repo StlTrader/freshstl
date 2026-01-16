@@ -10,7 +10,7 @@ interface CollectionCardProps {
 
 export const CollectionCard: React.FC<CollectionCardProps> = ({ collection }) => {
     return (
-        <Link href={`/collections/${collection.id}`} className="group block h-full">
+        <Link href={`/collection/${collection.slug || collection.id}`} className="group block h-full">
             <div className="relative h-full bg-white dark:bg-dark-surface rounded-2xl overflow-hidden border border-gray-100 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-600 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
 
                 {/* Image Container */}

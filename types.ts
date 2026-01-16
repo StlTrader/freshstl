@@ -64,7 +64,7 @@ export interface Order {
   paymentId?: string;
   amount: number;
   discountApplied?: number;
-  items: { id: string; name: string; price: number; imageUrl?: string; slug?: string }[];
+  items: { id: string; name: string; price: number; imageUrl?: string; slug?: string; category?: string }[];
   date?: Timestamp;
   createdAt?: Timestamp;
   status: 'pending' | 'completed' | 'refunded' | 'failed' | 'paid' | 'succeeded';
@@ -129,6 +129,7 @@ export interface StripeConfig {
 export interface Collection {
   id: string;
   title: string;
+  slug?: string;
   description: string;
   price: number; // Optional, if it's a bundle with a specific price
   productIds: string[];

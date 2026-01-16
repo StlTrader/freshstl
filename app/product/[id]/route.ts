@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '../../../services/firebaseAdmin';
+import { getProductUrl } from '../../../utils/urlHelpers';
 
 export async function GET(
     request: NextRequest,
@@ -18,7 +19,8 @@ export async function GET(
         if (docSnap.exists) {
             const data = docSnap.data();
             if (data && data.slug) {
-                const url = new URL(`/3d-print/${data.slug}`, request.url);
+                const productUrl = getProductUrl({ category: data.category || 'misc', slug: data.slug });
+                const url = new URL(productUrl, request.url);
                 return NextResponse.redirect(url, 301);
             }
         }

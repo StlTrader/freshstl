@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Product } from '../types';
 import { Plus, Eye, Heart, ShoppingCart, Download } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
+import { getProductUrl } from '../utils/urlHelpers';
 
 interface ProductCardProps {
     product: Product;
@@ -25,7 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer bg-transparent border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-all duration-200">
             {/* Image Container */}
             <div className="relative overflow-hidden rounded-xl aspect-square mb-2">
-                <Link href={`/3d-print/${product.slug}`} className="block w-full h-full">
+                <Link href={getProductUrl({ category: product.category, slug: product.slug })} className="block w-full h-full">
                     {activeImage ? (
                         <Image
                             src={activeImage}
@@ -97,7 +98,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
 
             {/* Product Info */}
-            <Link href={`/3d-print/${product.slug}`} className="block px-1 pb-2">
+            <Link href={getProductUrl({ category: product.category, slug: product.slug })} className="block px-1 pb-2">
                 <h3 className="text-sm font-bold text-social-black dark:text-white truncate pr-2">
                     {product.name}
                 </h3>

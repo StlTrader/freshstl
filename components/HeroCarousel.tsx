@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Product, Collection } from '../types';
+import { getProductUrl } from '../utils/urlHelpers';
 
 interface HeroCarouselProps {
     products: Product[];
@@ -45,7 +46,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
             subtitle: 'New Arrival',
             description: 'Premium STL for 3D printing. Ready to print.',
             image: p.imageUrl,
-            link: `/3d-print/${p.slug}`,
+            link: getProductUrl({ category: p.category, slug: p.slug }),
             isCustom: false
         }))
     ];

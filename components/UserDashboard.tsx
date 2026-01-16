@@ -32,6 +32,7 @@ import { getStripe } from '../services/paymentService';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import { SUPPORTED_COUNTRIES } from '../constants';
+import { getProductUrl } from '../utils/urlHelpers';
 
 interface UserDashboardProps {
   user: User | null;
@@ -74,6 +75,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
   // Payment Methods State
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Derived Wishlist Products
   const wishlistProducts = React.useMemo(() => {
@@ -161,6 +163,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
       const file = e.target.files[0];
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleDownload = async (productId: string, productName: string) => {
+    try {
+      setDownloadingId(productId);
+      const url = await firebaseService.getSecureDownloadUrl(productId);
+      window.open(url, '_blank');
+    } catch (error: any) {
+      console.error("Download failed:", error);
+      setMessage(`Failed to download ${productName}: ${error.message}`);
+      setTimeout(() => setMessage(''), 5000);
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -336,7 +352,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                 return (
                   <div key={purchase.id} className="bg-white dark:bg-dark-surface rounded-xl p-4 md:p-6 border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 group">
                     <div className="w-full aspect-video md:w-48 md:h-48 md:aspect-square bg-gray-100 dark:bg-dark-bg rounded-lg overflow-hidden flex-shrink-0 relative shadow-inner">
-                      <Link href={`/3d-print/${product?.slug || purchase.productId}`} className="block w-full h-full">
+                      <Link href={getProductUrl({ category: product?.category || 'misc', slug: product?.slug || purchase.productId })} className="block w-full h-full">
                         {product?.imageUrl ? (
                           <Image
                             src={product.imageUrl}
@@ -367,16 +383,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 w-full">
-                        <a
-                          href={purchase.downloadLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-6 py-3 rounded-xl transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-95"
+                        <button
+                          onClick={() => handleDownload(purchase.productId, purchase.productName)}
+                          disabled={downloadingId === purchase.productId}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-6 py-3 rounded-xl transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
-                          <Download size={18} /> Download Files
-                        </a>
+                          {downloadingId === purchase.productId ? (
+                            <Loader2 className="animate-spin" size={18} />
+                          ) : (
+                            <Download size={18} />
+                          )}
+                          {downloadingId === purchase.productId ? 'Generating Link...' : 'Download Files'}
+                        </button>
                         <Link
-                          href={`/3d-print/${product?.slug || purchase.productId}`}
+                          href={getProductUrl({ category: product?.category || 'misc', slug: product?.slug || purchase.productId })}
                           className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-bg/80 text-gray-700 dark:text-dark-text-primary px-6 py-3 rounded-xl transition-all font-medium text-sm hover:shadow-md active:scale-95"
                         >
                           <ExternalLink size={18} /> View Product
@@ -410,8 +430,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                             #{(order.transactionId || order.paymentId || order.id).slice(-8).toUpperCase()}
                           </h3>
                           <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${(order.status === 'completed' || order.status === 'paid' || order.status === 'succeeded') ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                              order.status === 'refunded' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' :
-                                'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+                            order.status === 'refunded' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' :
+                              'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
                             }`}>
                             {order.status}
                           </span>
@@ -466,7 +486,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                 {wishlistProducts.map(product => (
                   <div key={product.id} className="bg-white dark:bg-dark-surface rounded-xl overflow-hidden border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-lg transition-all group flex flex-col">
                     <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-dark-bg">
-                      <Link href={`/3d-print/${product.slug}`} className="block w-full h-full">
+                      <Link href={getProductUrl({ category: product.category, slug: product.slug })} className="block w-full h-full">
                         {product.imageUrl ? (
                           <Image
                             src={product.imageUrl}
@@ -493,7 +513,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       <h3 className="font-bold text-gray-900 dark:text-dark-text-primary mb-1 text-lg line-clamp-1">{product.name}</h3>
                       <p className="text-social-black dark:text-white font-black text-xl mb-4">${(product.price / 100).toFixed(2)}</p>
                       <Link
-                        href={`/3d-print/${product.slug}`}
+                        href={getProductUrl({ category: product.category, slug: product.slug })}
                         className="mt-auto block w-full text-center py-3 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95"
                       >
                         View Details

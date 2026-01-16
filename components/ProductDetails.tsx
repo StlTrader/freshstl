@@ -10,15 +10,18 @@ import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box
 import * as firebaseService from '../services/firebaseService';
 import { getStripeConfig } from '../services/paymentService';
 import { ProductCardSkeleton, Skeleton } from './LoadingSkeleton';
+import { getProductUrl } from '../utils/urlHelpers';
 
 interface ProductDetailsProps {
     product: Product;
+    initialRelatedProducts?: Product[];
+    initialReviews?: Review[];
 }
 
-export default function ProductDetails({ product }: ProductDetailsProps) {
+export default function ProductDetails({ product, initialRelatedProducts = [], initialReviews = [] }: ProductDetailsProps) {
     const router = useRouter();
     const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user, isAuthReady } = useStore();
-    const [reviews, setReviews] = useState<Review[]>([]);
+    const [reviews, setReviews] = useState<Review[]>(initialReviews);
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,8 +36,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
     const [thumbPage, setThumbPage] = useState(0);
     const [showFullDescription, setShowFullDescription] = useState(false);
-    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-    const [isLoadingRelated, setIsLoadingRelated] = useState(true);
+    const [relatedProducts, setRelatedProducts] = useState<Product[]>(initialRelatedProducts);
+    const [isLoadingRelated, setIsLoadingRelated] = useState(initialRelatedProducts.length === 0);
 
     useEffect(() => {
         setIsLoadingRelated(true);
@@ -486,7 +489,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                                             <div className="flex items-center justify-between mb-1">
                                                                 <h4 className="font-bold text-sm text-social-black dark:text-white truncate">{review.userName}</h4>
                                                                 <span className="text-[10px] text-gray-400 flex-shrink-0">
-                                                                    {typeof review.date.toDate === 'function' ? review.date.toDate().toLocaleDateString() : 'Recently'}
+                                                                    {typeof review.date?.toDate === 'function' ? review.date.toDate().toLocaleDateString() : (typeof review.date === 'string' ? new Date(review.date).toLocaleDateString() : 'Recently')}
                                                                 </span>
                                                             </div>
                                                             <div className="flex mb-1.5">
@@ -607,7 +610,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                                         <div className="flex items-center justify-between mb-1">
                                                             <h4 className="font-bold text-social-black dark:text-white">{review.userName}</h4>
                                                             <span className="text-xs text-gray-400">
-                                                                {typeof review.date.toDate === 'function' ? review.date.toDate().toLocaleDateString() : 'Recently'}
+                                                                {typeof review.date?.toDate === 'function' ? review.date.toDate().toLocaleDateString() : (typeof review.date === 'string' ? new Date(review.date).toLocaleDateString() : 'Recently')}
                                                             </span>
                                                         </div>
                                                         <div className="flex mb-2">
@@ -802,7 +805,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                                     relatedProducts.map((related) => (
                                         <div
                                             key={related.id}
-                                            onClick={() => router.push(`/3d-print/${related.slug}`)}
+                                            onClick={() => router.push(getProductUrl({ category: related.category, slug: related.slug }))}
                                             className="group cursor-pointer bg-transparent rounded-xl overflow-hidden hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-all duration-200 flex flex-col h-full"
                                         >
                                             <div className="aspect-square relative overflow-hidden rounded-xl bg-gray-100 dark:bg-dark-bg mb-2">
