@@ -6,6 +6,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Contact Us | FreshSTL',
     description: 'Get in touch with the FreshSTL team. We are here to help with any questions or inquiries you may have.',
+    alternates: {
+        canonical: 'https://freshstl.com/contact',
+    },
 };
 
 export default function ContactPage() {

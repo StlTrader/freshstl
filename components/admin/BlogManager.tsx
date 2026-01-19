@@ -7,6 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Plus, Edit, Trash2, Search, X, Upload, CheckCircle, Eye, Tag, Palette, Sparkles, Box } from 'lucide-react';
 import Image from 'next/image';
 import { Product } from '../../types';
+import { getCleanImageUrl } from '../../utils/urlHelpers';
 
 export default function BlogManager({ initialEditId }: { initialEditId?: string }) {
     const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -687,7 +688,7 @@ export default function BlogManager({ initialEditId }: { initialEditId?: string 
                                                 {coverImage ? (
                                                     <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-dark-border group">
                                                         <Image
-                                                            src={coverImage}
+                                                            src={getCleanImageUrl(coverImage)}
                                                             alt="Cover"
                                                             fill
                                                             className="object-cover"

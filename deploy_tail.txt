@@ -1,0 +1,420 @@
+﻿[2026-01-16T22:51:57.758Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[2026-01-16T22:51:58.090Z] Running auto auth
+[2026-01-16T22:51:58.091Z] [iam] checking project freshstlstore-99511217-ca510 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[2026-01-16T22:51:58.092Z] No OAuth tokens found
+[2026-01-16T22:51:58.093Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/freshstlstore-99511217-ca510:testIamPermissions [none]
+[2026-01-16T22:51:58.093Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/freshstlstore-99511217-ca510:testIamPermissions x-goog-quota-user=projects/freshstlstore-99511217-ca510
+[2026-01-16T22:51:58.093Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/freshstlstore-99511217-ca510:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[2026-01-16T22:51:58.877Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/freshstlstore-99511217-ca510:testIamPermissions 200
+[2026-01-16T22:51:58.877Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/freshstlstore-99511217-ca510:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[2026-01-16T22:51:58.878Z] No OAuth tokens found
+[2026-01-16T22:51:58.878Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/freshstlstore-99511217-ca510/serviceAccounts/freshstlstore-99511217-ca510@appspot.gserviceaccount.com:testIamPermissions [none]
+[2026-01-16T22:51:58.878Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/freshstlstore-99511217-ca510/serviceAccounts/freshstlstore-99511217-ca510@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[2026-01-16T22:51:59.419Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/freshstlstore-99511217-ca510/serviceAccounts/freshstlstore-99511217-ca510@appspot.gserviceaccount.com:testIamPermissions 200
+[2026-01-16T22:51:59.419Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/freshstlstore-99511217-ca510/serviceAccounts/freshstlstore-99511217-ca510@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[2026-01-16T22:51:59.420Z] No OAuth tokens found
+[2026-01-16T22:51:59.420Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510 [none]
+[2026-01-16T22:51:59.823Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510 200
+[2026-01-16T22:51:59.824Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510 {"projectId":"freshstlstore-99511217-ca510","projectNumber":"1086916049812","displayName":"Firebase app","name":"projects/freshstlstore-99511217-ca510","resources":{"hostingSite":"freshstlstore-99511217-ca510"},"state":"ACTIVE","etag":"1_4d9bcaf5-7618-47f6-a254-114c0ffe55ef"}
+[2026-01-16T22:52:02.535Z] No OAuth tokens found
+[2026-01-16T22:52:02.535Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites pageToken=&pageSize=10
+[2026-01-16T22:52:03.551Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites 200
+[2026-01-16T22:52:03.551Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites {"sites":[{"name":"projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510","defaultUrl":"https://freshstlstore-99511217-ca510.web.app","type":"DEFAULT_SITE"}]}
+[2026-01-16T22:52:03.552Z] No OAuth tokens found
+[2026-01-16T22:52:03.552Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites 
+[2026-01-16T22:52:03.843Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites 200
+[2026-01-16T22:52:03.843Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites {"sites":[{"name":"projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510","defaultUrl":"https://freshstlstore-99511217-ca510.web.app","type":"DEFAULT_SITE"}]}
+[2026-01-16T22:52:03.843Z] No OAuth tokens found
+[2026-01-16T22:52:03.844Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/webApps/-/config [none]
+[2026-01-16T22:52:04.420Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/webApps/-/config 200
+[2026-01-16T22:52:04.420Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/webApps/-/config {"projectId":"freshstlstore-99511217-ca510","appId":"1:1086916049812:web:ad588e00ab40b69ecead81","storageBucket":"freshstlstore-99511217-ca510.firebasestorage.app","apiKey":"AIzaSyC0z4o3dtUuSdeQt4ENzgQ3ey5TQhyWKes","authDomain":"freshstlstore-99511217-ca510.firebaseapp.com","messagingSenderId":"1086916049812","measurementId":"G-0TQHHJZZCF","projectNumber":"1086916049812","version":"2"}
+node.exe : No Firebase app 
+associated with site 
+freshstlstore-99511217-ca510, 
+injecting project default config.
+At C:\Users\MSI\AppData\Roaming\npm\f
+irebase.ps1:24 char:5
++     & "node$exe"  "$basedir/node_mo
+dules/firebase-tools/lib/bin/fireb 
+...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+NotSpecifie    d: (No Firebase 
+app...default config.    :String) 
+[], RemoteException
+    + FullyQualifiedErrorId : 
+NativeComma    ndError
+ 
+  You can link a Web app to a 
+Hosting site here https://console.fir
+ebase.google.com/project/freshstlstor
+e-99511217-ca510/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[2026-01-16T22:52:11.114Z] No OAuth tokens found
+[2026-01-16T22:52:11.114Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 [none]
+[2026-01-16T22:52:12.059Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 200
+[2026-01-16T22:52:12.059Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 {"name":"projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510","defaultUrl":"https://freshstlstore-99511217-ca510.web.app","type":"DEFAULT_SITE"}
+ΓÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\MSI\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\MSI\Desktop\freshstl.store - Nextjs\package-lock.json
+
+
+Γû▓ Next.js 16.1.1 (Turbopack)
+
+- Environments: .env.local
+
+
+  Creating an optimized production build ...
+
+
+
+
+Source path: ./app/globals.css
+
+Setting up new context...
+
+Finding changed files: 17.984ms
+
+Reading changed files: 231.939ms
+
+Sorting candidates: 7.963ms
+
+Generate rules: 443.904ms
+
+Build stylesheet: 8.099ms
+
+Potential classes:  8822
+
+Active contexts:  1
+
+JIT TOTAL: 982.45ms
+
+
+
+
+Γ£ô Compiled successfully in 10.5s
+
+  Running TypeScript ...
+
+  Collecting page data using 11 workers ...
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Firebase Admin initialized successfully.
+
+Initializing Firebase Admin...
+
+Using explicit credentials from env vars.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin initialized successfully.
+
+Firebase Admin already initialized.
+
+Firebase Admin already initialized.
+
+WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.
+
+Firebase Project ID: freshstlstore-99511217-ca510
+
+Auth initialized successfully
+
+Firestore initialized successfully
+
+Storage initialized successfully
+
+[2026-01-16T22:52:44.559Z]  @firebase/analytics: Analytics: Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: (1) Cookies are not available. (analytics/invalid-analytics-context).
+
+Analytics not available in this environment.
+
+Firebase initialized. Project: freshstlstore-99511217-ca510
+
+Firebase Admin already initialized.
+
+WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.
+
+Firebase Project ID: freshstlstore-99511217-ca510
+
+Auth initialized successfully
+
+Firestore initialized successfully
+
+Storage initialized successfully
+
+[2026-01-16T22:52:44.587Z]  @firebase/analytics: Analytics: Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: (1) Cookies are not available. (analytics/invalid-analytics-context).
+
+Analytics not available in this environment.
+Firebase initialized. Project: freshstlstore-99511217-ca510
+
+Firebase Admin already initialized.
+
+  Generating static pages using 11 workers (0/31) ...
+
+WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.
+
+Firebase Project ID: freshstlstore-99511217-ca510
+
+Auth initialized successfully
+
+Firestore initialized successfully
+
+Storage initialized successfully
+
+[2026-01-16T22:52:45.101Z]  @firebase/analytics: Analytics: Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: (1) Cookies are not available. (analytics/invalid-analytics-context).
+
+Analytics not available in this environment.
+Firebase initialized. Project: freshstlstore-99511217-ca510
+
+WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.
+
+Firebase Project ID: freshstlstore-99511217-ca510
+
+Auth initialized successfully
+
+Firestore initialized successfully
+
+Storage initialized successfully
+
+[2026-01-16T22:52:45.247Z]  @firebase/analytics: Analytics: Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: (1) Cookies are not available. (analytics/invalid-analytics-context).
+
+Analytics not available in this environment.
+Firebase initialized. Project: freshstlstore-99511217-ca510
+
+  Generating static pages using 11 workers (7/31) 
+
+  Generating static pages using 11 workers (15/31) 
+
+  Generating static pages using 11 workers (23/31) 
+
+WARNING: Using Env/Default Firebase Config. Ensure this is intended for Production.
+
+Firebase Project ID: freshstlstore-99511217-ca510
+
+Auth initialized successfully
+
+Firestore initialized successfully
+
+Storage initialized successfully
+
+[2026-01-16T22:52:46.866Z]  @firebase/analytics: Analytics: Firebase Analytics is not supported in this environment. Wrap initialization of analytics in analytics.isSupported() to prevent initialization in unsupported environments. Details: (1) Cookies are not available. (analytics/invalid-analytics-context).
+
+Analytics not available in this environment.
+Firebase initialized. Project: freshstlstore-99511217-ca510
+
+[BlogPage] Fetching posts (Server Side)...
+
+[BlogPage] Using Admin SDK
+
+[BlogPage] Found 6 total posts via Admin SDK
+
+Γ£ô Generating static pages using 11 workers (31/31) in 4.1s
+
+  Finalizing page optimization ...
+
+
+
+Route (app)                      Revalidate  Expire
+Γöî Γùï /                                    1m      1y
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /[category]/[slug]
+Γö£ ╞Æ /3d-print/[slug]
+Γö£ Γùï /admin
+Γö£ ╞Æ /api/admin/create-user
+Γö£ ╞Æ /api/admin/delete-test-data
+Γö£ ╞Æ /api/admin/delete-user
+Γö£ ╞Æ /api/admin/update-role
+Γö£ ╞Æ /api/ai/generate-blog
+Γö£ ╞Æ /api/ai/generate-media
+Γö£ ╞Æ /api/ai/generate-product
+Γö£ ╞Æ /api/ai/generate-text
+Γö£ ╞Æ /api/checkout
+Γö£ ╞Æ /api/debug
+Γö£ ╞Æ /api/seed-blog
+Γö£ ╞Æ /api/webhook/stripe
+Γö£ Γùï /blog
+Γö£ ╞Æ /blog/[slug]
+Γö£ ╞Æ /builder/[productId]
+Γö£ Γùï /cart
+Γö£ Γùï /checkout
+Γö£ Γùï /checkout/success
+Γö£ ╞Æ /collection/[slug]
+Γö£ Γùï /contact
+Γö£ Γùï /cookies
+Γö£ Γùï /forgot-password
+Γö£ Γùï /license
+Γö£ Γùï /login
+Γö£ Γùï /privacy
+Γö£ ╞Æ /product/[id]
+Γö£ Γùï /purchases
+Γö£ Γùï /robots.txt
+Γö£ Γùï /sitemap.xml
+Γö£ Γùï /support
+Γöö Γùï /terms
+
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ ΓÇó use of revalidate /
+ ΓÇó non-static component /3d-print/[slug]/page
+ ΓÇó non-static component /[category]/[slug]/page
+ ΓÇó non-static component /api/admin/create-user/route
+ ΓÇó non-static component /api/admin/delete-test-data/route
+[2026-01-16T22:52:51.199Z]  ΓÇó non-static component /api/admin/delete-user/route
+[2026-01-16T22:52:51.199Z]  ΓÇó non-static component /api/admin/update-role/route
+[2026-01-16T22:52:51.199Z]  ΓÇó non-static component /api/ai/generate-blog/route
+[2026-01-16T22:52:51.199Z]  ΓÇó non-static component /api/ai/generate-media/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/ai/generate-product/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/ai/generate-text/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/checkout/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/debug/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/seed-blog/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /api/webhook/stripe/route
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /blog/[slug]/page
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /builder/[productId]/page
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /collection/[slug]/page
+[2026-01-16T22:52:51.200Z]  ΓÇó non-static component /product/[id]/route
+[2026-01-16T22:52:51.200Z]  ΓÇó advanced rewrites
+
+[2026-01-16T22:52:52.341Z] skipping / due to revalidate
+[2026-01-16T22:52:57.932Z] No OAuth tokens found
+[2026-01-16T22:52:57.932Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 [none]
+[2026-01-16T22:52:58.894Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 200
+[2026-01-16T22:52:58.895Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510 {"name":"projects/freshstlstore-99511217-ca510/sites/freshstlstore-99511217-ca510","defaultUrl":"https://freshstlstore-99511217-ca510.web.app","type":"DEFAULT_SITE"}
+!  This integration expects Node version 16, 18, or 20. You're running version 22, problems may be encountered. 
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: 
+firebase-frameworks@0.11.8
+npm error Found: sharp@0.34.5
+npm error node_modules/sharp
+npm error   sharp@"^0.34.5" from the 
+root project
+npm error   optional sharp@"^0.34.4" 
+from next@16.1.1
+npm error   node_modules/next
+npm error     next@"^16.1.1" from 
+the root project
+npm error
+npm error Could not resolve 
+dependency:
+npm error peerOptional sharp@"^0.32 
+|| ^0.33" from 
+firebase-frameworks@0.11.8
+npm error 
+node_modules/firebase-frameworks
+npm error   
+firebase-frameworks@"^0.11.0" from 
+the root project
+npm error
+npm error Conflicting peer 
+dependency: sharp@0.33.5
+npm error node_modules/sharp
+npm error   peerOptional 
+sharp@"^0.32 || ^0.33" from 
+firebase-frameworks@0.11.8
+npm error   
+node_modules/firebase-frameworks
+npm error     
+firebase-frameworks@"^0.11.0" from 
+the root project
+npm error
+npm error Fix the upstream 
+dependency conflict, or retry
+npm error this command with --force 
+or --legacy-peer-deps
+npm error to accept an incorrect 
+(and potentially broken) dependency 
+resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\MSI\AppData\Local\
+npm-cache\_logs\2026-01-16T22_53_13_3
+70Z-eresolve-report.txt
+npm error A complete log of this run 
+can be found in: C:\Users\MSI\AppData
+\Local\npm-cache\_logs\2026-01-16T22_
+53_13_370Z-debug-0.log
+[2026-01-16T22:53:14.874Z] Error: Command failed: npm i --omit dev --no-audit
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:882:11)
+    at execSync (node:child_process:954:15)
+    at prepareFrameworks (C:\Users\MSI\AppData\Roaming\npm\node_modules\firebase-tools\lib\frameworks\index.js:373:42)
+    at async deploy (C:\Users\MSI\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\index.js:79:9)
+
+Error: An unexpected error has occurred.

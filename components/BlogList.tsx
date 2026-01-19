@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, User, Tag, ArrowRight, ShoppingBag, Star, Clock, Mail, TrendingUp } from 'lucide-react';
 import { BlogPost, Product } from '../types';
+import { getCleanImageUrl } from '../utils/urlHelpers';
 
 interface BlogListProps {
     initialPosts: BlogPost[];
@@ -88,7 +89,7 @@ export default function BlogList({ initialPosts, products = [] }: BlogListProps)
                             <Link href={`/blog/${featuredPost.slug}`} className="group block relative rounded-3xl overflow-hidden aspect-[16/9] shadow-xl hover:shadow-2xl transition-all duration-500">
                                 {featuredPost.coverImage ? (
                                     <Image
-                                        src={featuredPost.coverImage}
+                                        src={getCleanImageUrl(featuredPost.coverImage)}
                                         alt={featuredPost.title}
                                         fill
                                         className="object-cover transform group-hover:scale-105 transition-transform duration-1000"
@@ -147,7 +148,7 @@ export default function BlogList({ initialPosts, products = [] }: BlogListProps)
                                         <div className="w-1/3 sm:w-2/5 lg:w-1/3 relative overflow-hidden bg-gray-200 dark:bg-dark-bg shrink-0">
                                             {post.coverImage ? (
                                                 <Image
-                                                    src={post.coverImage}
+                                                    src={getCleanImageUrl(post.coverImage)}
                                                     alt={post.title}
                                                     fill
                                                     sizes="(max-width: 768px) 33vw, 33vw"
@@ -281,7 +282,7 @@ export default function BlogList({ initialPosts, products = [] }: BlogListProps)
                                             <div className="w-16 h-16 bg-gray-100 dark:bg-dark-bg rounded-lg overflow-hidden shrink-0 relative">
                                                 {product.imageUrl ? (
                                                     <Image
-                                                        src={product.imageUrl}
+                                                        src={getCleanImageUrl(product.imageUrl)}
                                                         alt={product.name}
                                                         fill
                                                         sizes="64px"

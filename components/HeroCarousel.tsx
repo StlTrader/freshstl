@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Product, Collection } from '../types';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 interface HeroCarouselProps {
     products: Product[];
@@ -81,7 +81,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
                                     <>
                                         {/* Blurred Background for Atmosphere */}
                                         <Image
-                                            src={slide.image}
+                                            src={getCleanImageUrl(slide.image)}
                                             alt=""
                                             fill
                                             quality={50}
@@ -90,8 +90,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
                                         />
                                         {/* Main Sharp Image */}
                                         <Image
-                                            src={slide.image}
-                                            alt={slide.title}
+                                            src={getCleanImageUrl(slide.image)}
+                                            alt={slide.isCustom ? slide.title : `3D model of ${slide.title}`}
                                             fill
                                             quality={95}
                                             priority={index === 0}
@@ -118,9 +118,15 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ products, featuredCo
                                             </span>
                                         </div>
 
-                                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-social-black dark:text-white tracking-tight leading-[1.1] line-clamp-2">
-                                            {slide.title}
-                                        </h2>
+                                        {index === 0 ? (
+                                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-social-black dark:text-white tracking-tight leading-[1.1] line-clamp-2">
+                                                {slide.title}
+                                            </h1>
+                                        ) : (
+                                            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-social-black dark:text-white tracking-tight leading-[1.1] line-clamp-2">
+                                                {slide.title}
+                                            </h2>
+                                        )}
 
                                         <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 max-w-md font-medium leading-relaxed line-clamp-2">
                                             {slide.description}

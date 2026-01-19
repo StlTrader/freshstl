@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         siteName: 'FreshSTL',
         images: [
             {
-                url: '/og-image.jpg', // Ensure this image exists in public folder or use a dynamic one
+                url: 'https://freshstl.com/og-image.jpg',
                 width: 1200,
                 height: 630,
                 alt: 'FreshSTL - Premium 3D Models',
@@ -32,10 +32,10 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'FreshSTL | Premium 3D Print Files & Models',
         description: 'Discover high-quality 3D print files, STL models, and creative designs for your 3D printer.',
-        images: ['/og-image.jpg'],
+        images: ['https://freshstl.com/og-image.jpg'],
     },
     alternates: {
-        canonical: '/',
+        canonical: 'https://freshstl.com',
     },
 };
 

@@ -10,7 +10,7 @@ import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box
 import * as firebaseService from '../services/firebaseService';
 import { getStripeConfig } from '../services/paymentService';
 import { ProductCardSkeleton, Skeleton } from './LoadingSkeleton';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 interface ProductDetailsProps {
     product: Product;
@@ -27,10 +27,12 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
     const [isDownloading, setIsDownloading] = useState(false);
-    // Default to first image (or model if no images, though unlikely)
+    const mainImage = getCleanImageUrl(product.imageUrl, product.category);
+    const images = (product.images || []).map(img => getCleanImageUrl(img, product.category));
+
     const [activeMedia, setActiveMedia] = useState<string>(
-        (product.images && product.images.length > 0) ? product.images[0] :
-            (product.imageUrl ? product.imageUrl : 'model')
+        (images.length > 0) ? images[0] :
+            (mainImage ? mainImage : 'model')
     );
     const [isAuthorized, setIsAuthorized] = useState(product.status !== 'draft');
 
@@ -79,8 +81,8 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
     const viewerUrl = product.modelUrl;
 
     const mediaList = [
-        ...(product.images || []),
-        ...(product.imageUrl && !product.images?.includes(product.imageUrl) ? [product.imageUrl] : []),
+        ...images,
+        ...(mainImage && !images.includes(mainImage) ? [mainImage] : []),
         ...(product.show3DModel !== false && product.modelUrl ? ['model'] : []),
         ...(product.showVideo !== false && product.videoUrl ? ['video'] : [])
     ];
@@ -241,7 +243,7 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
                                 <div className="relative w-full h-full bg-black">
                                     <Image
                                         src={activeMedia}
-                                        alt={product.name}
+                                        alt={`${product.name} - Premium 3D Model`}
                                         fill
                                         sizes="(max-width: 1024px) 100vw, 66vw"
                                         className="object-contain"
@@ -317,26 +319,26 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
                                 )}
 
                                 {/* Thumbnails */}
-                                {product.images?.map((img, idx) => (
+                                {images.map((img, idx) => (
                                     <button
                                         key={idx}
                                         onClick={() => setActiveMedia(img)}
                                         className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === img ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <div className="relative w-full h-full bg-gray-100 dark:bg-social-dark-hover">
-                                            <Image src={img} alt={`View ${idx + 1}`} fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
+                                            <Image src={img} alt={`${product.name} - View ${idx + 1}`} fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
                                         </div>
                                     </button>
                                 ))}
 
                                 {/* Fallback if no images array but imageUrl exists */}
-                                {!product.images?.length && product.imageUrl && (
+                                {!images.length && mainImage && (
                                     <button
-                                        onClick={() => setActiveMedia(product.imageUrl!)}
-                                        className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === product.imageUrl ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                        onClick={() => setActiveMedia(mainImage)}
+                                        className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all ${activeMedia === mainImage ? 'border-social-black dark:border-white' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                     >
                                         <div className="relative w-full h-full bg-gray-100 dark:bg-social-dark-hover">
-                                            <Image src={product.imageUrl} alt="Main View" fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
+                                            <Image src={mainImage} alt={`${product.name} - Main View`} fill sizes="(max-width: 1024px) 64px, 80px" className="object-cover" />
                                         </div>
                                     </button>
                                 )}

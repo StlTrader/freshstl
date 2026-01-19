@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BlogPost } from '../types';
 import { ArrowRight, BookOpen } from 'lucide-react';
+import { getCleanImageUrl } from '../utils/urlHelpers';
 
 interface InsightCardCardProps {
     post: BlogPost;
@@ -15,7 +16,7 @@ export const InsightCard: React.FC<InsightCardCardProps> = ({ post }) => {
             <div className="absolute inset-0 h-full w-full">
                 {post.coverImage ? (
                     <Image
-                        src={post.coverImage}
+                        src={getCleanImageUrl(post.coverImage)}
                         alt={post.title}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"

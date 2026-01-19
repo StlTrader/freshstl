@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collection } from '../types';
 import { ArrowRight, Layers } from 'lucide-react';
+import { getCleanImageUrl } from '../utils/urlHelpers';
 
 interface CollectionCardProps {
     collection: Collection;
@@ -17,7 +18,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ collection }) =>
                 <div className="relative h-64 w-full overflow-hidden">
                     {collection.imageUrl ? (
                         <Image
-                            src={collection.imageUrl}
+                            src={getCleanImageUrl(collection.imageUrl)}
                             alt={collection.title}
                             fill
                             className="object-cover transition-transform duration-700 group-hover:scale-110"

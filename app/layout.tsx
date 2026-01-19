@@ -8,7 +8,7 @@ import BreadcrumbJsonLd from '../components/BreadcrumbJsonLd';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://freshstl.store'),
+    metadataBase: new URL('https://freshstl.com'),
     title: {
         default: 'FreshSTL - Premium 3D Models',
         template: '%s | FreshSTL'

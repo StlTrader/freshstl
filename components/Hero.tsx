@@ -10,6 +10,7 @@ import { getStripeConfig } from '../services/paymentService';
 import { TiltCard } from './TiltCard';
 import { HeroBackground } from './HeroBackground';
 import { HeroCarousel } from './HeroCarousel';
+import { getCleanImageUrl } from '../utils/urlHelpers';
 
 interface HeroProps {
     products: Product[];
@@ -100,7 +101,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
             className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-border group"
         >
             <Image
-                src={product.imageUrl}
+                src={getCleanImageUrl(product.imageUrl)}
                 alt={product.name}
                 fill
                 priority={index === 0}

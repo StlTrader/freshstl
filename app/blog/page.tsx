@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: 'Blog | FreshSTL',
     description: 'Latest news, updates, and tutorials from FreshSTL.',
     alternates: {
-        canonical: '/blog',
+        canonical: 'https://freshstl.com/blog',
     },
 };
 

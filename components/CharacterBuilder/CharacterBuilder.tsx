@@ -6,6 +6,7 @@ import { Scene } from './Scene';
 import { User } from 'firebase/auth';
 import { BuilderAsset, BuilderCategory } from '../../types';
 import * as firebaseService from '../../services/firebaseService';
+import { getCleanImageUrl } from '../../utils/urlHelpers';
 
 interface CharacterBuilderProps {
     onBack: () => void;
@@ -243,7 +244,7 @@ export const CharacterBuilder: React.FC<CharacterBuilderProps> = ({ onBack, prod
                                 {asset.thumbnailUrl ? (
                                     <div className="relative w-full h-full p-1">
                                         <Image
-                                            src={asset.thumbnailUrl}
+                                            src={getCleanImageUrl(asset.thumbnailUrl)}
                                             alt={asset.name}
                                             fill
                                             className="object-contain"

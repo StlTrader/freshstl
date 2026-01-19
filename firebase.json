@@ -10,6 +10,7 @@
         "source": "functions"
     },
     "hosting": {
+        "site": "freshstlstore-99511217-ca510",
         "source": ".",
         "ignore": [
             "firebase.json",

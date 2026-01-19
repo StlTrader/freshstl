@@ -5,7 +5,7 @@ import { useStore } from '../contexts/StoreContext';
 import { Package, Download, Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 export const PurchasesList = () => {
     const { orders, purchases, user, isLoadingPurchases } = useStore();
@@ -103,7 +103,7 @@ export const PurchasesList = () => {
                                                 {item.imageUrl && (
                                                     <Link href={getProductUrl({ category: item.category || 'misc', slug: item.slug || item.id })}>
                                                         <Image
-                                                            src={item.imageUrl}
+                                                            src={getCleanImageUrl(item.imageUrl)}
                                                             alt={item.name}
                                                             width={64}
                                                             height={64}

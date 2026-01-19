@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { adminDb } from '../services/firebaseAdmin';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl, getAbsoluteImageUrl } from '../utils/urlHelpers';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://freshstl.com';
@@ -45,11 +45,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                         }
                     }
 
+                    const images = getAbsoluteImageUrl(data.imageUrl, data.category) ? [getAbsoluteImageUrl(data.imageUrl, data.category)] : [];
+
                     return {
                         url: `${baseUrl}${getProductUrl({ category: data.category, slug: data.slug || doc.id })}`,
                         lastModified: lastModified,
                         changeFrequency: 'weekly' as const,
                         priority: 0.9,
+                        images: images,
                     };
                 });
 
@@ -67,11 +70,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     }
                 }
 
+                const images = getAbsoluteImageUrl(data.coverImage) ? [getAbsoluteImageUrl(data.coverImage)] : [];
+
                 return {
                     url: `${baseUrl}/blog/${data.slug}`,
                     lastModified: lastModified,
                     changeFrequency: 'weekly' as const,
                     priority: 0.8,
+                    images: images,
                 };
             });
 

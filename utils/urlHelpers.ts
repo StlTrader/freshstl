@@ -6,17 +6,26 @@ export function getCategoryPath(category: string): string {
     return slug;
 }
 
-export function getCleanImageUrl(imageUrl: string, category: string): string {
+export function getCleanImageUrl(imageUrl: string, category?: string): string {
     if (!imageUrl) return '';
 
     try {
-        if (imageUrl.includes('firebasestorage.googleapis.com')) {
+        if (imageUrl.includes('firebasestorage.googleapis.com') || imageUrl.includes('storage.googleapis.com')) {
             const url = new URL(imageUrl);
-            const pathParts = url.pathname.split('/o/');
-            if (pathParts.length > 1) {
-                const encodedPath = pathParts[1];
-                const path = decodeURIComponent(encodedPath);
+            let path = '';
 
+            if (imageUrl.includes('firebasestorage.googleapis.com')) {
+                const pathParts = url.pathname.split('/o/');
+                if (pathParts.length > 1) {
+                    path = decodeURIComponent(pathParts[1]);
+                }
+            } else {
+                // storage.googleapis.com/bucket/path
+                const pathParts = url.pathname.split('/').slice(2); // Skip empty and bucket
+                path = pathParts.join('/');
+            }
+
+            if (path) {
                 // Match new structure: products/[category]/[slug]/public/images/[filename]
                 // We want to serve this as: /assets/[category]/[slug]/images/[filename]
 
@@ -28,7 +37,7 @@ export function getCleanImageUrl(imageUrl: string, category: string): string {
                 }
 
                 // Fallback for legacy paths or direct category paths
-                const categoryPath = getCategoryPath(category);
+                const categoryPath = getCategoryPath(category || 'misc');
                 if (path.startsWith(categoryPath + '/')) {
                     const filename = path.split('/').pop();
                     return `/assets/${categoryPath}/${filename}`;
@@ -40,6 +49,13 @@ export function getCleanImageUrl(imageUrl: string, category: string): string {
     }
 
     return imageUrl;
+}
+
+export function getAbsoluteImageUrl(imageUrl: string, category?: string): string {
+    const cleanPath = getCleanImageUrl(imageUrl, category);
+    if (!cleanPath) return '';
+    if (cleanPath.startsWith('http')) return cleanPath;
+    return `https://freshstl.com${cleanPath}`;
 }
 
 export type StorageFileType = 'image' | 'preview' | 'source' | 'builder';

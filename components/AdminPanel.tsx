@@ -53,7 +53,7 @@ import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
 import Image from 'next/image';
-import { getStoragePathForUpload } from '../utils/urlHelpers';
+import { getStoragePathForUpload, getCleanImageUrl } from '../utils/urlHelpers';
 
 interface AdminPanelProps {
   products: Product[];
@@ -1643,7 +1643,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
                                   </td>
                                   <td className="px-4 py-2">
                                     {asset.thumbnailUrl ? (
-                                      <Image src={asset.thumbnailUrl} alt="" width={32} height={32} className="rounded object-cover bg-gray-100" />
+                                      <Image src={getCleanImageUrl(asset.thumbnailUrl, currentProduct.category)} alt="" width={32} height={32} className="rounded object-cover bg-gray-100" />
                                     ) : (
                                       <span className="text-xs text-gray-400">No image</span>
                                     )}
@@ -1740,7 +1740,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
             <div key={product.id} className="p-4 flex gap-4 items-start">
               <div className="relative shrink-0">
                 {product.imageUrl ? (
-                  <Image src={product.imageUrl} alt="" width={80} height={80} className="rounded-lg object-cover bg-gray-100" />
+                  <Image src={getCleanImageUrl(product.imageUrl, product.category)} alt="" width={80} height={80} className="rounded-lg object-cover bg-gray-100" />
                 ) : (
                   <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
                     <Package size={24} />
@@ -1810,7 +1810,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
                     <div className="flex items-center gap-4">
                       <NextLink href={`/3d-print/${product.slug}`} target="_blank" className="block relative group/img">
                         {product.imageUrl ? (
-                          <Image src={product.imageUrl} alt="" width={48} height={48} className="rounded-lg object-cover bg-gray-200 dark:bg-gray-900 shadow-sm group-hover/img:shadow-md transition-all" />
+                          <Image src={getCleanImageUrl(product.imageUrl, product.category)} alt="" width={48} height={48} className="rounded-lg object-cover bg-gray-200 dark:bg-gray-900 shadow-sm group-hover/img:shadow-md transition-all" />
                         ) : (
                           <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-900 flex items-center justify-center shadow-sm">
                             <Package size={20} className="text-gray-400" />
@@ -2623,7 +2623,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                           <div key={idx} className="flex gap-4 items-center bg-white dark:bg-dark-surface p-3 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm hover:shadow-md transition-shadow">
                             <NextLink href={`/3d-print/${item.slug}`} target="_blank" className="block shrink-0 group">
                               {item.imageUrl ? (
-                                <Image src={item.imageUrl} alt={item.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
+                                <Image src={getCleanImageUrl(item.imageUrl, item.category)} alt={item.name} width={56} height={56} className="rounded-lg object-cover bg-gray-100 group-hover:scale-105 transition-transform" />
                               ) : (
                                 <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
                                   <Package size={20} />
@@ -3292,7 +3292,7 @@ const HeroManager = ({ products }: { products: Product[] }) => {
                       }`}>
                       {isSelected && <CheckCircle size={14} />}
                     </div>
-                    <Image src={product.imageUrl} alt={product.name} width={40} height={40} className="rounded object-cover bg-gray-100" />
+                    <Image src={getCleanImageUrl(product.imageUrl, product.category)} alt={product.name} width={40} height={40} className="rounded object-cover bg-gray-100" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary truncate">{product.name}</p>
                       <p className="text-xs text-gray-500 dark:text-dark-text-secondary">${(product.price / 100).toFixed(2)}</p>
@@ -3323,7 +3323,7 @@ const HeroManager = ({ products }: { products: Product[] }) => {
                   <div className="flex gap-4">
                     <div className="w-16 h-16 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 relative">
                       {collection.imageUrl ? (
-                        <Image src={collection.imageUrl} alt={collection.title} fill className="object-cover" />
+                        <Image src={getCleanImageUrl(collection.imageUrl, 'collections')} alt={collection.title} fill className="object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full text-gray-400">
                           <Box size={24} />

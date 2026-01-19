@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AuthBarrier } from './AuthBarrier';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 export const CartDrawer: React.FC = () => {
   const { isCartOpen, setIsCartOpen, cart, removeFromCart, user } = useStore();
@@ -108,7 +108,7 @@ export const CartDrawer: React.FC = () => {
                       <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 dark:bg-dark-surface">
                         {item.imageUrl ? (
                           <Image
-                            src={item.imageUrl}
+                            src={getCleanImageUrl(item.imageUrl)}
                             alt={item.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"

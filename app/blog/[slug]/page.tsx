@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, User, Tag, Share2, Clock, ArrowRight, Facebook, Tw
 import { notFound } from 'next/navigation';
 import { BlogPost } from '../../../types';
 import { AdminEditButton } from '../../../components/AdminEditButton';
+import { getCleanImageUrl, getAbsoluteImageUrl } from '../../../utils/urlHelpers';
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -52,13 +53,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             type: 'article',
             publishedTime: post.createdAt?.toDate ? new Date(post.createdAt.toDate()).toISOString() : undefined,
             authors: [post.authorName],
-            images: post.coverImage ? [post.coverImage] : [],
+            images: post.coverImage ? [getAbsoluteImageUrl(post.coverImage, 'blog')] : [],
         },
         twitter: {
             card: 'summary_large_image',
             title: post.title,
             description: post.excerpt,
-            images: post.coverImage ? [post.coverImage] : [],
+            images: post.coverImage ? [getAbsoluteImageUrl(post.coverImage, 'blog')] : [],
         },
     };
 }
@@ -176,7 +177,7 @@ export default async function BlogPostPage({ params }: Props) {
                     <figure key={index} className="my-10 group">
                         <div className="rounded-2xl overflow-hidden shadow-lg bg-gray-100 dark:bg-dark-surface relative aspect-video">
                             <Image
-                                src={imgMatch[2]}
+                                src={getCleanImageUrl(imgMatch[2], 'blog')}
                                 alt={imgMatch[1]}
                                 fill
                                 className="object-cover transform group-hover:scale-[1.02] transition-transform duration-700"
@@ -243,7 +244,7 @@ export default async function BlogPostPage({ params }: Props) {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: post.title,
-        image: post.coverImage ? [post.coverImage] : [],
+        image: post.coverImage ? [getAbsoluteImageUrl(post.coverImage, 'blog')] : [],
         datePublished: post.createdAt?.toDate ? new Date(post.createdAt.toDate()).toISOString() : undefined,
         dateModified: post.updatedAt?.toDate ? new Date(post.updatedAt.toDate()).toISOString() : undefined,
         author: [{
@@ -334,7 +335,7 @@ export default async function BlogPostPage({ params }: Props) {
                         {post.coverImage && (
                             <div className="mb-12 rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50 dark:shadow-black/50 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 relative aspect-[16/9]">
                                 <Image
-                                    src={post.coverImage}
+                                    src={getCleanImageUrl(post.coverImage, 'blog')}
                                     alt={post.title}
                                     fill
                                     priority
@@ -429,7 +430,7 @@ export default async function BlogPostPage({ params }: Props) {
                                         <div className="w-1/3 sm:w-full aspect-[4/3] relative overflow-hidden bg-gray-100 dark:bg-dark-bg shrink-0">
                                             {relatedPost.coverImage ? (
                                                 <Image
-                                                    src={relatedPost.coverImage}
+                                                    src={getCleanImageUrl(relatedPost.coverImage, 'blog')}
                                                     alt={relatedPost.title}
                                                     fill
                                                     sizes="(max-width: 768px) 33vw, (max-width: 1200px) 50vw, 25vw"

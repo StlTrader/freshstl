@@ -5,6 +5,7 @@ import { Product } from '../../../types';
 import ProductDetails from '../../../components/ProductDetails';
 import { AdminEditButton } from '../../../components/AdminEditButton';
 import { Metadata } from 'next';
+import { getCleanImageUrl, getAbsoluteImageUrl } from '../../../utils/urlHelpers';
 
 export const revalidate = 60;
 
@@ -88,7 +89,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             type: 'website',
             images: [
                 {
-                    url: product.imageUrl,
+                    url: getAbsoluteImageUrl(product.imageUrl, product.category),
                     width: 800,
                     height: 600,
                     alt: product.name,
@@ -99,7 +100,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             card: 'summary_large_image',
             title: product.name,
             description: product.description.substring(0, 160),
-            images: [product.imageUrl],
+            images: [getAbsoluteImageUrl(product.imageUrl, product.category)],
         },
     };
 }
@@ -112,11 +113,18 @@ export default async function ProductPage({ params }: PageProps) {
         notFound();
     }
 
+    // Clean URLs
+    product.imageUrl = getCleanImageUrl(product.imageUrl, product.category);
+    if (product.images) {
+        const category = product.category;
+        product.images = product.images.map(img => getCleanImageUrl(img, category));
+    }
+
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.name,
-        image: product.imageUrl,
+        image: getAbsoluteImageUrl(product.imageUrl, product.category),
         description: product.description,
         offers: {
             '@type': 'Offer',

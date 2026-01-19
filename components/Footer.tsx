@@ -24,13 +24,31 @@ export const Footer: React.FC = () => {
                             Premium 3D models for makers, designers, and hobbyists. Bring your ideas to life with our curated collection of high-quality STL files.
                         </p>
                         <div className="flex space-x-4">
-                            <a href="#" className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors">
+                            <a
+                                href="https://twitter.com/freshstl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors"
+                                aria-label="Follow FreshSTL on Twitter"
+                            >
                                 <Twitter className="w-5 h-5" />
                             </a>
-                            <a href="#" className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors">
+                            <a
+                                href="https://instagram.com/freshstl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors"
+                                aria-label="Follow FreshSTL on Instagram"
+                            >
                                 <Instagram className="w-5 h-5" />
                             </a>
-                            <a href="#" className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors">
+                            <a
+                                href="https://github.com/freshstl"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-400 hover:text-social-black dark:hover:text-white transition-colors"
+                                aria-label="Follow FreshSTL on GitHub"
+                            >
                                 <Github className="w-5 h-5" />
                             </a>
                         </div>

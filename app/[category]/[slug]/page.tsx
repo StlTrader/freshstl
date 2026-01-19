@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Product, Review } from '../../../types';
 import ProductDetails from '../../../components/ProductDetails';
 import { AdminEditButton } from '../../../components/AdminEditButton';
-import { getCleanImageUrl, getProductUrl } from '../../../utils/urlHelpers';
+import { getCleanImageUrl, getProductUrl, getAbsoluteImageUrl } from '../../../utils/urlHelpers';
 
 interface Props {
     params: Promise<{ category: string; slug: string }>;
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const isDraft = product.status === 'draft';
 
-    const cleanImageUrl = getCleanImageUrl(product.imageUrl, product.category);
+    const absoluteImageUrl = getAbsoluteImageUrl(product.imageUrl, product.category);
 
     return {
         title: `${product.name} | FreshSTL`,
@@ -47,13 +47,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         openGraph: {
             title: product.name,
             description: product.description,
-            images: cleanImageUrl ? [cleanImageUrl] : [],
+            images: absoluteImageUrl ? [absoluteImageUrl] : [],
         },
         twitter: {
             card: 'summary_large_image',
             title: product.name,
             description: product.description,
-            images: cleanImageUrl ? [cleanImageUrl] : [],
+            images: absoluteImageUrl ? [absoluteImageUrl] : [],
         },
     };
 }
@@ -176,7 +176,7 @@ export default async function ProductPage({ params }: Props) {
             {
                 '@type': 'Product',
                 name: product.name,
-                image: product.images || [product.imageUrl],
+                image: product.images?.map(img => getAbsoluteImageUrl(img, product.category)) || [getAbsoluteImageUrl(product.imageUrl, product.category)],
                 description: product.description,
                 brand: {
                     '@type': 'Brand',

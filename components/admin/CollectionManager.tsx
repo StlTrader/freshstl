@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Save, X, Image as ImageIcon, Sparkles, Search, Chec
 import { Collection, Product } from '../../types';
 import * as firebaseService from '../../services/firebaseService';
 import Image from 'next/image';
+import { getCleanImageUrl } from '../../utils/urlHelpers';
 
 interface CollectionManagerProps {
     products: Product[];
@@ -168,7 +169,7 @@ const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
                     return;
                 }
                 console.log("Collage Blob created, size:", blob.size);
-                
+
                 const user = firebaseService.auth?.currentUser;
                 console.log("Current User:", user?.uid);
 
@@ -271,7 +272,7 @@ const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
                                 <div className="flex gap-2 items-start">
                                     <div className="relative w-full h-48 bg-gray-100 dark:bg-dark-bg rounded-lg overflow-hidden border border-dashed border-gray-300 flex items-center justify-center">
                                         {currentCollection.imageUrl ? (
-                                            <Image src={currentCollection.imageUrl} alt="Cover" fill className="object-cover" />
+                                            <Image src={getCleanImageUrl(currentCollection.imageUrl)} alt="Cover" fill className="object-cover" />
                                         ) : (
                                             <span className="text-gray-400">No image</span>
                                         )}
@@ -320,7 +321,7 @@ const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
                                                 {currentCollection.productIds?.includes(product.id) && <Check size={14} />}
                                             </div>
                                             <div className="w-10 h-10 relative rounded overflow-hidden bg-gray-100">
-                                                <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                                                <Image src={getCleanImageUrl(product.imageUrl)} alt={product.name} fill className="object-cover" />
                                             </div>
                                             <span className="text-sm font-medium truncate flex-1">{product.name}</span>
                                         </div>
@@ -350,7 +351,7 @@ const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
                         <div key={collection.id} className="bg-white dark:bg-dark-surface rounded-2xl border border-gray-200 dark:border-dark-border overflow-hidden group hover:shadow-lg transition-all">
                             <div className="relative h-48 bg-gray-100">
                                 {collection.imageUrl ? (
-                                    <Image src={collection.imageUrl} alt={collection.title} fill className="object-cover" />
+                                    <Image src={getCleanImageUrl(collection.imageUrl)} alt={collection.title} fill className="object-cover" />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
                                 )}

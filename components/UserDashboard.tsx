@@ -32,7 +32,7 @@ import { getStripe } from '../services/paymentService';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import { SUPPORTED_COUNTRIES } from '../constants';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 interface UserDashboardProps {
   user: User | null;
@@ -288,7 +288,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
         <div className="flex items-center gap-3 bg-white dark:bg-dark-surface p-2 rounded-lg border border-gray-200 dark:border-dark-border shadow-sm">
           <div className="relative w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold text-lg overflow-hidden">
             {avatarPreview ? (
-              <Image src={avatarPreview} alt="Profile" fill className="object-cover" sizes="128px" />
+              <Image src={getCleanImageUrl(avatarPreview)} alt="Profile" fill className="object-cover" sizes="128px" />
             ) : user?.displayName ? (
               user.displayName.charAt(0).toUpperCase()
             ) : (
@@ -355,7 +355,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       <Link href={getProductUrl({ category: product?.category || 'misc', slug: product?.slug || purchase.productId })} className="block w-full h-full">
                         {product?.imageUrl ? (
                           <Image
-                            src={product.imageUrl}
+                            src={getCleanImageUrl(product.imageUrl)}
                             alt={purchase.productName}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -489,7 +489,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       <Link href={getProductUrl({ category: product.category, slug: product.slug })} className="block w-full h-full">
                         {product.imageUrl ? (
                           <Image
-                            src={product.imageUrl}
+                            src={getCleanImageUrl(product.imageUrl)}
                             alt={product.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -649,7 +649,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                     <div className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-dark-border flex items-center justify-center overflow-hidden border-4 border-white dark:border-dark-border shadow-md shrink-0">
                       {avatarPreview ? (
-                        <Image src={avatarPreview} alt="Profile Preview" fill className="object-cover" sizes="128px" />
+                        <Image src={getCleanImageUrl(avatarPreview)} alt="Profile Preview" fill className="object-cover" sizes="128px" />
                       ) : (
                         <UserIcon size={40} className="text-gray-400" />
                       )}

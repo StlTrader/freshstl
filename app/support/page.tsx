@@ -6,6 +6,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Support Center | FreshSTL',
     description: 'Get help with your orders, downloads, and 3D printing questions. Contact our support team or browse our FAQs.',
+    alternates: {
+        canonical: 'https://freshstl.com/support',
+    },
 };
 
 export default function SupportPage() {

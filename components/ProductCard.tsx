@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Product } from '../types';
 import { Plus, Eye, Heart, ShoppingCart, Download } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
-import { getProductUrl } from '../utils/urlHelpers';
+import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
 
 interface ProductCardProps {
     product: Product;
@@ -16,11 +16,13 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const router = useRouter();
     const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen } = useStore();
-    const [activeImage, setActiveImage] = useState(product.imageUrl);
+
+    const mainImage = getCleanImageUrl(product.imageUrl, product.category);
+    const [activeImage, setActiveImage] = useState(mainImage);
 
     // Combine main image and additional images for the carousel
     // Ensure unique images
-    const allImages = [product.imageUrl, ...(product.images || [])].filter((v, i, a) => a.indexOf(v) === i && v);
+    const allImages = [mainImage, ...(product.images || []).map(img => getCleanImageUrl(img, product.category))].filter((v, i, a) => a.indexOf(v) === i && v);
 
     return (
         <div className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer bg-transparent border border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-social-light-hover dark:hover:bg-social-dark-hover transition-all duration-200">
@@ -30,7 +32,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {activeImage ? (
                         <Image
                             src={activeImage}
-                            alt={product.name}
+                            alt={`3D model of ${product.name}`}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
                             className="object-cover transform transition-transform duration-500 group-hover:scale-105"

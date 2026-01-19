@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BlogPost } from '../types';
 import { ArrowRight, GraduationCap, Calendar, User, Tag } from 'lucide-react';
+import { getCleanImageUrl } from '../utils/urlHelpers';
 
 interface LearningHubProps {
     posts: BlogPost[];
@@ -46,7 +47,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ posts }) => {
                             <div className="absolute inset-0 bg-gray-200 dark:bg-dark-bg">
                                 {post.coverImage ? (
                                     <Image
-                                        src={post.coverImage}
+                                        src={getCleanImageUrl(post.coverImage)}
                                         alt={post.title}
                                         fill
                                         sizes="(max-width: 768px) 300px, 320px"

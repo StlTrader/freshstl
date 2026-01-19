@@ -33,10 +33,6 @@ const nextConfig = {
                 destination: 'https://firebasestorage.googleapis.com/v0/b/freshstlstore-99511217-ca510.firebasestorage.app/o/products%2F:category%2F:slug%2Fpublic%2F:type%2F:filename?alt=media',
             },
             {
-                source: '/assets/:category/:slug/:type/:filename',
-                destination: 'https://firebasestorage.googleapis.com/v0/b/freshstlstore-99511217-ca510.firebasestorage.app/o/products%2F:category%2F:slug%2Fpublic%2F:type%2F:filename?alt=media',
-            },
-            {
                 source: '/assets/:category/:filename',
                 destination: 'https://firebasestorage.googleapis.com/v0/b/freshstlstore-99511217-ca510.firebasestorage.app/o/:category%2F:filename?alt=media',
             },
