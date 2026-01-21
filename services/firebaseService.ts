@@ -164,7 +164,7 @@ let isMockFallback = false;
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC0z4o3dtUuSdeQt4ENzgQ3ey5TQhyWKes",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "freshstl.com",
+  authDomain: "freshstl.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "freshstlstore-99511217-ca510",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "freshstlstore-99511217-ca510.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1086916049812",
