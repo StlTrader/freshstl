@@ -29,6 +29,10 @@ const nextConfig = {
     async rewrites() {
         return [
             {
+                source: '/__/auth/:path*',
+                destination: 'https://freshstlstore-99511217-ca510.firebaseapp.com/__/auth/:path*',
+            },
+            {
                 source: '/assets/:category/:slug/:type/:filename',
                 destination: 'https://firebasestorage.googleapis.com/v0/b/freshstlstore-99511217-ca510.firebasestorage.app/o/products%2F:category%2F:slug%2Fpublic%2F:type%2F:filename?alt=media',
             },
