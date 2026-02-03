@@ -28,16 +28,31 @@ export const formatPrice = (amountInCents: number, currency: string = 'USD'): st
  * Defaults to 'USD'.
  */
 export const detectCurrency = async (): Promise<string> => {
+    // 1. Try GeoIP with a timeout to prevent long hangs or NetworkErrors
     try {
-        // Simple GeoIP check
-        const response = await fetch('https://ipapi.co/json/');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
+        const response = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         const data = await response.json();
 
         if (data.country === 'TN') {
             return 'TND';
         }
     } catch (error) {
-        console.error('Failed to detect location:', error);
+        console.warn('GeoIP detection failed or timed out. Falling back to timezone/default.', error);
+    }
+
+    // 2. Secondary fallback: Check browser timezone
+    try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (timezone.includes('Tunis') || timezone.includes('Africa/Tunis')) {
+            return 'TND';
+        }
+    } catch (e) {
+        // Ignore timezone errors
     }
 
     return 'USD';
