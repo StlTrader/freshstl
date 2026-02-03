@@ -11,6 +11,7 @@ import * as firebaseService from '../services/firebaseService';
 import { getStripeConfig } from '../services/paymentService';
 import { ProductCardSkeleton, Skeleton } from './LoadingSkeleton';
 import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface ProductDetailsProps {
     product: Product;
@@ -20,7 +21,7 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product, initialRelatedProducts = [], initialReviews = [] }: ProductDetailsProps) {
     const router = useRouter();
-    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user, isAuthReady } = useStore();
+    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, user, isAuthReady, currency } = useStore();
     const [reviews, setReviews] = useState<Review[]>(initialReviews);
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
@@ -365,9 +366,8 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
                             <div className="bg-white dark:bg-dark-surface rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-dark-border">
                                 <div className="flex items-end gap-2 mb-5">
                                     <span className="text-4xl font-black text-social-black dark:text-white tracking-tight">
-                                        ${(product.price / 100).toFixed(2)}
+                                        {formatPrice(product.price, currency)}
                                     </span>
-                                    <span className="text-gray-500 dark:text-gray-400 font-medium mb-1.5">USD</span>
                                 </div>
 
                                 <div className="space-y-3">
@@ -700,9 +700,8 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
 
                                 <div className="flex items-end gap-2 mb-8">
                                     <span className="text-5xl font-black text-social-black dark:text-white tracking-tight">
-                                        ${(product.price / 100).toFixed(2)}
+                                        {formatPrice(product.price, currency)}
                                     </span>
-                                    <span className="text-gray-500 dark:text-gray-400 font-medium mb-2">USD</span>
                                 </div>
 
                                 <button

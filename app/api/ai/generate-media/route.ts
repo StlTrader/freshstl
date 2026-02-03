@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
         }
 
         const isTextOnly = context === 'asset_generation';
-        // Use flash model for text tasks, pro-image-preview for image tasks
-        const model = isTextOnly ? 'gemini-2.0-flash-exp' : 'gemini-3-pro-image-preview';
+        // Use flash model for both text and image tasks as it's reliable
+        const model = 'gemini-2.0-flash-exp';
 
         const tools = [
             {
@@ -30,11 +30,9 @@ export async function POST(req: NextRequest) {
         ];
 
         const config = {
-            responseModalities: isTextOnly ? ['TEXT'] : ['IMAGE', 'TEXT'] as any,
-            imageConfig: isTextOnly ? undefined : {
-                imageSize: '1K',
-            },
-            tools: isTextOnly ? undefined : tools, // Tools might not be needed for simple text gen
+            // gemini-2.0-flash-exp primarily outputs text in this SDK.
+            // Image generation typically requires Imagen via Vertex AI.
+            responseModalities: ['TEXT'] as any,
         };
 
         const parts: any[] = [{ text: prompt }];

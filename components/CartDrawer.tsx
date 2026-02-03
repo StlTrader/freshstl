@@ -9,9 +9,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { AuthBarrier } from './AuthBarrier';
 import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
+import { formatPrice } from '../utils/currencyHelpers';
 
 export const CartDrawer: React.FC = () => {
-  const { isCartOpen, setIsCartOpen, cart, removeFromCart, user } = useStore();
+  const { isCartOpen, setIsCartOpen, cart, removeFromCart, user, currency } = useStore();
   const router = useRouter();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -140,7 +141,7 @@ export const CartDrawer: React.FC = () => {
 
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-bold text-lg text-brand-600 dark:text-brand-400">
-                          ${(item.price / 100).toFixed(2)}
+                          {formatPrice(item.price, currency)}
                         </span>
                       </div>
                     </div>
@@ -167,11 +168,11 @@ export const CartDrawer: React.FC = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center justify-between text-gray-500 dark:text-gray-400">
                   <span>Subtotal</span>
-                  <span>${(subtotal / 100).toFixed(2)}</span>
+                  <span>{formatPrice(subtotal, currency)}</span>
                 </div>
                 <div className="flex items-center justify-between text-xl font-bold text-gray-900 dark:text-white pt-3 border-t border-gray-100 dark:border-dark-border">
                   <span>Total</span>
-                  <span>${(total / 100).toFixed(2)}</span>
+                  <span>{formatPrice(total, currency)}</span>
                 </div>
               </div>
 

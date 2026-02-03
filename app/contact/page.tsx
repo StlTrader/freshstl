@@ -45,14 +45,26 @@ export default function ContactPage() {
 
                     <div className="mt-12 pt-12 border-t border-gray-100 dark:border-dark-border">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-4 flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-gray-400" /> Business Address
+                            <MapPin className="w-5 h-5 text-gray-400" /> Business Information
                         </h3>
-                        <address className="not-italic text-gray-600 dark:text-dark-text-secondary">
-                            FreshSTL Ltd.<br />
-                            123 Maker Street, Suite 404<br />
-                            Digital City, DC 10101<br />
-                            United Kingdom
-                        </address>
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 className="font-bold text-gray-900 dark:text-dark-text-primary mb-2 text-sm uppercase tracking-wider">Registered Address</h4>
+                                <address className="not-italic text-gray-600 dark:text-dark-text-secondary leading-relaxed">
+                                    Yassine Bouomrine (Auto-entrepreneur)<br />
+                                    Near Abassi St, Bir Lahmar<br />
+                                    3212 Tataouine<br />
+                                    Tunisia
+                                </address>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-gray-900 dark:text-dark-text-primary mb-2 text-sm uppercase tracking-wider">Legal Details</h4>
+                                <p className="text-gray-600 dark:text-dark-text-secondary text-sm">
+                                    <strong>RNE Identifier:</strong> 1905292R<br />
+                                    <strong>Activity:</strong> Retail trade via display and markets
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

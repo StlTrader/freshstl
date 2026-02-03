@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { User } from 'firebase/auth';
 import { Product, CartItem, Purchase, Order } from '../types';
 import * as firebaseService from '../services/firebaseService';
-
+import { detectCurrency } from '../utils/currencyHelpers';
 import * as paymentService from '../services/paymentService';
 
 interface SystemStatus {
@@ -24,6 +24,7 @@ interface StoreContextType {
     systemStatus: SystemStatus;
     isLoadingPurchases: boolean;
     isAuthReady: boolean;
+    currency: string;
 
     // Actions
     toggleTheme: () => void;
@@ -68,6 +69,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const [systemStatus, setSystemStatus] = useState<SystemStatus>({ isOnline: false, storageMode: 'Checking...' });
     const [isAuthReady, setIsAuthReady] = useState(false);
+    const [currency, setCurrency] = useState('USD');
 
     // Theme State
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -178,6 +180,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             return () => clearTimeout(timeoutId);
         }
     }, [cart, user]);
+
+    // Currency Detection Effect
+    useEffect(() => {
+        const initCurrency = async () => {
+            const detected = await detectCurrency();
+            setCurrency(detected);
+        };
+        initCurrency();
+    }, []);
 
     // --- Handlers ---
 
@@ -306,6 +317,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             systemStatus,
             isLoadingPurchases,
             isAuthReady,
+            currency,
             toggleTheme,
             addToCart,
             removeFromCart,
@@ -337,6 +349,7 @@ export function useStore() {
             systemStatus: { isOnline: false, storageMode: 'unknown' },
             isLoadingPurchases: false,
             isAuthReady: false,
+            currency: 'USD',
             toggleTheme: () => { },
             addToCart: () => { },
             removeFromCart: () => { },

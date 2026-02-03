@@ -20,23 +20,55 @@ export default function TermsPage() {
                 </div>
 
                 <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 md:p-12 border border-gray-200 dark:border-dark-border shadow-sm prose dark:prose-invert max-w-none text-gray-600 dark:text-dark-text-secondary">
-                    <h3>1. Acceptance of Terms</h3>
-                    <p>By accessing and using freshstl.com, you accept and agree to be bound by the terms and provision of this agreement. These terms apply to all visitors, users, and others who access or use the Service.</p>
+                    <p className="text-sm font-medium text-gray-400 mb-8 uppercase tracking-wider">General Terms and Conditions of Sale (GTC)</p>
 
-                    <h3>2. Digital Products</h3>
-                    <p>All products sold on freshstl.com are digital files (STL/GLB format) intended for 3D printing. No physical products will be shipped. Access to purchased files is granted immediately upon successful payment.</p>
+                    <h3>1. Object and Seller Identity</h3>
+                    <p>
+                        These terms govern the sale of 3D models (digital) and 3D prints (physical goods) via freshstl.com. <br />
+                        <strong>Seller:</strong> Yassine Bouomrine (Auto-entrepreneur)<br />
+                        <strong>Address:</strong> Near Abassi St, Bir Lahmar, 3212 Tataouine, Tunisia<br />
+                        <strong>Unique Identifier (RNE):</strong> 1905292R
+                    </p>
 
-                    <h3>3. Refund Policy</h3>
-                    <p>Due to the nature of digital goods, <strong>all sales are final</strong>. We do not offer refunds once the files have been downloaded or accessed, except in cases where the file is technically defective and cannot be fixed by our support team.</p>
+                    <h3>2. Products</h3>
+                    <p>
+                        FreshSTL offers:
+                        <ul className="list-disc pl-6">
+                            <li><strong>Digital Goods:</strong> 3D files (STL/GLB format) for personal or commercial use (as specified by the license).</li>
+                            <li><strong>Physical Goods:</strong> On-demand 3D printed objects.</li>
+                        </ul>
+                    </p>
 
-                    <h3>4. User Accounts</h3>
-                    <p>You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password. You agree not to disclose your password to any third party.</p>
+                    <h3>3. Pricing and Payments</h3>
+                    <p>
+                        Prices are displayed in the applicable currency. All payments are securely processed through <strong>Flouci</strong>.
+                        We support <strong>Visa, Mastercard, and Click to Pay</strong>.
+                        Access to digital files is granted immediately upon successful payment. Physical items will be processed after payment confirmation.
+                    </p>
 
-                    <h3>5. Modifications</h3>
-                    <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms.</p>
+                    <h3>4. Delivery</h3>
+                    <ul className="list-disc pl-6 space-y-2">
+                        <li><strong>Digital Files:</strong> Available via direct download link in your account and via email.</li>
+                        <li><strong>Physical Prints:</strong> Shipped via local Tunisian couriers from Bir Lahmar, Tataouine. Estimated delivery times are provided at checkout based on production time and carrier schedules.</li>
+                    </ul>
+
+                    <h3>5. Right of Withdrawal and Refunds (Tunisian Law No. 2000-83)</h3>
+                    <p>In accordance with Article 30 and 31 of Law No. 2000-83:</p>
+                    <ul className="list-disc pl-6 space-y-2">
+                        <li><strong>Digital Goods:</strong> By commencing the download or accessing the file, you expressly waive your right of withdrawal. All digital sales are final.</li>
+                        <li><strong>Personalized Physical Prints:</strong> Products made to customer specifications or clearly personalized are exempt from the right of withdrawal and are non-refundable unless defective.</li>
+                        <li><strong>Standard Physical Prints:</strong> Customers have a period of 10 working days from receipt to exercise their right of withdrawal for non-personalized items.</li>
+                        <li><strong>Defects:</strong> If a file is technicaly defective or a physical item arrives damaged, we will offer a replacement or refund within 30 days.</li>
+                    </ul>
+
+                    <h3>6. Intellectual Property</h3>
+                    <p>Purchase of a digital model does not transfer ownership of the intellectual property. Users must comply with the specific license attached to each model (Standard, Royalty-Free, or Commercial).</p>
+
+                    <h3>7. Governing Law</h3>
+                    <p>These terms and conditions are governed by and construed in accordance with the laws of Tunisia. Any disputes shall be subject to the exclusive jurisdiction of the Tunisian courts.</p>
 
                     <div className="mt-8 pt-8 border-t border-gray-100 dark:border-dark-border text-sm text-gray-500">
-                        Last Updated: December 2025
+                        Last Updated: February 2025
                     </div>
                 </div>
 

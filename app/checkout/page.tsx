@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { StripeCheckout } from '../../components/StripeCheckout';
 import * as firebaseService from '../../services/firebaseService';
 import { SUPPORTED_COUNTRIES } from '../../constants';
+import { formatPrice } from '../../utils/currencyHelpers';
 
 interface CustomerInfo {
     fullName: string;
@@ -21,7 +22,7 @@ interface CustomerInfo {
 }
 
 export default function CheckoutPage() {
-    const { cart, user, processCheckout, clearCart } = useStore();
+    const { cart, user, processCheckout, clearCart, currency } = useStore();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -261,7 +262,7 @@ export default function CheckoutPage() {
                                         <div className="flex-1">
                                             <h4 className="font-medium text-gray-900 dark:text-white line-clamp-1">{item.name}</h4>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">{item.category}</p>
-                                            <p className="text-sm font-semibold text-brand-600 dark:text-brand-400 mt-1">${(item.price / 100).toFixed(2)}</p>
+                                            <p className="text-sm font-semibold text-brand-600 dark:text-brand-400 mt-1">{formatPrice(item.price, currency)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -280,11 +281,11 @@ export default function CheckoutPage() {
                             <div className="mb-6 p-4 bg-gray-50 dark:bg-dark-bg rounded-xl border border-gray-200 dark:border-dark-border">
                                 <div className="flex justify-between text-sm mb-2 text-gray-600 dark:text-gray-400">
                                     <span>Subtotal</span>
-                                    <span>${(subtotal / 100).toFixed(2)}</span>
+                                    <span>{formatPrice(subtotal, currency)}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white pt-3 border-t border-gray-200 dark:border-dark-border">
                                     <span>Total</span>
-                                    <span>${(total / 100).toFixed(2)}</span>
+                                    <span>{formatPrice(total, currency)}</span>
                                 </div>
                             </div>
 

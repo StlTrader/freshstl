@@ -266,7 +266,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
     const [loadingMethods, setLoadingMethods] = useState(true);
     const [saveCard, setSaveCard] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
-    const { isDarkMode, user } = useStore();
+    const { isDarkMode, user, currency } = useStore();
 
     // Fetch saved methods and check admin status on mount
     useEffect(() => {
@@ -322,7 +322,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
 
                 const result = await paymentService.createPaymentIntent(
                     amount,
-                    'usd',
+                    currency.toLowerCase(),
                     customerInfo,
                     useNewCard ? saveCard : false, // Only save if using new card
                     isUsingSaved ? selectedMethodId! : undefined,

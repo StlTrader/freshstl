@@ -54,6 +54,8 @@ import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { getStoragePathForUpload, getCleanImageUrl } from '../utils/urlHelpers';
+import { useStore } from '../contexts/StoreContext';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface AdminPanelProps {
   products: Product[];
@@ -66,6 +68,7 @@ type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'se
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initialTab, initialEditId }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab || 'dashboard');
+  const { currency } = useStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -444,7 +447,7 @@ const DashboardView = ({ products, orders }: { products: Product[], orders: Orde
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
-          value={`$${(totalRevenue / 100).toFixed(2)}`}
+          value={formatPrice(totalRevenue, currency)}
           icon={<DollarSign className="text-emerald-500" size={24} />}
           trend="+12.5% from last week"
           delay={0}
@@ -495,7 +498,7 @@ const DashboardView = ({ products, orders }: { products: Product[], orders: Orde
                 </div>
               </div>
               <span className="font-bold text-gray-900 dark:text-dark-text-primary bg-white dark:bg-dark-surface px-3 py-1 rounded-lg shadow-sm group-hover:shadow border border-gray-100 dark:border-gray-700">
-                ${(order.amount / 100).toFixed(2)}
+                {formatPrice(order.amount, currency)}
               </span>
             </div>
           ))}
@@ -1140,7 +1143,8 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
           preview: URL.createObjectURL(file)
         }]);
         // Set the model name to what we are now using
-        setCurrentProduct(prev => ({ ...prev, aiModel: 'Gemini 3 Pro Image' }));
+        setCurrentProduct(prev => ({ ...prev, aiModel: 'Gemini 2.0 Flash' }));
+
       }
 
     } catch (error: any) {
@@ -1312,7 +1316,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Price ($)</label>
+              <label className="block text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-1">Price ({currency === 'usd' ? '$' : 'DT'})</label>
               <input
                 type="number"
                 step="0.01"
@@ -1776,7 +1780,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mb-1">{product.description}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <span className="font-mono font-bold text-gray-900 dark:text-dark-text-primary">${(product.price / 100).toFixed(2)}</span>
+                  <span className="font-mono font-bold text-gray-900 dark:text-dark-text-primary">{formatPrice(product.price, currency)}</span>
                   <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">{product.category}</span>
                   <div className="flex items-center gap-1 text-xs text-emerald-600 ml-auto">
                     <TrendingUp size={12} /> {product.sales || 0}
@@ -1847,7 +1851,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono font-medium text-gray-700 dark:text-dark-text-secondary">${(product.price / 100).toFixed(2)}</td>
+                  <td className="px-6 py-4 font-mono font-medium text-gray-700 dark:text-dark-text-secondary">{formatPrice(product.price, currency)}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 text-gray-700 dark:text-dark-text-secondary">
                       <TrendingUp size={14} className="text-emerald-500" />
@@ -1955,7 +1959,7 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
                   <div className="text-xs text-gray-500">{order.date ? order.date.toDate().toLocaleString() : 'N/A'}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
+                  <div className="font-bold text-gray-900 dark:text-dark-text-primary">{formatPrice(order.amount, currency)}</div>
                   <select
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
@@ -2053,7 +2057,7 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-bold text-gray-900 dark:text-dark-text-primary font-mono">${(order.amount / 100).toFixed(2)}</td>
+                  <td className="px-6 py-4 font-bold text-gray-900 dark:text-dark-text-primary font-mono">{formatPrice(order.amount, currency)}</td>
                   <td className="px-6 py-4 font-mono text-xs text-gray-500 select-all">
                     {order.paymentId || 'N/A'}
                     {order.isTest && (
@@ -2125,6 +2129,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
 
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUser, setNewUser] = useState({ email: '', displayName: '', role: 'customer', password: '' });
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = firebaseService.subscribeToAllUsers((data) => {
@@ -2240,7 +2245,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
 
                   <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 mb-3">
                     <span className="flex items-center gap-1"><ShoppingCart size={12} /> {userOrders.length} Orders</span>
-                    <span className="font-bold text-emerald-600">${(totalSpent / 100).toFixed(2)}</span>
+                    <span className="font-bold text-emerald-600">{formatPrice(totalSpent, currency)}</span>
                   </div>
 
                   <div className="flex gap-2">
@@ -2326,7 +2331,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right font-mono font-bold text-gray-900 dark:text-dark-text-primary">
-                      ${(totalSpent / 100).toFixed(2)}
+                      {formatPrice(totalSpent, currency)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -2489,50 +2494,60 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                                 : 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800'}`}
                           >
                             {selectedUser.role || 'Customer'}
-                            <Edit size={10} className="opacity-50" />
+                            {updatingRoleId === selectedUser.id ? (
+                              <Loader2 size={10} className="animate-spin" />
+                            ) : (
+                              <Edit size={10} className="opacity-50" />
+                            )}
                           </button>
 
                           {/* Role Dropdown */}
                           <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-dark-surface rounded-lg shadow-xl border border-gray-200 dark:border-dark-border overflow-hidden opacity-0 invisible group-hover/role:opacity-100 group-hover/role:visible transition-all z-20">
                             <button
+                              disabled={updatingRoleId !== null}
                               onClick={async () => {
                                 if (confirm(`Change role to Customer?`)) {
                                   try {
+                                    setUpdatingRoleId(selectedUser.id);
                                     await firebaseService.updateUserRole(selectedUser.id, 'customer');
                                     setSelectedUser({ ...selectedUser, role: 'customer' });
                                     alert('Role updated to Customer');
-                                  } catch (e: any) { alert(e.message); }
+                                  } catch (e: any) { alert(e.message); } finally { setUpdatingRoleId(null); }
                                 }
                               }}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-gray-700 dark:text-dark-text-primary"
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-gray-700 dark:text-dark-text-primary disabled:opacity-50"
                             >
                               Customer
                             </button>
                             <button
+                              disabled={updatingRoleId !== null}
                               onClick={async () => {
                                 if (confirm(`Change role to Tester?`)) {
                                   try {
+                                    setUpdatingRoleId(selectedUser.id);
                                     await firebaseService.updateUserRole(selectedUser.id, 'tester');
                                     setSelectedUser({ ...selectedUser, role: 'tester' });
                                     alert('Role updated to Tester');
-                                  } catch (e: any) { alert(e.message); }
+                                  } catch (e: any) { alert(e.message); } finally { setUpdatingRoleId(null); }
                                 }
                               }}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-indigo-600 dark:text-indigo-400 font-medium"
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-indigo-600 dark:text-indigo-400 font-medium disabled:opacity-50"
                             >
                               Tester
                             </button>
                             <button
+                              disabled={updatingRoleId !== null}
                               onClick={async () => {
                                 if (confirm(`Change role to Admin?`)) {
                                   try {
+                                    setUpdatingRoleId(selectedUser.id);
                                     await firebaseService.updateUserRole(selectedUser.id, 'admin');
                                     setSelectedUser({ ...selectedUser, role: 'admin' });
                                     alert('Role updated to Admin');
-                                  } catch (e: any) { alert(e.message); }
+                                  } catch (e: any) { alert(e.message); } finally { setUpdatingRoleId(null); }
                                 }
                               }}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-purple-600 dark:text-purple-400 font-medium"
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-bg text-purple-600 dark:text-purple-400 font-medium disabled:opacity-50"
                             >
                               Admin
                             </button>
@@ -2632,7 +2647,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                             </NextLink>
                             <div className="flex-1 min-w-0">
                               <div className="font-bold text-gray-900 dark:text-dark-text-primary truncate">{item.name}</div>
-                              <div className="text-sm font-medium text-brand-600 dark:text-brand-400">${(item.price / 100).toFixed(2)}</div>
+                              <div className="text-sm font-medium text-brand-600 dark:text-brand-400">{formatPrice(item.price, currency)}</div>
                             </div>
                           </div>
                         ))}
@@ -2665,7 +2680,7 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
                                 <div className="text-xs text-gray-500 mt-0.5">{order.date ? new Date(order.date.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                               </div>
                               <div className="text-right">
-                                <div className="font-bold text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
+                                <div className="font-bold text-gray-900 dark:text-dark-text-primary">{formatPrice(order.amount, currency)}</div>
                                 <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mt-1 inline-block ${order.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                   }`}>
                                   {order.status}

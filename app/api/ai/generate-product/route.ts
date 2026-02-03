@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
         // Remove data URL prefix if present to get raw base64
         const base64Image = image.replace(/^data:image\/(png|jpeg|webp);base64,/, '');
 
-        const model = 'gemini-3-flash-preview';
+        const model = 'gemini-2.0-flash-exp';
+
 
         const tools = [
             {
@@ -34,9 +35,6 @@ export async function POST(req: NextRequest) {
         ];
 
         const config = {
-            thinkingConfig: {
-                thinkingLevel: 'HIGH',
-            },
             tools,
         };
 

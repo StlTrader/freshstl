@@ -8,6 +8,7 @@ import { Product } from '../types';
 import { Plus, Eye, Heart, ShoppingCart, Download } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface ProductCardProps {
     product: Product;
@@ -15,7 +16,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const router = useRouter();
-    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen } = useStore();
+    const { addToCart, toggleWishlist, wishlist, purchases, cart, setIsCartOpen, currency } = useStore();
 
     const mainImage = getCleanImageUrl(product.imageUrl, product.category);
     const [activeImage, setActiveImage] = useState(mainImage);
@@ -106,7 +107,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </h3>
                 <div className="flex items-center mt-1 gap-2">
                     <span className="text-sm font-medium text-social-black dark:text-gray-300">
-                        ${(product.price / 100).toFixed(2)}
+                        {formatPrice(product.price, currency)}
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                         {product.category}

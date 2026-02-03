@@ -2456,6 +2456,11 @@ export const updateUserRole = async (userId: string, role: 'admin' | 'customer' 
 
   // Fallback to Firestore only if API fails
   await updateDoc(doc(db, 'users', userId), { role });
+
+  // Refresh token if it's the current user
+  if (auth?.currentUser?.uid === userId) {
+    await auth.currentUser.getIdToken(true);
+  }
 };
 
 // Send Order Confirmation Email (via Trigger Email Extension)
@@ -2668,6 +2673,10 @@ export const makeMeAdmin = async () => {
   try {
     const userRef = doc(db, 'users', auth.currentUser.uid);
     await setDoc(userRef, { role: 'admin' }, { merge: true });
+
+    // Refresh token to apply custom claims if any, or just to update client state
+    await auth.currentUser.getIdToken(true);
+
     console.log("Successfully updated user role to admin");
     alert("You are now an Admin! The page will reload.");
     window.location.reload();
