@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Trash2, ShoppingBag, ArrowRight, Lock } from 'lucide-react';
+import { formatPrice } from '../../utils/currencyHelpers';
 
 export default function CartPage() {
-    const { cart, removeFromCart, clearCart, processCheckout, user } = useStore();
+    const { cart, removeFromCart, clearCart, processCheckout, user, currency } = useStore();
     const router = useRouter();
 
     const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
@@ -67,7 +68,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="flex justify-between items-end">
                                         <div className="text-xl font-bold text-brand-600 dark:text-brand-400">
-                                            ${(item.price / 100).toFixed(2)}
+                                            {formatPrice(item.price, currency)}
                                         </div>
                                     </div>
                                 </div>
@@ -83,11 +84,11 @@ export default function CartPage() {
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
                                     <span>Subtotal</span>
-                                    <span>${(subtotal / 100).toFixed(2)}</span>
+                                    <span>{formatPrice(subtotal, currency)}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white pt-4 border-t border-gray-100 dark:border-dark-border">
                                     <span>Total</span>
-                                    <span>${(subtotal / 100).toFixed(2)}</span>
+                                    <span>{formatPrice(subtotal, currency)}</span>
                                 </div>
                             </div>
 

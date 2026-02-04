@@ -69,7 +69,7 @@ import {
   updatePassword,
   deleteUser as deleteAuthUser
 } from 'firebase/auth';
-import { Product, CartItem, Purchase, Order, Review, Coupon, Payment, CustomerInfo, Category, BuilderCategory, BuilderAsset, BlogPost, Collection } from '../types';
+import { Product, CartItem, Purchase, Order, Review, Coupon, Payment, CustomerInfo, Category, BuilderCategory, BuilderAsset, BlogPost, Collection, GlobalPaymentConfig } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // --- Configuration ---
@@ -2465,7 +2465,6 @@ export const updateUserRole = async (userId: string, role: 'admin' | 'customer' 
 
 // Send Order Confirmation Email (via Trigger Email Extension)
 export const sendOrderConfirmationEmail = async (
-  userId: string,
   email: string,
   orderData: any
 ): Promise<void> => {
@@ -2475,6 +2474,9 @@ export const sendOrderConfirmationEmail = async (
   }
 
   try {
+    const { detectCurrency, formatPrice } = await import('../utils/currencyHelpers');
+    const currency = await detectCurrency();
+
     const mailRef = collection(db, 'mail');
     await addDoc(mailRef, {
       to: email,
@@ -2483,10 +2485,10 @@ export const sendOrderConfirmationEmail = async (
         html: `
           <h1>Thank you for your purchase!</h1>
           <p>Order ID: ${orderData.transactionId}</p>
-          <p>Total: $${(orderData.amount / 100).toFixed(2)}</p>
+          <p>Total: ${formatPrice(orderData.amount, currency)}</p>
           <h3>Items:</h3>
           <ul>
-            ${orderData.items.map((item: any) => `<li>${item.name} - $${(item.price / 100).toFixed(2)}</li>`).join('')}
+            ${orderData.items.map((item: any) => `<li>${item.name} - ${formatPrice(item.price, currency)}</li>`).join('')}
           </ul>
           <p>You can download your files from your <a href="https://freshstl.com/dashboard">Dashboard</a>.</p>
         `
@@ -2652,17 +2654,78 @@ export const updateStripeConfig = async (config: any) => {
     testerEmails: config.testerEmails
     // EXCLUDE: secret keys, webhook secrets
   };
-  await setDoc(doc(db, 'settings', 'stripe_public'), publicConfig, { merge: true });
-
   // 3. Update Local Storage (Safe version only)
   // Security: Do NOT save secret keys to local storage
-  const safeConfig = { ...config };
-  delete safeConfig.testSecretKey;
-  delete safeConfig.liveSecretKey;
-  delete safeConfig.testWebhookSecret;
-  delete safeConfig.liveWebhookSecret;
+  localStorage.setItem('freshstl_stripe_config', JSON.stringify(publicConfig));
+};
 
-  localStorage.setItem('freshstl_stripe_config', JSON.stringify(safeConfig));
+// --- Global Flouci Configuration ---
+
+// For Admin Panel (Reads Secrets)
+export const subscribeToAdminFlouciConfig = (callback: (config: any) => void) => {
+  if (db) {
+    return onSnapshot(doc(db, 'settings', 'flouci'), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        callback({ isTestMode: true, isConnected: false });
+      }
+    });
+  }
+  return () => { };
+};
+
+// For Client App (Reads Public Only)
+export const subscribeToFlouciConfig = (callback: (config: any) => void) => {
+  if (db) {
+    return onSnapshot(doc(db, 'settings', 'flouci_public'), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        callback({ isTestMode: true, isConnected: false });
+      }
+    });
+  }
+  return () => { };
+};
+
+export const updateFlouciConfig = async (config: any) => {
+  if (!db) return;
+
+  // 1. Save Full Config (Secrets included) to 'settings/flouci' (Admin Only)
+  await setDoc(doc(db, 'settings', 'flouci'), config, { merge: true });
+
+  // 2. Save Public Config (Safe for Client) to 'settings/flouci_public' (Public Read)
+  const publicConfig = {
+    isTestMode: config.isTestMode,
+    isConnected: config.isConnected,
+    developerId: config.developerId,
+    appToken: config.appToken // Public token
+  };
+  await setDoc(doc(db, 'settings', 'flouci_public'), publicConfig, { merge: true });
+};
+
+// --- Global Payment Selection ---
+
+export const subscribeToGlobalPaymentConfig = (callback: (config: GlobalPaymentConfig) => void) => {
+  if (db) {
+    return onSnapshot(doc(db, 'settings', 'global_payment'), (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data() as GlobalPaymentConfig);
+      } else {
+        callback({ activeGateway: 'auto' });
+      }
+    });
+  }
+  return () => { };
+};
+
+export const updateGlobalPaymentConfig = async (config: GlobalPaymentConfig) => {
+  if (!db) return;
+  await setDoc(doc(db, 'settings', 'global_payment'), {
+    ...config,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
 };
 
 export const makeMeAdmin = async () => {

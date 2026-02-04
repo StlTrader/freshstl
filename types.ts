@@ -126,6 +126,14 @@ export interface StripeConfig {
   isConnected: boolean;
   testerEmails?: string[];
 }
+
+export interface FlouciConfig {
+  appToken: string;
+  appSecret: string;
+  developerId: string;
+  isTestMode: boolean;
+  isConnected: boolean;
+}
 export interface Collection {
   id: string;
   title: string;
@@ -171,8 +179,8 @@ export interface Payment {
   userId: string;
   amount: number; // in cents
   currency: string;
-  status: 'pending' | 'succeeded' | 'failed' | 'refunded';
-  paymentMethod: string; // 'card', 'stripe', 'mock'
+  status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'completed';
+  paymentMethod: 'card' | 'stripe' | 'flouci' | 'mock';
   stripePaymentIntentId?: string;
   cardBrand?: string;
   cardLast4?: string;
@@ -238,4 +246,9 @@ export interface HeroConfig {
   collectionId?: string;
   layout?: 'standard' | 'centered' | 'split' | 'asymmetrical' | 'grid';
   visualEffect?: 'none' | 'tilt' | 'glow' | 'parallax';
+}
+
+export interface GlobalPaymentConfig {
+  activeGateway: 'stripe' | 'flouci' | 'auto';
+  updatedAt?: any;
 }

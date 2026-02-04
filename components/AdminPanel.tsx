@@ -43,19 +43,20 @@ import {
   ArrowRight,
   Globe,
   Eye,
-  EyeOff
+  EyeOff,
+  Smartphone
 } from 'lucide-react';
 import BlogManager from './admin/BlogManager';
 import CollectionManager from './admin/CollectionManager';
 import IndexingManager from './admin/IndexingManager';
-import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig, Collection } from '../types';
+import { Product, Order, Payment, CartItem, BuilderCategory, BuilderAsset, HeroConfig, Collection, FlouciConfig, GlobalPaymentConfig } from '../types';
 import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { getStoragePathForUpload, getCleanImageUrl } from '../utils/urlHelpers';
-import { useStore } from '../contexts/StoreContext';
 import { formatPrice } from '../utils/currencyHelpers';
+import { useStore } from '../contexts/StoreContext';
 
 interface AdminPanelProps {
   products: Product[];
@@ -65,6 +66,7 @@ interface AdminPanelProps {
 }
 
 type AdminTab = 'dashboard' | 'products' | 'orders' | 'users' | 'payments' | 'settings' | 'blog' | 'hero' | 'payment_settings' | 'collections' | 'indexing';
+
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initialTab, initialEditId }) => {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab || 'dashboard');
@@ -236,14 +238,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initi
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 transition-colors">
         <div className="max-w-7xl mx-auto">
-          {activeTab === 'dashboard' && <DashboardView products={localProducts} orders={orders} />}
-          {activeTab === 'products' && <ProductsManager products={localProducts} initialEditId={initialEditId} />}
-          {activeTab === 'orders' && <OrdersManager orders={orders} />}
-          {activeTab === 'users' && <UsersManager orders={orders} />}
+          {activeTab === 'dashboard' && <DashboardView products={localProducts} orders={orders} currency={currency} />}
+          {activeTab === 'products' && <ProductsManager products={localProducts} initialEditId={initialEditId} currency={currency} />}
+          {activeTab === 'orders' && <OrdersManager orders={orders} currency={currency} />}
+          {activeTab === 'users' && <UsersManager orders={orders} currency={currency} />}
           {activeTab === 'payment_settings' && <PaymentSetting />}
 
           {activeTab === 'blog' && <BlogManager initialEditId={initialEditId} />}
-          {activeTab === 'hero' && <HeroManager products={localProducts} />}
+          {activeTab === 'hero' && <HeroManager products={localProducts} currency={currency} />}
           {activeTab === 'collections' && <CollectionManager products={localProducts} />}
           {activeTab === 'indexing' && <IndexingManager products={localProducts} />}
         </div>
@@ -254,8 +256,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ products, onClose, initi
 
 // --- Sub Components ---
 
+const SidebarItem = ({ icon, label, active, onClick }: any) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active
+      ? 'bg-social-black dark:bg-white text-white dark:text-black shadow-lg shadow-black/10'
+      : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-bg/50 hover:text-gray-900 dark:hover:text-white'
+      }`}
+  >
+    {icon}
+    <span className="font-bold">{label}</span>
+  </button>
+);
 
-// --- Sub Components ---
+const NavBtn = ({ icon, label, active, onClick }: any) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 p-2 transition-all ${active ? 'text-social-black dark:text-white' : 'text-gray-400'
+      }`}
+  >
+    {icon}
+    <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+  </button>
+);
 
 const CategoriesManager = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -386,29 +409,7 @@ const CategoriesManager = () => {
   );
 };
 
-const SidebarItem = ({ icon, label, active, onClick }: any) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active ? 'bg-social-black dark:bg-white text-white dark:text-black shadow-lg' : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white'
-      }`}
-  >
-    {icon}
-    <span className="font-medium">{label}</span>
-  </button>
-);
-
-const NavBtn = ({ icon, label, active, onClick }: any) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all w-16 ${active
-      ? 'text-social-black dark:text-white bg-gray-100 dark:bg-dark-bg'
-      : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-bg/50'
-      }`}
-  >
-    {icon}
-    <span className="text-[10px] font-medium">{label}</span>
-  </button>
-);
+// --- Sub Components ---
 
 const MenuBtn = ({ icon, label, active, onClick, color = 'brand' }: any) => {
   const colors: any = {
@@ -434,7 +435,7 @@ const MenuBtn = ({ icon, label, active, onClick, color = 'brand' }: any) => {
   );
 };
 
-const DashboardView = ({ products, orders }: { products: Product[], orders: Order[] }) => {
+const DashboardView = ({ products, orders, currency }: { products: Product[], orders: Order[], currency: string }) => {
   const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
   const totalSales = orders.length;
   const topProduct = [...products].sort((a, b) => (b.sales || 0) - (a.sales || 0))[0];
@@ -535,12 +536,13 @@ const StatCard = ({ title, value, icon, trend, delay }: any) => (
   </div>
 );
 
-const ProductsManager = ({ products, initialEditId }: { products: Product[], initialEditId?: string }) => {
+const ProductsManager = ({ products, currency, initialEditId }: { products: Product[], currency: string, initialEditId?: string }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({ tags: [] });
 
   useEffect(() => {
     if (initialEditId && products.length > 0) {
+
       const productToEdit = products.find(p => p.id === initialEditId);
       if (productToEdit) {
         setCurrentProduct(productToEdit);
@@ -1906,7 +1908,7 @@ const ProductsManager = ({ products, initialEditId }: { products: Product[], ini
   );
 };
 
-const OrdersManager = ({ orders }: { orders: Order[] }) => {
+const OrdersManager = ({ orders, currency }: { orders: Order[], currency: string }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredOrders = orders.filter(o =>
@@ -2120,7 +2122,7 @@ const OrdersManager = ({ orders }: { orders: Order[] }) => {
 
 
 
-const UsersManager = ({ orders }: { orders: Order[] }) => {
+const UsersManager = ({ orders, currency }: { orders: Order[], currency: string }) => {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -2734,6 +2736,14 @@ const UsersManager = ({ orders }: { orders: Order[] }) => {
 
 const PaymentSetting = () => {
   const [config, setConfig] = useState(paymentService.getStripeConfig());
+  const [flouciConfig, setFlouciConfig] = useState<FlouciConfig>({
+    appToken: '',
+    appSecret: '',
+    developerId: '',
+    isTestMode: true,
+    isConnected: false
+  });
+  const [globalConfig, setGlobalConfig] = useState<GlobalPaymentConfig>({ activeGateway: 'auto' });
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const status = firebaseService.getSystemStatus();
@@ -2743,16 +2753,30 @@ const PaymentSetting = () => {
   const [showTestWebhook, setShowTestWebhook] = useState(false);
   const [showLiveSecret, setShowLiveSecret] = useState(false);
   const [showLiveWebhook, setShowLiveWebhook] = useState(false);
+  const [showFlouciToken, setShowFlouciToken] = useState(false);
+  const [showFlouciSecret, setShowFlouciSecret] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = firebaseService.subscribeToAdminStripeConfig((newConfig) => {
+    const unsubStripe = firebaseService.subscribeToAdminStripeConfig((newConfig) => {
       if (newConfig) setConfig(prev => ({ ...prev, ...newConfig }));
     });
-    return () => unsubscribe();
+    const unsubFlouci = firebaseService.subscribeToAdminFlouciConfig((newConfig) => {
+      if (newConfig) setFlouciConfig(prev => ({ ...prev, ...newConfig }));
+    });
+    const unsubGlobal = firebaseService.subscribeToGlobalPaymentConfig((newConfig) => {
+      if (newConfig) setGlobalConfig(newConfig);
+    });
+    return () => {
+      unsubStripe();
+      unsubFlouci();
+      unsubGlobal();
+    };
   }, []);
 
   const handleSave = async () => {
     await firebaseService.updateStripeConfig(config);
+    await firebaseService.updateFlouciConfig(flouciConfig);
+    await firebaseService.updateGlobalPaymentConfig(globalConfig);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -2762,9 +2786,91 @@ const PaymentSetting = () => {
     setConfig({ ...config, isConnected: !config.isConnected });
   };
 
+  const toggleFlouciConnection = () => {
+    setFlouciConfig({ ...flouciConfig, isConnected: !flouciConfig.isConnected });
+  };
+
   return (
-    <div className="max-w-3xl animate-in fade-in duration-500">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary mb-6">Payment Settings</h1>
+    <div className="max-w-3xl animate-in fade-in duration-500 overflow-y-auto pb-20">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text-primary">Payment Settings</h1>
+        {saved && (
+          <div className="flex items-center gap-2 text-green-600 font-bold animate-in fade-in slide-in-from-right-4 transition-all bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-lg border border-green-100 dark:border-green-800">
+            <CheckCircle size={18} /> Settings Saved
+          </div>
+        )}
+      </div>
+
+      <div className="mb-8 bg-white dark:bg-dark-surface p-6 rounded-2xl border border-brand-200 dark:border-brand-900/50 shadow-lg shadow-brand-500/5 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-5 text-brand-500">
+          <Zap size={100} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-6 flex items-center gap-2">
+          <Zap className="text-brand-500" size={24} />
+          Active Payment Gateway
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+          <button
+            onClick={() => setGlobalConfig({ ...globalConfig, activeGateway: 'auto' })}
+            className={`p-6 rounded-xl border-2 text-left transition-all flex flex-col gap-2 ${globalConfig.activeGateway === 'auto'
+              ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-2 ring-brand-500/20'
+              : 'border-gray-200 dark:border-dark-border hover:border-brand-300 dark:hover:border-brand-700'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${globalConfig.activeGateway === 'auto' ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                <RefreshCw size={24} />
+              </div>
+              <span className={`font-bold text-lg ${globalConfig.activeGateway === 'auto' ? 'text-brand-700 dark:text-brand-400' : 'text-gray-900 dark:text-dark-text-primary'}`}>Automatic</span>
+              {globalConfig.activeGateway === 'auto' && <CheckCircle className="ml-auto text-brand-500" size={20} />}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-1">
+              Automatically chooses the best gateway based on user currency (DT &rarr; Flouci, else &rarr; Stripe).
+            </p>
+          </button>
+
+          <button
+            onClick={() => setGlobalConfig({ ...globalConfig, activeGateway: 'stripe' })}
+            className={`p-6 rounded-xl border-2 text-left transition-all flex flex-col gap-2 ${globalConfig.activeGateway === 'stripe'
+              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-500/20'
+              : 'border-gray-200 dark:border-dark-border hover:border-brand-300 dark:hover:border-brand-700'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${globalConfig.activeGateway === 'stripe' ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                <CreditCard size={24} />
+              </div>
+              <span className={`font-bold text-lg ${globalConfig.activeGateway === 'stripe' ? 'text-indigo-700 dark:text-indigo-400' : 'text-gray-900 dark:text-dark-text-primary'}`}>Stripe Only</span>
+              {globalConfig.activeGateway === 'stripe' && <CheckCircle className="ml-auto text-indigo-500" size={20} />}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-1">
+              Force Stripe for all transactions regardless of currency.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setGlobalConfig({ ...globalConfig, activeGateway: 'flouci' })}
+            className={`p-6 rounded-xl border-2 text-left transition-all flex flex-col gap-2 ${globalConfig.activeGateway === 'flouci'
+              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 ring-2 ring-orange-500/20'
+              : 'border-gray-200 dark:border-dark-border hover:border-brand-300 dark:hover:border-brand-700'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${globalConfig.activeGateway === 'flouci' ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                <Smartphone size={24} />
+              </div>
+              <span className={`font-bold text-lg ${globalConfig.activeGateway === 'flouci' ? 'text-orange-700 dark:text-orange-400' : 'text-gray-900 dark:text-dark-text-primary'}`}>Flouci Only</span>
+              {globalConfig.activeGateway === 'flouci' && <CheckCircle className="ml-auto text-orange-500" size={20} />}
+            </div>
+            <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-1">
+              Force Flouci for all transactions (only works for TND currency).
+            </p>
+          </button>
+        </div>
+        <p className="mt-4 text-xs text-gray-500 flex items-center gap-1.5">
+          <AlertCircle size={14} /> Note: This setting determines which payment provider is shown to customers at checkout.
+        </p>
+      </div>
 
       <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex gap-3 items-start">
         <Shield className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" size={20} />
@@ -3025,25 +3131,125 @@ const PaymentSetting = () => {
           </div>
         )}
 
-        {/* Save Button */}
-        <div className="mt-6 flex justify-end">
+      </div>
+
+      {/* Flouci Integration Section */}
+      <div className="bg-white dark:bg-dark-surface rounded-2xl p-8 border border-gray-200 dark:border-dark-border mb-8 relative overflow-hidden shadow-sm transition-colors">
+        <div className="absolute top-0 right-0 p-4 opacity-10 text-brand-500">
+          <Smartphone size={120} />
+        </div>
+        <div className="flex justify-between items-start mb-6 relative z-10">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary flex items-center gap-2">
+              Flouci (Tunisia)
+              {flouciConfig.isConnected ?
+                <span className="flex items-center text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full gap-1.5 border border-green-200 dark:border-green-700 font-bold uppercase">
+                  <CheckCircle size={12} /> Connected
+                </span> :
+                <span className="flex items-center text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-dark-text-secondary px-2.5 py-1 rounded-full gap-1.5 font-bold uppercase">
+                  <AlertCircle size={12} /> Not Connected
+                </span>
+              }
+            </h2>
+            <p className="text-gray-500 dark:text-dark-text-secondary text-sm mt-1">Manage your Flouci developer credentials for DT payments.</p>
+          </div>
           <button
-            onClick={handleSave}
-            disabled={saved}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${saved
-              ? 'bg-green-500 text-white cursor-default'
-              : 'bg-social-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+            onClick={toggleFlouciConnection}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${flouciConfig.isConnected
+              ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 shadow-red-500/10'
+              : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/30'
               }`}
           >
-            {saved ? (
-              <>
-                <CheckCircle size={18} /> Saved!
-              </>
-            ) : (
-              <>
-                <Save size={18} /> Save API Keys
-              </>
-            )}
+            <LinkIcon size={18} /> {flouciConfig.isConnected ? 'Disconnect Flouci' : 'Connect Flouci'}
+          </button>
+        </div>
+
+        {/* Flouci Mode Toggle */}
+        <div className="mb-6 relative z-10">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-secondary mb-3">Flouci Environment</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFlouciConfig({ ...flouciConfig, isTestMode: true })}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all border-2 ${flouciConfig.isTestMode
+                ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 dark:border-orange-600 text-orange-700 dark:text-orange-400'
+                : 'bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <AlertCircle size={18} />
+                <span>Sandbox Mode</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setFlouciConfig({ ...flouciConfig, isTestMode: false })}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all border-2 ${!flouciConfig.isTestMode
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-600 text-green-700 dark:text-green-400'
+                : 'bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <CheckCircle size={18} />
+                <span>Production Mode</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Flouci Credentials */}
+        <div className={`space-y-4 relative z-10 transition-all duration-300 ${flouciConfig.isConnected ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+          <div className="bg-gray-50 dark:bg-dark-bg p-4 rounded-lg border border-gray-200 dark:border-dark-border">
+            <h3 className="font-medium text-gray-900 dark:text-dark-text-primary mb-3">API Credentials</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">App Token</label>
+                <div className="relative">
+                  <input
+                    type={showFlouciToken ? "text" : "password"}
+                    value={flouciConfig.appToken}
+                    onChange={(e) => setFlouciConfig({ ...flouciConfig, appToken: e.target.value })}
+                    placeholder="Enter Flouci App Token"
+                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                  />
+                  <button onClick={() => setShowFlouciToken(!showFlouciToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showFlouciToken ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">App Secret</label>
+                <div className="relative">
+                  <input
+                    type={showFlouciSecret ? "text" : "password"}
+                    value={flouciConfig.appSecret}
+                    onChange={(e) => setFlouciConfig({ ...flouciConfig, appSecret: e.target.value })}
+                    placeholder="Enter Flouci App Secret"
+                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                  />
+                  <button onClick={() => setShowFlouciSecret(!showFlouciSecret)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showFlouciSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Developer Tracking ID</label>
+                <input
+                  type="text"
+                  value={flouciConfig.developerId}
+                  onChange={(e) => setFlouciConfig({ ...flouciConfig, developerId: e.target.value })}
+                  placeholder="Enter Developer Tracking ID"
+                  className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-dark-border rounded-lg p-3 text-gray-900 dark:text-dark-text-primary font-mono text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end relative z-10">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold transition-all shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <Save size={18} /> Save Flouci Settings
           </button>
         </div>
       </div>
@@ -3088,7 +3294,7 @@ const PaymentSetting = () => {
   );
 };
 
-const HeroManager = ({ products }: { products: Product[] }) => {
+const HeroManager = ({ products, currency }: { products: Product[], currency: string }) => {
   const [config, setConfig] = useState<HeroConfig>({ mode: 'auto', autoType: 'newest' });
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -3310,7 +3516,7 @@ const HeroManager = ({ products }: { products: Product[] }) => {
                     <Image src={getCleanImageUrl(product.imageUrl, product.category)} alt={product.name} width={40} height={40} className="rounded object-cover bg-gray-100" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-dark-text-secondary">${(product.price / 100).toFixed(2)}</p>
+                      <p className="text-xs text-gray-500 dark:text-dark-text-secondary">{formatPrice(product.price, currency)}</p>
                     </div>
                   </div>
                 );

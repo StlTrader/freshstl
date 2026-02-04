@@ -33,6 +33,8 @@ import * as firebaseService from '../services/firebaseService';
 import * as paymentService from '../services/paymentService';
 import { SUPPORTED_COUNTRIES } from '../constants';
 import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
+import { useStore } from '../contexts/StoreContext';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface UserDashboardProps {
   user: User | null;
@@ -45,6 +47,7 @@ interface UserDashboardProps {
 type Tab = 'library' | 'orders' | 'wishlist' | 'analytics' | 'payment' | 'settings';
 
 export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, loading, products, wishlist }) => {
+  const { currency } = useStore();
   const [activeTab, setActiveTab] = useState<Tab>('library');
   const [customerInfo, setCustomerInfo] = useState({
     fullName: user?.displayName || '',
@@ -372,14 +375,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-dark-text-primary line-clamp-2">{purchase.productName}</h3>
                         <span className="font-mono text-sm font-bold text-social-black dark:text-white bg-gray-100 dark:bg-dark-bg px-2 py-1 rounded hidden md:inline-block">
-                          ${((product?.price || 0) / 100).toFixed(2)}
+                          {formatPrice(product?.price || 0, currency)}
                         </span>
                       </div>
 
                       <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-gray-500 dark:text-dark-text-secondary mb-6">
                         <span className="flex items-center gap-1.5"><Calendar size={16} className="text-gray-400" /> {formatDate(purchase.purchaseDate)}</span>
                         <span className="flex items-center gap-1.5"><FileBox size={16} className="text-gray-400" /> STL Format</span>
-                        <span className="font-mono text-social-black dark:text-white md:hidden font-bold bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded">${((product?.price || 0) / 100).toFixed(2)}</span>
+                        <span className="font-mono text-social-black dark:text-white md:hidden font-bold bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded">{formatPrice(product?.price || 0, currency)}</span>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -446,7 +449,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                         </p>
                       </div>
                       <div className="text-left sm:text-right w-full sm:w-auto bg-gray-50 dark:bg-dark-bg/50 p-4 rounded-xl sm:bg-transparent sm:p-0 flex flex-row sm:flex-col justify-between items-center sm:items-end">
-                        <div className="font-black text-2xl text-gray-900 dark:text-dark-text-primary">${(order.amount / 100).toFixed(2)}</div>
+                        <div className="font-black text-2xl text-gray-900 dark:text-dark-text-primary">{formatPrice(order.amount, currency)}</div>
                         <div className="text-xs text-gray-500 font-medium bg-white dark:bg-dark-bg px-2 py-1 rounded-full border border-gray-200 dark:border-dark-border sm:border-none sm:bg-transparent sm:p-0">
                           {order.items.length} Item{order.items.length !== 1 && 's'}
                         </div>
@@ -460,7 +463,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                               <Box size={14} className="text-gray-400" />
                               {item.name}
                             </span>
-                            <span className="text-gray-900 dark:text-dark-text-primary font-bold font-mono">${(item.price / 100).toFixed(2)}</span>
+                            <span className="text-gray-900 dark:text-dark-text-primary font-bold font-mono">{formatPrice(item.price, currency)}</span>
                           </div>
                         ))}
                       </div>
@@ -511,7 +514,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                     </div>
                     <div className="p-5 flex flex-col flex-1">
                       <h3 className="font-bold text-gray-900 dark:text-dark-text-primary mb-1 text-lg line-clamp-1">{product.name}</h3>
-                      <p className="text-social-black dark:text-white font-black text-xl mb-4">${(product.price / 100).toFixed(2)}</p>
+                      <p className="text-social-black dark:text-white font-black text-xl mb-4">{formatPrice(product.price, currency)}</p>
                       <Link
                         href={getProductUrl({ category: product.category, slug: product.slug })}
                         className="mt-auto block w-full text-center py-3 bg-social-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-95"
@@ -555,10 +558,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ user, purchases, l
                   <div>
                     <p className="text-sm text-gray-500 dark:text-dark-text-secondary">Total Spent</p>
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">
-                      ${(purchases.reduce((acc, curr) => {
+                      {formatPrice(purchases.reduce((acc, curr) => {
                         const product = products.find(p => p.id === curr.productId);
                         return acc + (product?.price || 0);
-                      }, 0) / 100).toFixed(2)}
+                      }, 0), currency)}
                     </h3>
                   </div>
                 </div>

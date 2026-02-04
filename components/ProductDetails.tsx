@@ -828,7 +828,7 @@ export default function ProductDetails({ product, initialRelatedProducts = [], i
                                                 </h3>
                                                 <div className="mt-auto flex items-center justify-between">
                                                     <span className="text-sm font-medium text-social-black dark:text-gray-300">
-                                                        {related.price === 0 ? 'Free' : `$${(related.price / 100).toFixed(2)}`}
+                                                        {related.price === 0 ? 'Free' : formatPrice(related.price, currency)}
                                                     </span>
                                                     <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                                                         <span className="font-medium">{related.category}</span>

@@ -6,9 +6,10 @@ import { Package, Download, Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getProductUrl, getCleanImageUrl } from '../utils/urlHelpers';
+import { formatPrice } from '../utils/currencyHelpers';
 
 export const PurchasesList = () => {
-    const { orders, purchases, user, isLoadingPurchases } = useStore();
+    const { orders, purchases, user, isLoadingPurchases, currency } = useStore();
 
     if (isLoadingPurchases) {
         return <div className="flex justify-center py-20">Loading...</div>;
@@ -86,7 +87,7 @@ export const PurchasesList = () => {
                                 <span>{order.date ? new Date(order.date.seconds * 1000).toLocaleDateString() : 'N/A'}</span>
                             </div>
                             <div className="font-bold text-gray-900 dark:text-dark-text-primary">
-                                ${(order.amount / 100).toFixed(2)}
+                                {formatPrice(order.amount, currency)}
                             </div>
                         </div>
 
@@ -115,7 +116,7 @@ export const PurchasesList = () => {
                                                     <h3 className="font-bold text-gray-900 dark:text-dark-text-primary group-hover:text-brand-600 transition-colors">
                                                         <Link href={getProductUrl({ category: item.category || 'misc', slug: item.slug || item.id })}>{item.name}</Link>
                                                     </h3>
-                                                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary">${(item.price / 100).toFixed(2)}</p>
+                                                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary">{formatPrice(item.price, currency)}</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">

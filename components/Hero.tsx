@@ -11,6 +11,7 @@ import { TiltCard } from './TiltCard';
 import { HeroBackground } from './HeroBackground';
 import { HeroCarousel } from './HeroCarousel';
 import { getCleanImageUrl } from '../utils/urlHelpers';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface HeroProps {
     products: Product[];
@@ -18,7 +19,7 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ products, config }) => {
-    const { user } = useStore();
+    const { user, currency } = useStore();
     const layout = config?.layout || 'standard';
     const effect = config?.visualEffect || 'none';
 
@@ -111,7 +112,7 @@ export const Hero: React.FC<HeroProps> = ({ products, config }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                 <div>
                     <p className="text-white font-bold text-lg line-clamp-1">{product.name}</p>
-                    <p className="text-brand-300 text-sm font-medium">${(product.price / 100).toFixed(2)}</p>
+                    <p className="text-brand-300 text-sm font-medium">{formatPrice(product.price, currency)}</p>
                 </div>
             </div>
         </TiltCard>

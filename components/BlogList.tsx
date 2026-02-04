@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { Calendar, User, Tag, ArrowRight, ShoppingBag, Star, Clock, Mail, TrendingUp } from 'lucide-react';
 import { BlogPost, Product } from '../types';
 import { getCleanImageUrl } from '../utils/urlHelpers';
+import { useStore } from '../contexts/StoreContext';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface BlogListProps {
     initialPosts: BlogPost[];
@@ -13,6 +15,7 @@ interface BlogListProps {
 }
 
 export default function BlogList({ initialPosts, products = [] }: BlogListProps) {
+    const { currency } = useStore();
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [email, setEmail] = useState('');
@@ -303,7 +306,7 @@ export default function BlogList({ initialPosts, products = [] }: BlogListProps)
                                                     <span className="text-gray-500 dark:text-dark-text-secondary">{product.rating || 'New'}</span>
                                                 </div>
                                                 <div className="text-sm font-bold text-social-black dark:text-white">
-                                                    ${(product.price / 100).toFixed(2)}
+                                                    {formatPrice(product.price, currency)}
                                                 </div>
                                             </div>
                                         </Link>

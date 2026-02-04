@@ -1,20 +1,91 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle, ArrowRight, Download } from 'lucide-react';
+import { CheckCircle, ArrowRight, Download, Loader2, AlertCircle } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useStore } from '../../../contexts/StoreContext';
+import { verifyFlouciPayment } from '../../../services/flouciService';
 
 export default function OrderSuccessPage() {
     const searchParams = useSearchParams();
-    const paymentId = searchParams.get('paymentId');
+    const paymentId = searchParams.get('payment_id'); // Flouci uses payment_id
+    const gateway = searchParams.get('gateway');
     const { clearCart } = useStore();
 
-    // Ensure cart is cleared (redundant safety check)
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+    const [error, setError] = useState<string | null>(null);
+
+    // Handle Flouci payment verification
     useEffect(() => {
-        clearCart();
-    }, [clearCart]);
+        const handleFlouciSuccess = async () => {
+            if (gateway !== 'flouci' || !paymentId) {
+                // Not a Flouci payment - standard success
+                setVerificationStatus('success');
+                clearCart();
+                return;
+            }
+
+            setIsVerifying(true);
+            try {
+                // Verify the payment with Flouci
+                const isValid = await verifyFlouciPayment(paymentId);
+
+                if (isValid) {
+                    setVerificationStatus('success');
+                    // Clear pending order data and cart
+                    sessionStorage.removeItem('pending_flouci_order');
+                    clearCart();
+                } else {
+                    setVerificationStatus('failed');
+                    setError('Payment verification failed. Please contact support.');
+                }
+            } catch (e: any) {
+                console.error('[Flouci Success] Verification error:', e);
+                setVerificationStatus('failed');
+                setError(e.message || 'Failed to verify payment');
+            } finally {
+                setIsVerifying(false);
+            }
+        };
+
+        handleFlouciSuccess();
+    }, [gateway, paymentId, clearCart]);
+
+    // Show loading state while verifying
+    if (isVerifying) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-dark-surface p-8 sm:p-12 rounded-3xl shadow-xl max-w-lg w-full text-center border border-gray-100 dark:border-dark-border">
+                    <Loader2 className="w-12 h-12 animate-spin text-brand-600 mx-auto mb-6" />
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Verifying Payment...</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Please wait while we confirm your payment.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error if verification failed
+    if (verificationStatus === 'failed') {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-dark-surface p-8 sm:p-12 rounded-3xl shadow-xl max-w-lg w-full text-center border border-gray-100 dark:border-dark-border">
+                    <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <AlertCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Payment Failed</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8">{error || 'Something went wrong with your payment.'}</p>
+                    <Link
+                        href="/checkout"
+                        className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
+                    >
+                        Try Again
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center p-4">

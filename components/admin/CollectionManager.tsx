@@ -4,12 +4,15 @@ import { Collection, Product } from '../../types';
 import * as firebaseService from '../../services/firebaseService';
 import Image from 'next/image';
 import { getCleanImageUrl } from '../../utils/urlHelpers';
+import { useStore } from '../../contexts/StoreContext';
+import { formatPrice } from '../../utils/currencyHelpers';
 
 interface CollectionManagerProps {
     products: Product[];
 }
 
 const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
+    const { currency } = useStore();
     const [collections, setCollections] = useState<Collection[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [currentCollection, setCurrentCollection] = useState<Partial<Collection>>({
@@ -378,7 +381,7 @@ const CollectionManager: React.FC<CollectionManagerProps> = ({ products }) => {
                                         {collection.productIds.length} Products
                                     </span>
                                     {collection.price && (
-                                        <span className="font-bold text-brand-600">${(collection.price / 100).toFixed(2)}</span>
+                                        <span className="font-bold text-brand-600">{formatPrice(collection.price, currency)}</span>
                                     )}
                                 </div>
                             </div>

@@ -3,9 +3,12 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import * as paymentService from '../services/paymentService';
 import { Loader2, AlertCircle, Lock, TestTube2, Zap, CreditCard, ShieldCheck } from 'lucide-react';
-import { auth, getUserProfile } from '../services/firebaseService';
-import { PaymentMethod } from '../types';
+import { auth, getUserProfile, subscribeToFlouciConfig, subscribeToGlobalPaymentConfig } from '../services/firebaseService';
+import * as flouciService from '../services/flouciService';
+import { Smartphone } from 'lucide-react';
+import { PaymentMethod, GlobalPaymentConfig } from '../types';
 import { useStore } from '../contexts/StoreContext';
+import { formatPrice } from '../utils/currencyHelpers';
 
 const CardIcon = ({ brand }: { brand: string }) => {
     const b = brand.toLowerCase();
@@ -61,6 +64,7 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard, customerInfo }
         country?: string;
     }
 }) => {
+    const { currency } = useStore();
     const stripe = useStripe();
     const elements = useElements();
     const [error, setError] = useState<string | null>(null);
@@ -173,7 +177,7 @@ const CheckoutForm = ({ onSuccess, amount, saveCard, setSaveCard, customerInfo }
                     </>
                 ) : (
                     <>
-                        <Lock className="w-4 h-4" /> Pay ${(amount / 100).toFixed(2)}
+                        <Lock className="w-4 h-4" /> Pay {formatPrice(amount, currency)}
                     </>
                 )}
             </button>
@@ -199,6 +203,7 @@ const SavedCardPaymentForm = ({
     paymentMethodId: string,
     clientSecret: string
 }) => {
+    const { currency } = useStore();
     const stripe = useStripe();
     const [error, setError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -249,7 +254,112 @@ const SavedCardPaymentForm = ({
                     </>
                 ) : (
                     <>
-                        <Lock className="w-4 h-4" /> Pay ${(amount / 100).toFixed(2)} with Saved Card
+                        <Lock className="w-4 h-4" /> Pay {formatPrice(amount, currency)} with Saved Card
+                    </>
+                )}
+            </button>
+        </div>
+    );
+};
+
+const FlouciCheckout = ({ amount, customerInfo, items, onCancel }: {
+    amount: number,
+    customerInfo?: { fullName: string; email: string },
+    items: any[],
+    onCancel: () => void
+}) => {
+    const { currency } = useStore();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
+    const handleFlouciPay = async () => {
+        setIsProcessing(true);
+        setError(null);
+        setPaymentUrl(null);
+        try {
+            // Save pending order data to sessionStorage for retrieval after redirect
+            sessionStorage.setItem('pending_flouci_order', JSON.stringify({
+                items: items,
+                total: amount,
+                customerInfo: customerInfo
+            }));
+
+            const result = await flouciService.initiateFlouciPayment(
+                amount,
+                customerInfo || { email: '', fullName: 'Guest' },
+                items
+            );
+
+            if (result?.url) {
+                console.log('[Flouci] Payment URL received:', result.url);
+                setPaymentUrl(result.url);
+
+                // Create a hidden form and submit it for reliable redirect
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = result.url;
+                form.target = '_self';
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            } else {
+                console.error('[Flouci] No URL in result:', result);
+                sessionStorage.removeItem('pending_flouci_order');
+                throw new Error("Failed to get payment link");
+            }
+        } catch (e: any) {
+            sessionStorage.removeItem('pending_flouci_order');
+            setError(e.message || "Failed to initiate Flouci payment");
+            setIsProcessing(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6 text-center animate-in fade-in duration-500">
+            <div className="p-6 bg-brand-50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/30">
+                <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/20">
+                    <Smartphone className="text-white" size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-2">Pay with Flouci</h3>
+                <p className="text-gray-500 dark:text-dark-text-secondary text-sm">
+                    Secure payment via Flouci wallet or bank card (Tunisia).
+                </p>
+            </div>
+
+            {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                    <AlertCircle size={16} />
+                    {error}
+                </div>
+            )}
+
+            {/* Show direct link if redirect fails */}
+            {paymentUrl && (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-green-700 dark:text-green-400 text-sm mb-2">Payment link ready! Click below if not redirected:</p>
+                    <a
+                        href={paymentUrl}
+                        className="text-brand-600 hover:text-brand-500 font-bold underline"
+                        rel="noopener noreferrer"
+                    >
+                        → Go to Payment Page
+                    </a>
+                </div>
+            )}
+
+            <button
+                onClick={handleFlouciPay}
+                disabled={isProcessing}
+                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-400 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            >
+                {isProcessing ? (
+                    <>
+                        <Loader2 className="w-5 h-5 animate-spin" /> Initializing...
+                    </>
+                ) : (
+                    <>
+                        <Zap className="w-4 h-4" /> Pay {formatPrice(amount, currency)} with Flouci
                     </>
                 )}
             </button>
@@ -266,6 +376,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
     const [loadingMethods, setLoadingMethods] = useState(true);
     const [saveCard, setSaveCard] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [flouciPublicConfig, setFlouciPublicConfig] = useState<any>(null);
+    const [globalPaymentConfig, setGlobalPaymentConfig] = useState<GlobalPaymentConfig>({ activeGateway: 'stripe' });
     const { isDarkMode, user, currency } = useStore();
 
     // Fetch saved methods and check admin status on mount
@@ -296,13 +408,30 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
                 setUseNewCard(true);
             }
         };
-        fetchMethods();
+        const unsubFlouci = subscribeToFlouciConfig(setFlouciPublicConfig);
+        const unsubGlobal = subscribeToGlobalPaymentConfig(setGlobalPaymentConfig);
+        return () => {
+            unsubFlouci();
+            unsubGlobal();
+        };
     }, []);
 
     const [stripeInstance, setStripeInstance] = useState<Promise<any> | null>(null);
 
+    // Determine Flouci activation early
+    const isFlouciActive = globalPaymentConfig.activeGateway === 'flouci';
+    const isAutoGateway = globalPaymentConfig.activeGateway === 'auto';
+    const shouldUseFlouci = isFlouciActive || (isAutoGateway && currency === 'DT');
+
     // Initialize Payment Intent whenever selection changes (New vs Saved, or different Saved card)
+    // Skip Stripe initialization entirely if Flouci is active
     useEffect(() => {
+        // Skip if Flouci is active - no need to init Stripe
+        if (shouldUseFlouci) {
+            setLoadingMethods(false);
+            return;
+        }
+
         const initPayment = async () => {
             // Only init if we are done loading methods
             if (loadingMethods) return;
@@ -350,7 +479,24 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [amount, useNewCard, selectedMethodId, saveCard, loadingMethods, user]);
+    }, [amount, useNewCard, selectedMethodId, saveCard, loadingMethods, user, shouldUseFlouci]);
+
+    // EARLY RETURN: If Flouci is the active gateway, render it immediately
+    if (shouldUseFlouci) {
+        return (
+            <div className="p-1">
+                <FlouciCheckout
+                    amount={amount * 10} // Convert cents (100 per DT) to millimes (1000 per DT)
+                    customerInfo={customerInfo}
+                    items={items}
+                    onCancel={onCancel}
+                />
+                <div className="mt-4 text-center">
+                    <button onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-900 dark:hover:text-dark-text-primary">Cancel Payment</button>
+                </div>
+            </div>
+        );
+    }
 
     if (loadingMethods) {
         return (
@@ -399,6 +545,8 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({ amount, onSucces
         }
         onSuccess(paymentIntentId, pmDetails);
     };
+
+    // Flouci check already handled above via early return
 
     return (
         <div className="p-1">

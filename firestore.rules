@@ -103,6 +103,29 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Flouci Public Config: Public Read
+    match /settings/flouci_public {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Flouci Secrets: Admin Only
+    match /settings/flouci {
+      allow read, write: if isAdmin();
+    }
+
+    // Global Payment Config: Public Read (needed for checkout)
+    match /settings/global_payment {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Hero Config: Public Read
+    match /settings/hero {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
 
 
     // Default deny

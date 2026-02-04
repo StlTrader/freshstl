@@ -3,6 +3,8 @@ import { Product, Review, Purchase } from '../types';
 import { SketchfabViewer } from './SketchfabViewer';
 import { ShoppingCart, Star, Share2, ShieldCheck, Download, ArrowLeft, Lock, Box, Sparkles } from 'lucide-react';
 import * as firebaseService from '../services/firebaseService';
+import { useStore } from '../contexts/StoreContext';
+import { formatPrice } from '../utils/currencyHelpers';
 
 interface ProductPageProps {
     product: Product;
@@ -14,6 +16,7 @@ interface ProductPageProps {
 }
 
 export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAddToCart, onCustomize, user, purchases = [] }) => {
+    const { currency } = useStore();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
@@ -274,9 +277,8 @@ export const ProductPage: React.FC<ProductPageProps> = ({ product, onBack, onAdd
 
                                 <div className="flex items-end gap-2 mb-8">
                                     <span className="text-5xl font-black text-gray-900 dark:text-dark-text-primary tracking-tight">
-                                        ${(product.price / 100).toFixed(2)}
+                                        {formatPrice(product.price, currency)}
                                     </span>
-                                    <span className="text-gray-500 dark:text-dark-text-secondary font-medium mb-2">USD</span>
                                 </div>
 
                                 <button
